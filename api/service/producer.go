@@ -14,7 +14,6 @@ package service
 import (
 	"context"
 	"github.com/sirupsen/logrus"
-	"time"
 	"uuabc.com/sendmsg/api/storer/db"
 	"uuabc.com/sendmsg/api/storer/mq"
 	"uuabc.com/sendmsg/pkg/errors"
@@ -24,10 +23,24 @@ import (
 
 var ProducerImpl = producerImpl{}
 
-type producerImpl struct {
+type producerImpl struct{}
+
+func (p producerImpl) Produce(ctx context.Context, meta Meta) (string, error) {
+	err := p.produce(ctx, meta)
+	if err == nil {
+		return meta.GetId(), nil
+	}
+	// 不是项目用的error
+	if _, ok := err.(*errors.Error); !ok {
+		err = errors.NewError(
+			10000000,
+			err.Error(),
+		)
+	}
+	return "", err
 }
 
-func (p producerImpl) Produce(ctx context.Context, meta Meta) error {
+func (p producerImpl) produce(ctx context.Context, meta Meta) error {
 	b, err := meta.Marshal()
 	if err != nil {
 		return err
@@ -60,11 +73,7 @@ func (p producerImpl) Produce(ctx context.Context, meta Meta) error {
 			}
 			return err
 		}
-		back := backoff.NewExponentialBackOff()
-		back.InitialInterval = time.Millisecond * 100
-		back.Multiplier = 1.2
-		back.MaxInterval = time.Millisecond * 300
-		back.MaxElapsedTime = time.Second * 5
+		back := backoff.NewServiceBackOff()
 		err = backoff.Retry(retryFunc, back)
 		if err != nil {
 			logrus.Errorf("unexpected error: %s", err.Error())
@@ -76,7 +85,7 @@ func (p producerImpl) Produce(ctx context.Context, meta Meta) error {
 
 func (producerImpl) sendToMq(ctx context.Context, n string, b []byte, d int64) (err error) {
 	switch n {
-	case weixin:
+	case wechat:
 		err = mq.ProduceWeChat(ctx, b, d)
 	case sms:
 		err = mq.ProduceSms(ctx, b, d)

@@ -30,5 +30,10 @@ type Cache interface {
 	// 如果key存在就报错，只有不存在时才能设置成功,ttl单位 秒
 	Add(k string, v []byte, ttl int32) error
 
+	// 将数据添加到set，k为列表名称，v为值
+	Append(k string, v []byte) error
+	// v是否在k列表中
+	IsMember(k string, v []byte) (bool, error)
+
 	io.Closer
 }

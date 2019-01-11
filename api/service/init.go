@@ -12,7 +12,7 @@
 package service
 
 const (
-	weixin = "weixin"
+	wechat = "wechat"
 	sms    = "sms"
 	email  = "email"
 )

@@ -6,7 +6,7 @@
 #   File Name     : mem.go
 #   Created       : 2019/1/8 10:36
 #   Last Modified : 2019/1/8 10:36
-#   Describe      :
+#   Describe      : 弃用，无法满足要求
 #
 # ====================================================*/
 package memcached
@@ -70,6 +70,14 @@ func (c *Client) Add(k string, v []byte, ttl int32) error {
 		}
 	}
 	return err
+}
+
+func (c *Client) Append(k string, v []byte) error {
+	return nil
+}
+
+func (c *Client) IsMember(k string, v []byte) (bool, error) {
+	return false, nil
 }
 
 func (c *Client) Close() error {

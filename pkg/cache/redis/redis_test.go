@@ -84,3 +84,19 @@ func TestNewClient(t *testing.T) {
 	fmt.Println(cli.Get("hello"))
 	cli.Close()
 }
+
+func TestClient_Append(t *testing.T) {
+	for _, v := range cases {
+		if err := cli.Append("test-list", v.value); err != v.want {
+			t.Errorf("%s test func Append() failed,want: %v actual: %v", v.name, v.want, err)
+		}
+	}
+}
+
+func TestClient_IsMember(t *testing.T) {
+	for _, v := range cases {
+		if b, err := cli.IsMember("test-list", v.value); err != v.want || !b {
+			t.Errorf("%s test func Append() failed,want: %v actual: %v", v.name, v.want, err)
+		}
+	}
+}

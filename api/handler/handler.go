@@ -19,6 +19,15 @@ import (
 	"uuabc.com/sendmsg/pkg/errors"
 )
 
+var (
+	// {
+	//    "errcode": 0,
+	//    "msg": "success",
+	//    "data": null
+	// }
+	successResp = []byte{123, 34, 101, 114, 114, 99, 111, 100, 101, 34, 58, 48, 44, 34, 109, 115, 103, 34, 58, 34, 115, 117, 99, 99, 101, 115, 115, 34, 44, 34, 100, 97, 116, 97, 34, 58, 110, 117, 108, 108, 125}
+)
+
 // BodyHandler 需要从request.Body中取数据的func
 type BodyHandler func(ctx context.Context, data []byte) ([]byte, error)
 

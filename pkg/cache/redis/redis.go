@@ -87,6 +87,16 @@ func (c *Client) Add(k string, v []byte, ttl int32) error {
 	return nil
 }
 
+func (c *Client) Append(k string, v []byte) error {
+	res := c.c.SAdd(k, v)
+	return res.Err()
+}
+
+func (c *Client) IsMember(k string, v []byte) (bool, error) {
+	res := c.c.SIsMember(k, v)
+	return res.Result()
+}
+
 func (c *Client) Close() error {
 	if c.c != nil {
 		if v, ok := c.c.(io.Closer); ok {

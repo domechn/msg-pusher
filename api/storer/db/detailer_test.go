@@ -12,6 +12,7 @@
 package db
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"uuabc.com/sendmsg/api/storer"
@@ -25,16 +26,27 @@ func init() {
 }
 
 func TestSmsDetailByID(t *testing.T) {
-	res, err := SmsDetailByID("42b86258-e242-4b67-b172-40dafa539972")
+	res, err := SmsDetailByID(context.Background(), "42b86258-e242-4b67-b172-40dafa539972")
 	fmt.Println(res, err)
 }
 
 func TestWeChatDetailByID(t *testing.T) {
-	res, err := WeChatDetailByID("00a87366-c607-43d8-9673-6f2cd143273c")
+	res, err := WeChatDetailByID(context.Background(), "00a87366-c607-43d8-9673-6f2cd143273c")
 	fmt.Println(res, err)
 }
 
 func TestEmailDetailByID(t *testing.T) {
-	res, err := EmailDetailByID("d1b1753f-d2d4-4c0c-b24b-bfdeeb8068bf")
+	res, err := EmailDetailByID(context.Background(), "d1b1753f-d2d4-4c0c-b24b-bfdeeb8068bf")
 	fmt.Println(res, err)
+}
+
+func TestSmsDetailByPhoneAndPage(t *testing.T) {
+	res, err := SmsDetailByPhoneAndPage(context.Background(), "18516051096", 1)
+	if err != nil {
+		t.Error(err)
+	} else {
+		for _, v := range res {
+			fmt.Println(v)
+		}
+	}
 }

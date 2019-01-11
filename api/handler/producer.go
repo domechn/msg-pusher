@@ -16,11 +16,11 @@ import (
 	"uuabc.com/sendmsg/api/service"
 )
 
-func processData(ctx context.Context, p service.Meta) (err error) {
+func processData(ctx context.Context, p service.Meta) (id string, err error) {
 	if err = p.Validated(); err != nil {
 		return
 	}
 	p.Transfer()
-	err = service.ProducerImpl.Produce(ctx, p)
+	id, err = service.ProducerImpl.Produce(ctx, p)
 	return
 }

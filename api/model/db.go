@@ -11,6 +11,10 @@
 # ====================================================*/
 package model
 
+import (
+	"uuabc.com/sendmsg/pkg/pb/meta"
+)
+
 // DbSms 数据库中smss表的实体类
 type DbSms struct {
 	ID           string `json:"id" db:"id"`
@@ -30,6 +34,10 @@ type DbSms struct {
 	UpdatedAt    string `json:"updated_at" db:"updated_at"`
 }
 
+func (d *DbSms) GetStatus() meta.Status {
+	return meta.Status(d.Status)
+}
+
 // DbWeChat 数据库中wechats表的实体类
 type DbWeChat struct {
 	ID           string `json:"id" db:"id"`
@@ -45,6 +53,10 @@ type DbWeChat struct {
 	ResultStatus int    `json:"result_status" db:"result_status"`
 	CreatedAt    string `json:"created_at" db:"created_at"`
 	UpdatedAt    string `json:"updated_at" db:"updated_at"`
+}
+
+func (d *DbWeChat) GetStatus() meta.Status {
+	return meta.Status(d.Status)
 }
 
 // DbEmail 数据库中emails表的实体类
@@ -65,4 +77,8 @@ type DbEmail struct {
 	ResultStatus int    `json:"result_status" db:"result_status"`
 	CreatedAt    string `json:"created_at" db:"created_at"`
 	UpdatedAt    string `json:"updated_at" db:"updated_at"`
+}
+
+func (d *DbEmail) GetStatus() meta.Status {
+	return meta.Status(d.Status)
 }

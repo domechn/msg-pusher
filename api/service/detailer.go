@@ -15,11 +15,10 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"github.com/sirupsen/logrus"
 	"time"
 	"uuabc.com/sendmsg/api/model"
-	"uuabc.com/sendmsg/api/storer"
+	"uuabc.com/sendmsg/api/storer/cache"
 	"uuabc.com/sendmsg/api/storer/db"
 	"uuabc.com/sendmsg/pkg/errors"
 	"uuabc.com/sendmsg/pkg/pb/meta"
@@ -35,10 +34,35 @@ var DetailerImpl detailerImpl
 type detailerImpl struct {
 }
 
+func (d detailerImpl) Detail(ctx context.Context, typeN, id string) (*model.Response, error) {
+	res, err := d.detail(ctx, typeN, id)
+	if err == nil {
+		return res, nil
+	}
+	// 转换err类型
+	if _, ok := err.(*errors.Error); !ok {
+		if err == sql.ErrNoRows {
+			err = errors.ErrMsgNotFound
+		} else {
+			logrus.Errorf("idDetail,数据操作异常，error: %v", err)
+			err = errors.NewError(
+				10000000,
+				err.Error(),
+			)
+		}
+	}
+	return nil, err
+}
+
+// DetailByPhonePage 直接数据库中取,不走缓存
+func (d detailerImpl) DetailByPhonePage(ctx context.Context, mobile string, page int) (*model.Response, error) {
+	return nil, nil
+}
+
 // IDDetail 根据消息id查询数据,先从缓存中查取数据，如果不存在再去数据库中查
-func (d detailerImpl) IDDetail(ctx context.Context, typeN, id string) (*model.Response, error) {
+func (d detailerImpl) detail(ctx context.Context, typeN, id string) (*model.Response, error) {
 	// TODO 使用bitmap先查看消息是否存在，防止数据库被刷爆,id hash+bitmap
-	data, err := storer.Cache.Get(id)
+	data, err := cache.Detail(ctx, id)
 	if err == nil {
 		logrus.WithFields(logrus.Fields{
 			"data": string(data),
@@ -69,7 +93,7 @@ GetDataInDB:
 		if err != nil {
 			return
 		}
-		if err = storer.Cache.Put(id, b, ttl); err == nil {
+		if err = cache.StoreDetail(ctx, id, b, ttl); err == nil {
 			logrus.WithFields(logrus.Fields{
 				"data": string(data),
 				"id":   id,
@@ -81,39 +105,29 @@ GetDataInDB:
 
 func (detailerImpl) idDetail(ctx context.Context, typeN, id string) (res interface{}, ttl int32, err error) {
 	switch typeN {
-	case weixin:
-		dt, er := db.WeChatDetailByID(id)
+	case wechat:
+		dt, er := db.WeChatDetailByID(ctx, id)
 		ttl = calculateTTL(dt.Status, dt.SendTime)
 		res = dt
 		err = er
 	case email:
-		dt, er := db.EmailDetailByID(id)
+		dt, er := db.EmailDetailByID(ctx, id)
 		ttl = calculateTTL(dt.Status, dt.SendTime)
 		res = dt
 		err = er
 	case sms:
-		dt, er := db.SmsDetailByID(id)
+		dt, er := db.SmsDetailByID(ctx, id)
 		ttl = calculateTTL(dt.Status, dt.SendTime)
 		res = dt
 		err = er
 	default:
 		res, err = nil, errors.ErrMsgTypeNotFound
 	}
-	if err == nil {
-		return
+	if err != nil {
+		return nil, 0, err
 	}
-	// 转换err类型
-	if _, ok := err.(*errors.Error); !ok {
-		if err == sql.ErrNoRows {
-			err = errors.ErrMsgNotFound
-		} else {
-			err = errors.NewError(
-				10000000,
-				err.Error(),
-			)
-		}
-	}
-	return nil, 0, err
+
+	return
 }
 
 // calculateTTL 根据消息的状态和发送时间计算存入缓存中的时间
@@ -123,7 +137,6 @@ func calculateTTL(status int, sendTime string) (ttl int32) {
 	if meta.Status(status) != meta.Status_Wait {
 		return
 	}
-	fmt.Println(sendTime)
 	// 如果消息是待发送状态 就将缓存有效时间设置为发送时间减去当前时间再减去10秒
 	t, err := time.Parse("2006-01-02T15:04:05Z", sendTime)
 	if err != nil {

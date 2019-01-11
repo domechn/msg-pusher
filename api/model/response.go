@@ -11,6 +11,10 @@
 # ====================================================*/
 package model
 
+import (
+	"encoding/json"
+)
+
 type Response struct {
 	Errcode int         `json:"errcode"`
 	Msg     string      `json:"msg"`
@@ -35,4 +39,9 @@ func NewResponseDataKey(key string, data interface{}) *Response {
 			key: data,
 		},
 	}
+}
+
+func (r *Response) MustMarshal() []byte {
+	res, _ := json.Marshal(r)
+	return res
 }

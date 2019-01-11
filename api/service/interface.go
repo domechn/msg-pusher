@@ -11,6 +11,10 @@
 # ====================================================*/
 package service
 
+import (
+	"uuabc.com/sendmsg/pkg/pb/meta"
+)
+
 type Meta interface {
 	GetId() string
 	// 验证参数
@@ -23,4 +27,8 @@ type Meta interface {
 	Transfer()
 	// 获取延迟发送的时间,请在Transfer调用后使用
 	Delay() int64
+}
+
+type Messager interface {
+	GetStatus() meta.Status
 }

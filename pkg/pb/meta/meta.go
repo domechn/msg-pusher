@@ -102,7 +102,7 @@ func (m *SmsProducer) Validated() error {
 // wechat begin..........
 // TypeName 接口的类型
 func (m *WeChatProducer) TypeName() string {
-	return "weixin"
+	return "wechat"
 }
 
 // Delay 延迟发送的时间 毫秒 单位

@@ -33,10 +33,10 @@ func Init(route *mux.Router) {
 	route = route.PathPrefix("/" + version.Info.Version).Subrouter()
 	// restful
 	delVRoute := route.Methods("DELETE").Subrouter()
-	delVRoute.Path("/sms/{id}").HandlerFunc(handler.JsonHandler(handler.SmsCancel))
-	delVRoute.Path("/sms/key/{key}").HandlerFunc(handler.JsonHandler(handler.SmsKeyCancel))
-	delVRoute.Path("/wechat/{id}").HandlerFunc(handler.JsonHandler(handler.WeChatCancel))
-	delVRoute.Path("/email/{id}").HandlerFunc(handler.JsonHandler(handler.EmailCancel))
+	delVRoute.Path("/sms/{id}").HandlerFunc(handler.URLHandler(handler.SmsCancel))
+	delVRoute.Path("/sms/key/{key}").HandlerFunc(handler.URLHandler(handler.SmsKeyCancel))
+	delVRoute.Path("/wechat/{id}").HandlerFunc(handler.URLHandler(handler.WeChatCancel))
+	delVRoute.Path("/email/{id}").HandlerFunc(handler.URLHandler(handler.EmailCancel))
 
 	postVRoute := route.Methods("POST").Subrouter()
 	postVRoute.Path("/sms").HandlerFunc(handler.JsonHandler(handler.SmsProducer))
