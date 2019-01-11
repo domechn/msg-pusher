@@ -3,14 +3,10 @@
 #
 #   Author        : domchan
 #   Email         : 814172254@qq.com
-#   File Name     : config.go
-#   Created       : 2019/1/7 14:32
-#   Last Modified : 2019/1/7 14:32
+#   File Name     : canceler.go
+#   Created       : 2019/1/10 20:04
+#   Last Modified : 2019/1/10 20:04
 #   Describe      :
 #
 # ====================================================*/
-package cst
-
-const (
-	WeiXinAccessToken = "weixin_access_token"
-)
+package db

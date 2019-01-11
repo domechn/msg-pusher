@@ -73,7 +73,7 @@ func (h *OpenTracing) Handler(next http.Handler) http.Handler {
 		}
 		ext.HTTPMethod.Set(span, r.Method)
 		ext.HTTPUrl.Set(span, fmt.Sprintf(scheme+"://"+r.Host+r.URL.Path))
-		ext.Component.Set(span, "gateway")
+		ext.Component.Set(span, "sendmsg")
 		ext.SpanKind.Set(span, "server")
 		if hostname, portString, err := net.SplitHostPort(r.URL.Host); err != nil {
 			ext.PeerHostname.Set(span, hostname)

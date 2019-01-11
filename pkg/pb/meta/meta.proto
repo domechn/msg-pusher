@@ -1,0 +1,109 @@
+syntax = "proto3";
+package meta;
+
+import "gogoproto/gogo.proto";
+
+option (gogoproto.marshaler_all) = true;
+option (gogoproto.sizer_all) = true;
+option (gogoproto.unmarshaler_all) = true;
+option (gogoproto.goproto_enum_prefix_all) = false;
+
+enum PlatForm {
+    PlatForm_Unknown = 0;
+    PlatForm_Back = 1;
+    PlatForm_Front = 2;
+    PlatForm_IOS = 3;
+    PlatForm_Android = 4;
+    PlatForm_NewSys = 5;
+}
+
+enum Message {
+    Message_Unknown = 0;
+    Message_Confirm = 1;
+    Message_Notice = 2;
+}
+
+enum Server {
+    Server_Unknown = 0;
+    Server_Eay =1 ;
+    Server_Ali =2;
+}
+
+enum Status {
+    Status_Unknown = 0;
+    Status_Wait = 1;
+    Status_Cancel =2;
+    Status_Final =3;
+    // 批量完成
+    Status_LotFinal=4;
+}
+
+// "platform":3,
+// "platform_key":"message_test",
+// "server":2,
+// "content": "验证码885588，您正在进行身份验证，打死不要告诉别人哦！",
+// "template": "SMS_130990029",
+// "arguments":"{\"code\":885588}",
+// "mobile": "18516051096",
+// "send_time":"2018-07-30T07:30:00+08:00",
+// "type": 2
+// SmsProducer 接收短信消息
+message SmsProducer{
+    string id=1 ;
+    int32 platform=2 ;
+    string platformKey=3 ;
+    int32 server=4;
+    string content=5;
+    string template=6;
+    string arguments=7;
+    string mobile=8;
+    string sendTime=9;
+    int64 _utcSendStamp = 10;
+    int32 type=11;
+}
+
+// "platform":3,
+// "platform_key":"email_test",
+// "server":2,
+// "title":"测试邮件",
+// "content": "好嗨哟，感觉人生已经到达了高潮",
+// "template": "test.blade.php",
+// "arguments":"{\"name\":\"乔治君\"}",
+// "destination": "923143925@qq.com",
+// "send_time":"2018-07-30T07:30:00+08:00",
+// "type": 2
+// EmailProducer 接收email信息
+message EmailProducer {
+    string id = 1;
+    int32 platform = 2;
+    string platformKey = 3;
+    int32 server =4;
+    string title = 5;
+    string content= 6;
+    string template = 7;
+    string arguments = 8;
+    string destination = 9;
+    string sendTime = 10;
+    int64 _utcSendStamp = 11;
+    int32 type = 12;
+}
+
+// "platform":3,
+// "touser": "oAdVsv5nQ-qtBF0F5WGU-xPcrpGY",
+// "template_id": "RlJfVX1SCBW2ncbIblbOE_8PaOUyoxBmr2MKnjzcY80",
+// "url": "",
+// "data":"{\"first\": {\"value\":\"亲爱的George家长，UU哥提示您：本次课程已经结束，本节课配有课后作业哦，作业信息如下：\",\"color\":\"#173177\"},\"keyword1\":{\"value\":\"Hello\",\"color\":\"#173177\"},\"keyword2\": {\"value\":\"World\",\"color\":\"#173177\"},\"remark\":{\"value\":\"请提醒小朋友前往学习记录完成课后作业，完成作业还会有额外奖励哦。。如有任何问题可微信对话框留言或拨打服务热线：4001636161\",\"color\":\"#173177\"}}",
+// "send_time":"0",
+// "type": 2
+// WeChatProducer 接收微信消息
+message WeChatProducer {
+    string id = 1;
+    int32 platform = 2;
+    string touser = 3;
+    string templateID= 4;
+    string url = 5;
+    string data = 6;
+    string sendTime = 7;
+    int64 _utcSendStamp = 8;
+    int32 type = 9;
+}

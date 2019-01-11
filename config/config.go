@@ -22,6 +22,11 @@ type Mysql struct {
 	ConnMaxLifetime int    `yaml:"connMaxLifetime"`
 }
 
+type Redis struct {
+	Addr     string `yaml:"addr"`
+	Password string `yaml:"password"`
+}
+
 type Memcached struct {
 	Addr string `yaml:"addr"`
 }
@@ -35,6 +40,7 @@ type Config struct {
 	Mysql     *Mysql     `yaml:"mysql"`
 	Memcached *Memcached `yaml:"memcached"`
 	MQ        *RabbitMQ  `yaml:"mq"`
+	Redis     *Redis     `yaml:"redis"`
 }
 
 var (
@@ -55,4 +61,8 @@ func MemCachedConf() *Memcached {
 
 func MQConf() *RabbitMQ {
 	return conf.MQ
+}
+
+func RedisConf() *Redis {
+	return conf.Redis
 }

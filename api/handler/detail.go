@@ -12,17 +12,18 @@
 package handler
 
 import (
-	"net/http"
+	"context"
 )
 
-func IDDetail(w http.ResponseWriter, r *http.Request) {
+func IDDetail(ctx context.Context, body []byte) (res []byte, err error) {
+	return
 
 }
 
-func KeyDetail(w http.ResponseWriter, r *http.Request) {
-
+func KeyDetail(ctx context.Context, body []byte) (res []byte, err error) {
+	return
 }
 
-func MobileDetail(w http.ResponseWriter, r *http.Request) {
-
+func MobileDetail(ctx context.Context, body []byte) (res []byte, err error) {
+	return
 }

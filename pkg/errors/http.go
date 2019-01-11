@@ -20,7 +20,7 @@ import (
 )
 
 // RecoveryHandler 程序奔溃时的返回
-func RecoveryHandler(w http.ResponseWriter, _ *http.Request, err interface{}) {
+func ErrHandler(w http.ResponseWriter, _ *http.Request, err interface{}) {
 	handler(w, err)
 }
 
@@ -29,19 +29,19 @@ func handler(w http.ResponseWriter, err interface{}) {
 	switch internalErr := err.(type) {
 	case *Error:
 		logrus.WithFields(logrus.Fields{
-			"code":  internalErr.Code,
+			"code":  internalErr.ErrCode,
 			"error": internalErr.Error(),
 		}).Errorf("Internal error handled")
-		toJson(w, internalErr.Code, internalErr)
+		toJson(w, 200, internalErr)
 	case error:
 		logrus.WithFields(logrus.Fields{
 			"error": internalErr,
 			"stack": string(debug.Stack()),
 		}).Errorf("Internal server error handled")
 		toJson(w, DoErr(internalErr), &Error{
-			Code: DoErr(internalErr),
-			Msg:  internalErr.Error(),
-			Data: nil,
+			ErrCode: DoErr(internalErr),
+			Msg:     internalErr.Error(),
+			Data:    nil,
 		})
 	default:
 		logrus.WithFields(logrus.Fields{

@@ -12,9 +12,9 @@
 package handler
 
 import (
-	"net/http"
+	"context"
 )
 
-func Edit(w http.ResponseWriter, r *http.Request) {
-
+func Edit(ctx context.Context, body []byte) (res []byte, err error) {
+	return
 }

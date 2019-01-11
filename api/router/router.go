@@ -25,7 +25,7 @@ func Init(route *mux.Router) {
 	route.Use(
 		mid.RequestIDMiddleware,
 		mid.LoggingMiddleware,
-		mid.RecoveryMiddleware(errors.RecoveryHandler),
+		mid.RecoveryMiddleware(errors.ErrHandler),
 		mid.NewOpenTracing(false).Handler,
 		mid.NewMetrics(prometheus).Handler,
 	)
@@ -33,17 +33,16 @@ func Init(route *mux.Router) {
 	postRoute := route.Methods("POST")
 
 	versionRoute := postRoute.PathPrefix("/" + version.Info.Version).Subrouter()
-
 	msgRoute := versionRoute.PathPrefix("/messages").Subrouter()
-	msgRoute.Path("/producer").HandlerFunc(handler.SmsProducer)
-	msgRoute.Path("/producers").HandlerFunc(handler.SmsProducers)
-	msgRoute.Path("/detail/id").HandlerFunc(handler.IDDetail)
-	msgRoute.Path("/detail/mobile").HandlerFunc(handler.MobileDetail)
-	msgRoute.Path("/edit").HandlerFunc(handler.Edit)
-	msgRoute.Path("/cancel").HandlerFunc(handler.Cancel)
-	msgRoute.Path("/detail/key").HandlerFunc(handler.KeyDetail)
-	msgRoute.Path("/cancel_key").HandlerFunc(handler.KeyCancel)
+	msgRoute.Path("/producer").HandlerFunc(handler.JsonHandler(handler.SmsProducer))
+	msgRoute.Path("/producers").HandlerFunc(handler.JsonHandler(handler.SmsProducers))
+	msgRoute.Path("/detail/id").HandlerFunc(handler.JsonHandler(handler.IDDetail))
+	msgRoute.Path("/detail/mobile").HandlerFunc(handler.JsonHandler(handler.MobileDetail))
+	msgRoute.Path("/edit").HandlerFunc(handler.JsonHandler(handler.Edit))
+	msgRoute.Path("/cancel").HandlerFunc(handler.JsonHandler(handler.Cancel))
+	msgRoute.Path("/detail/key").HandlerFunc(handler.JsonHandler(handler.KeyDetail))
+	msgRoute.Path("/cancel_key").HandlerFunc(handler.JsonHandler(handler.KeyCancel))
 
-	versionRoute.Path("/wechats/producer").HandlerFunc(handler.WeChatProducer)
-	versionRoute.Path("/emails/producer").HandlerFunc(handler.EmailProducer)
+	versionRoute.Path("/wechats/producer").HandlerFunc(handler.JsonHandler(handler.WeChatProducer))
+	versionRoute.Path("/emails/producer").HandlerFunc(handler.JsonHandler(handler.EmailProducer))
 }

@@ -12,18 +12,59 @@
 package handler
 
 import (
-	"net/http"
+	"context"
+	"encoding/json"
+	"uuabc.com/sendmsg/api/service"
+	"uuabc.com/sendmsg/pkg/pb/meta"
 )
 
-func SmsProducer(w http.ResponseWriter, r *http.Request) {
+// SmsProducer 接收用户提交的json，并将json转化成消息插入到sms消息队列
+func SmsProducer(ctx context.Context, body []byte) (res []byte, err error) {
+	p := &meta.SmsProducer{}
+	if err = json.Unmarshal(body, p); err != nil {
+		return
+	}
+	if err = processData(ctx, p); err != nil {
+		return
+	}
 
+	return
 }
 
-func SmsProducers(w http.ResponseWriter, r *http.Request) {
+// SmsProducers 批量将用户的消息插入sms队列
+func SmsProducers(ctx context.Context, body []byte) (res []byte, err error) {
+	return
 }
 
-func WeChatProducer(w http.ResponseWriter, r *http.Request) {
-
+// WeChatProducer 接收用户提交的json，并将json转化成消息插入到wechat消息队列
+func WeChatProducer(ctx context.Context, body []byte) (res []byte, err error) {
+	p := &meta.WeChatProducer{}
+	if err = json.Unmarshal(body, p); err != nil {
+		return
+	}
+	if err = processData(ctx, p); err != nil {
+		return
+	}
+	return
 }
-func EmailProducer(w http.ResponseWriter, r *http.Request) {
+
+// EmailProducer 接收用户提交的json，并将json转化成消息插入到email消息队列
+func EmailProducer(ctx context.Context, body []byte) (res []byte, err error) {
+	p := &meta.EmailProducer{}
+	if err = json.Unmarshal(body, p); err != nil {
+		return
+	}
+	if err = processData(ctx, p); err != nil {
+		return
+	}
+	return
+}
+
+func processData(ctx context.Context, p service.Meta) (err error) {
+	if err = p.Validated(); err != nil {
+		return
+	}
+	p.Transfer()
+	err = service.ProducerImpl.Produce(ctx, p)
+	return
 }

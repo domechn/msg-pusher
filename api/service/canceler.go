@@ -3,14 +3,20 @@
 #
 #   Author        : domchan
 #   Email         : 814172254@qq.com
-#   File Name     : config.go
-#   Created       : 2019/1/7 14:32
-#   Last Modified : 2019/1/7 14:32
+#   File Name     : canceler.go
+#   Created       : 2019/1/10 19:58
+#   Last Modified : 2019/1/10 19:58
 #   Describe      :
 #
 # ====================================================*/
-package cst
+package service
 
-const (
-	WeiXinAccessToken = "weixin_access_token"
-)
+var Canceler canceler
+
+type canceler struct {
+}
+
+func (canceler) Cancel(id string) error {
+
+	return nil
+}

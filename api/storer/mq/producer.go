@@ -17,19 +17,20 @@ import (
 	"uuabc.com/sendmsg/api/storer"
 )
 
-func ProduceSms(ctx context.Context, msg []byte, delay int32) error {
+func ProduceSms(ctx context.Context, msg []byte, delay int64) error {
 	return produce(ctx, "sms", msg, delay)
 }
 
-func ProduceEmail(ctx context.Context, msg []byte, delay int32) error {
+func ProduceEmail(ctx context.Context, msg []byte, delay int64) error {
 	return produce(ctx, "email", msg, delay)
 }
 
-func ProduceWeChat(ctx context.Context, msg []byte, delay int32) error {
+func ProduceWeChat(ctx context.Context, msg []byte, delay int64) error {
 	return produce(ctx, "wechat", msg, delay)
 }
 
-func produce(ctx context.Context, typeName string, msg []byte, delay int32) error {
+// TODO 修改err类型
+func produce(ctx context.Context, typeName string, msg []byte, delay int64) error {
 	channel, err := storer.MqCli.RabbitMQ(storer.ExChangeName, "x-delayed-message", amqp.Table{
 		"x-delayed-type": "direct",
 	})

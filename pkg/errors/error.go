@@ -19,9 +19,9 @@ import (
 
 // Error gateway代理出现错误时的返回值
 type Error struct {
-	Code int         `json:"code"`
-	Msg  string      `json:"msg"`
-	Data interface{} `json:"data"`
+	ErrCode int         `json:"errcode"`
+	Msg     string      `json:"msg"`
+	Data    interface{} `json:"data"`
 }
 
 // New creates a new instance of Error
@@ -34,11 +34,11 @@ func (e *Error) Error() string {
 }
 
 func (e *Error) GetCode() int {
-	return e.Code
+	return e.ErrCode
 }
 
 func (e *Error) Marshal() []byte {
-	str := `{"code":` + strconv.FormatInt(int64(e.Code), 10) + `,"msg":"` + e.Error() + `","data":{}}`
+	str := `{"code":` + strconv.FormatInt(int64(e.ErrCode), 10) + `,"msg":"` + e.Error() + `","data":{}}`
 	return []byte(str)
 }
 
