@@ -3,10 +3,19 @@
 #
 #   Author        : domchan
 #   Email         : 814172254@qq.com
-#   File Name     : canceler.go
-#   Created       : 2019/1/8 16:32
-#   Last Modified : 2019/1/8 16:32
+#   File Name     : uuid.go
+#   Created       : 2019/1/11 15:02
+#   Last Modified : 2019/1/11 15:02
 #   Describe      :
 #
 # ====================================================*/
-package handler
+package utils
+
+import (
+	"github.com/satori/go.uuid"
+)
+
+func ValidateUUIDV4(id string) error {
+	_, err := uuid.FromString(id)
+	return err
+}

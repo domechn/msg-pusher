@@ -33,4 +33,5 @@ var (
 	ErrPlatNotFound    = NewError(106001003, "请求平台不存在")
 	ErrPlatKeyIsNil    = NewError(106001012, "平台key内容为空")
 	ErrSendTimeTooLong = NewError(106001023, "无法延迟发送间隔超过一个月的消息")
+	ErrMsgNotFound     = NewError(106001024, "消息不存在")
 )

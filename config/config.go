@@ -23,8 +23,8 @@ type Mysql struct {
 }
 
 type Redis struct {
-	Addr     string `yaml:"addr"`
-	Password string `yaml:"password"`
+	Addrs    []string `yaml:"addrs"`
+	Password string   `yaml:"password"`
 }
 
 type Memcached struct {

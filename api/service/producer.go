@@ -22,12 +22,6 @@ import (
 	"uuabc.com/sendmsg/pkg/retry/backoff"
 )
 
-const (
-	weixin = "weixin"
-	sms    = "sms"
-	email  = "email"
-)
-
 var ProducerImpl = producerImpl{}
 
 type producerImpl struct {

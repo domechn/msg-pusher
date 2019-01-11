@@ -18,9 +18,10 @@ import (
 )
 
 var cli *Client
+var err error
 
 func init() {
-	cli = NewClient([]string{"127.0.0.1:6379"}, "")
+	cli, err = NewClient([]string{"127.0.0.1:6379"}, "")
 }
 
 var cases = []struct {
@@ -40,6 +41,7 @@ var cases = []struct {
 }
 
 func TestPut(t *testing.T) {
+	fmt.Printf("%v", err)
 	for _, v := range cases {
 		if err := cli.Put(v.key, v.value, 0); err != v.want {
 			t.Errorf("%s test func Put() failed,want: %v actual: %v", v.name, v.want, err)
@@ -75,7 +77,10 @@ func TestDel(t *testing.T) {
 }
 
 func TestNewClient(t *testing.T) {
-	cli := NewClient([]string{"127.0.0.1:6379"}, "")
+	cli, err := NewClient([]string{"127.0.0.1:6379"}, "")
+	if err != nil {
+		t.Error(err)
+	}
 	fmt.Println(cli.Get("hello"))
 	cli.Close()
 }

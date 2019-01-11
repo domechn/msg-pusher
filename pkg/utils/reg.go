@@ -9,18 +9,18 @@
 #   Describe      :
 #
 # ====================================================*/
-package reg
+package utils
 
 import (
 	"regexp"
 )
 
-func PhoneNumReg(s string) bool {
+func ValidatePhone(s string) bool {
 	b, _ := regexp.Match(`^1\d{10}$`, []byte(s))
 	return b
 }
 
-func TemplateReg(s string) bool {
+func ValidateTemplate(s string) bool {
 	b, _ := regexp.Match(`^SMS_[0-9]{9}`, []byte(s))
 	return b
 }

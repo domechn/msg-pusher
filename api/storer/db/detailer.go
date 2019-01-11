@@ -19,7 +19,7 @@ import (
 // SmsDetailByID 按照id查询sms所有字段信息，如果未找到返回error
 func SmsDetailByID(id string) (*model.DbSms, error) {
 	res := &model.DbSms{}
-	err := storer.DB.Get(res, "SELECT * FROM smss WHERE id = ? LIMIT 1", id)
+	err := storer.DB.Get(res, `SELECT * FROM smss WHERE id = ? LIMIT 1`, id)
 	if err != nil {
 		return nil, err
 	}

@@ -19,7 +19,7 @@ import (
 // The following fields are populated at build time using -ldflags -X.
 // Note that DATE is omitted for reproducible builds
 var (
-	buildVersion     = "V1.0"
+	buildVersion     = "V2.0"
 	buildGitRevision = "unknown"
 	buildUser        = "unknown"
 	buildHost        = "unknown"

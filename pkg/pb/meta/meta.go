@@ -16,7 +16,7 @@ import (
 	"github.com/satori/go.uuid"
 	"time"
 	"uuabc.com/sendmsg/pkg/errors"
-	"uuabc.com/sendmsg/pkg/reg"
+	"uuabc.com/sendmsg/pkg/utils"
 )
 
 // email begin...........
@@ -140,7 +140,7 @@ func checkPlatformKey(s string) error {
 }
 
 func checkMobile(s string) error {
-	if !reg.PhoneNumReg(s) {
+	if !utils.ValidatePhone(s) {
 		return errors.ErrPhoneNumber
 	}
 	return nil
@@ -172,7 +172,7 @@ func checkContent(s string) error {
 }
 
 func checkSmsTemplate(s string) error {
-	if s == "" || !reg.TemplateReg(s) {
+	if s == "" || !utils.ValidateTemplate(s) {
 		return errors.ErrTemplateNo
 	}
 	return nil

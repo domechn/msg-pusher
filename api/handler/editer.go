@@ -10,11 +10,3 @@
 #
 # ====================================================*/
 package handler
-
-import (
-	"context"
-)
-
-func Edit(ctx context.Context, body []byte) (res []byte, err error) {
-	return
-}

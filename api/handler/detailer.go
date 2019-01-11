@@ -3,9 +3,9 @@
 #
 #   Author        : domchan
 #   Email         : 814172254@qq.com
-#   File Name     : canceler.go
-#   Created       : 2019/1/8 16:32
-#   Last Modified : 2019/1/8 16:32
+#   File Name     : detailer.go
+#   Created       : 2019/1/11 14:04
+#   Last Modified : 2019/1/11 14:04
 #   Describe      :
 #
 # ====================================================*/

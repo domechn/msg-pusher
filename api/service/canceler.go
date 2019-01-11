@@ -11,12 +11,11 @@
 # ====================================================*/
 package service
 
-var Canceler canceler
+var Canceler cancelerImpl
 
-type canceler struct {
+type cancelerImpl struct {
 }
 
-func (canceler) Cancel(id string) error {
-
+func (cancelerImpl) Cancel(id string) error {
 	return nil
 }

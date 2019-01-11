@@ -10,3 +10,9 @@
 #
 # ====================================================*/
 package service
+
+const (
+	weixin = "weixin"
+	sms    = "sms"
+	email  = "email"
+)

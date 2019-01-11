@@ -22,31 +22,33 @@ type Client struct {
 	c redis.Cmdable
 }
 
-func NewClient(addrs []string, password string) *Client {
+func NewClient(addrs []string, password string) (*Client, error) {
 	if len(addrs) == 1 {
 		return newClient(addrs[0], password)
 	}
 	return newClusterClient(addrs, password)
 }
 
-func newClient(addr string, password string) *Client {
+func newClient(addr string, password string) (*Client, error) {
 	c := new(Client)
 	c.c = redis.NewClient(&redis.Options{
 		Addr:        addr,
 		Password:    password,
 		DialTimeout: time.Second * 5,
 	})
-	return c
+	err := c.c.Ping().Err()
+	return c, err
 }
 
-func newClusterClient(addrs []string, password string) *Client {
+func newClusterClient(addrs []string, password string) (*Client, error) {
 	c := new(Client)
 	c.c = redis.NewClusterClient(&redis.ClusterOptions{
 		Addrs:       addrs,
 		Password:    password,
 		DialTimeout: time.Second * 10,
 	})
-	return c
+	err := c.c.Ping().Err()
+	return c, err
 }
 
 func (c *Client) Get(s string) ([]byte, error) {

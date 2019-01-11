@@ -24,10 +24,10 @@ var (
 // Cache 缓存接口，实现了增删改查功能
 type Cache interface {
 	Get(s string) ([]byte, error)
-	// 如果ttl等于0 则kv永久有效
+	// 如果ttl等于0 则kv永久有效,ttl单位 秒
 	Put(k string, v []byte, ttl int32) error
 	Del(k string) error
-	// 如果key存在就报错，只有不存在时才能设置成功
+	// 如果key存在就报错，只有不存在时才能设置成功,ttl单位 秒
 	Add(k string, v []byte, ttl int32) error
 
 	io.Closer
