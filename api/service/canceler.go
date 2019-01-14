@@ -24,7 +24,6 @@ import (
 
 var Canceler = newCancelerImpl()
 
-type getFunc func(context.Context, string) (Messager, error)
 type updateFunc func(i context.Context, s string) (*sqlx.Tx, error)
 
 type cancelerImpl struct {
@@ -34,41 +33,29 @@ type cancelerImpl struct {
 }
 
 type cancelWeChatImpl struct {
-	g getFunc
 	u updateFunc
 }
 
 type cancelEmailImpl struct {
-	g getFunc
 	u updateFunc
 }
 
 type cancelSmsImpl struct {
-	g getFunc
 	u updateFunc
 }
 
 func newCancelerImpl() cancelerImpl {
 	wi := cancelWeChatImpl{
-		g: func(i context.Context, s string) (Messager, error) {
-			return db.WeChatDetailByID(i, s)
-		},
 		u: func(i context.Context, s string) (*sqlx.Tx, error) {
 			return db.WeChatCancelMsgByID(i, s)
 		},
 	}
 	ei := cancelEmailImpl{
-		g: func(i context.Context, s string) (Messager, error) {
-			return db.EmailDetailByID(i, s)
-		},
 		u: func(i context.Context, s string) (*sqlx.Tx, error) {
 			return db.EmailCancelMsgByID(i, s)
 		},
 	}
 	si := cancelSmsImpl{
-		g: func(i context.Context, s string) (Messager, error) {
-			return db.SmsDetailByID(i, s)
-		},
 		u: func(i context.Context, s string) (*sqlx.Tx, error) {
 			return db.SmsCancelMsgByID(i, s)
 		},
@@ -98,11 +85,11 @@ func (c cancelerImpl) Cancel(ctx context.Context, typeN, id string) error {
 func (c cancelerImpl) cancel(ctx context.Context, typeN, id string) (err error) {
 	switch typeN {
 	case wechat:
-		err = cancel(ctx, id, c.w.g, c.w.u, &model.DbWeChat{})
+		err = cancel(ctx, id, c.w.u, &model.DbWeChat{})
 	case sms:
-		err = cancel(ctx, id, c.s.g, c.s.u, &model.DbSms{})
+		err = cancel(ctx, id, c.s.u, &model.DbSms{})
 	case email:
-		err = cancel(ctx, id, c.e.g, c.e.u, &model.DbEmail{})
+		err = cancel(ctx, id, c.e.u, &model.DbEmail{})
 	default:
 		return errors.ErrMsgTypeNotFound
 	}
@@ -110,7 +97,7 @@ func (c cancelerImpl) cancel(ctx context.Context, typeN, id string) (err error) 
 	return
 }
 
-func cancel(ctx context.Context, id string, g getFunc, u updateFunc, m Messager) error {
+func cancel(ctx context.Context, id string, u updateFunc, m Messager) error {
 	data, err := cache.BaseDetail(ctx, id)
 	if err != nil {
 		logrus.Errorf("从缓存中获取要取消的数据失败，id: %s,error: %v", id, err)
@@ -147,24 +134,13 @@ func cancel(ctx context.Context, id string, g getFunc, u updateFunc, m Messager)
 
 	// 获取数据库中的值，并更新到缓存,必须同步，因为发送的时候需要检查缓存中信息的状态
 	// 如果异步操作失败，会导致已取消的信息发送
-	msg, err := g(ctx, id)
-	if err != nil {
-		logrus.WithFields(logrus.Fields{
-			"method": "getFunc",
-			"id":     id,
-			"error":  err,
-		}).Error("从数据库中获取数据失败")
-		rollback(tx)
-		return err
-	}
-	b, err := msg.Marshal()
-	if err != nil {
-		rollback(tx)
-		return err
-	}
+	var b []byte
+	m.SetStatus(int32(meta.Status_Cancel))
+	m.SetResult(int32(meta.Result_Fail))
+	b, _ = m.Marshal()
 
 	// 该方法并发安全
-	if err := cache.PutBaseCache(id, b); err != nil {
+	if err := cache.PutBaseCache(ctx, id, b); err != nil {
 		rollback(tx)
 		logrus.WithFields(logrus.Fields{
 			"method": "putBaseCache",
@@ -173,7 +149,7 @@ func cancel(ctx context.Context, id string, g getFunc, u updateFunc, m Messager)
 		}).Error("在取消发送后更新baseCache时出现错误")
 		return err
 	}
-	if err := cache.PutLastestCache(id, b); err != nil {
+	if err := cache.PutLastestCache(ctx, id, b); err != nil {
 		// 更新最新状态失败，无需回滚
 		// rollback(tx)
 		logrus.WithFields(logrus.Fields{

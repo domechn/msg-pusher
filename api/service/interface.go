@@ -21,7 +21,7 @@ type Meta interface {
 	Validated() error
 	Marshaler
 	// 转换必要的参数,请在validated调用后再使用
-	Transfer()
+	Transfer(bool)
 	// 获取延迟发送的时间,请在Transfer调用后使用
 	Delay() int64
 }
@@ -34,4 +34,6 @@ type Marshaler interface {
 type Messager interface {
 	Marshaler
 	GetStatus() meta.Status
+	SetStatus(int32)
+	SetResult(int32)
 }

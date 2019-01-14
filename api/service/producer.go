@@ -105,22 +105,19 @@ func (p producerImpl) produce(ctx context.Context, m Meta) error {
 }
 
 func (producerImpl) produceSms(ctx context.Context, sms *meta.SmsProducer, change func(*meta.SmsProducer) *model.DbSms, ttl int64) error {
-	b, err := sms.Marshal()
-	if err != nil {
-		return err
-	}
 	dbSms := change(sms)
 	tx, err := db.SmsInsert(ctx, dbSms)
 	if err != nil {
 		return err
 	}
-	err = mq.ProduceSms(ctx, b, ttl)
+	id := dbSms.ID
+	err = mq.ProduceSms(ctx, []byte(id), ttl)
 	if err != nil {
-		logrus.Errorf("消息 %s 插入消息队列失败，正在回滚。。。，error: %v\n", string(b), err)
+		logrus.Errorf("消息 %s 插入消息队列失败，正在回滚。。。，error: %v\n", id, err)
 		rollback(tx)
 		return err
 	}
-	logrus.Infof("消息 %s 插入消息队列成功,正在等待发送,开始提交到数据库", string(b))
+	logrus.Infof("消息 %s 插入消息队列成功,正在等待发送,开始提交到数据库", id)
 	err = commit(tx)
 	if err != nil {
 		return err
@@ -132,23 +129,20 @@ func (producerImpl) produceSms(ctx context.Context, sms *meta.SmsProducer, chang
 			return
 		}
 		// 插入redis
-		cache.PutBaseCache(sms.GetId(), byt)
+		cache.PutBaseCache(context.Background(), sms.GetId(), byt)
 	}()
-	logrus.Infof("消息 %s 插入数据库成功", string(b))
+	logrus.Infof("消息 %s 插入数据库成功", id)
 	return nil
 }
 
 func (producerImpl) produceEmail(ctx context.Context, email *meta.EmailProducer, change func(*meta.EmailProducer) *model.DbEmail, ttl int64) error {
-	b, err := email.Marshal()
-	if err != nil {
-		return err
-	}
 	dbEmail := change(email)
-	tx, err := db.InsertEmails(ctx, dbEmail)
+	tx, err := db.EmailInsert(ctx, dbEmail)
 	if err != nil {
 		return err
 	}
-	err = mq.ProduceEmail(ctx, b, ttl)
+	id := dbEmail.ID
+	err = mq.ProduceEmail(ctx, []byte(id), ttl)
 	if err != nil {
 		rollback(tx)
 		return err
@@ -164,22 +158,19 @@ func (producerImpl) produceEmail(ctx context.Context, email *meta.EmailProducer,
 			return
 		}
 		// 插入redis
-		cache.PutBaseCache(email.GetId(), byt)
+		cache.PutBaseCache(context.Background(), email.GetId(), byt)
 	}()
 	return nil
 }
 
 func (producerImpl) produceWechat(ctx context.Context, wechat *meta.WeChatProducer, change func(*meta.WeChatProducer) *model.DbWeChat, ttl int64) error {
-	b, err := wechat.Marshal()
-	if err != nil {
-		return err
-	}
 	dbWechat := change(wechat)
 	tx, err := db.WeChatInsert(ctx, dbWechat)
 	if err != nil {
 		return err
 	}
-	err = mq.ProduceWeChat(ctx, b, ttl)
+	id := dbWechat.ID
+	err = mq.ProduceWeChat(ctx, []byte(id), ttl)
 	if err != nil {
 		rollback(tx)
 		return err
@@ -195,7 +186,7 @@ func (producerImpl) produceWechat(ctx context.Context, wechat *meta.WeChatProduc
 			return
 		}
 		// 插入redis
-		cache.PutBaseCache(wechat.GetId(), byt)
+		cache.PutBaseCache(context.Background(), wechat.GetId(), byt)
 	}()
 	return nil
 }

@@ -12,12 +12,14 @@
 package meta
 
 import (
-	"encoding/json"
+	"github.com/json-iterator/go"
 	"github.com/satori/go.uuid"
 	"time"
 	"uuabc.com/sendmsg/pkg/errors"
 	"uuabc.com/sendmsg/pkg/utils"
 )
+
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 // email begin...........
 // Delay 返回延迟发送的时间 毫秒 单位
@@ -31,8 +33,10 @@ func (m *EmailProducer) Validated() error {
 }
 
 // Transfer 将必须的参数进行转换
-func (m *EmailProducer) Transfer() {
-	m.Id = uuid.NewV4().String()
+func (m *EmailProducer) Transfer(setID bool) {
+	if setID {
+		m.Id = uuid.NewV4().String()
+	}
 	st := gbfToUTC(m.SendTime)
 	m.SendTime = st.Format("2006-01-02T15:04:05")
 	m.XUtcSendStamp = st.Unix()
@@ -47,8 +51,10 @@ func (m *SmsProducer) Delay() int64 {
 }
 
 // Transfer 必要的参数转换
-func (m *SmsProducer) Transfer() {
-	m.Id = uuid.NewV4().String()
+func (m *SmsProducer) Transfer(setID bool) {
+	if setID {
+		m.Id = uuid.NewV4().String()
+	}
 	st := gbfToUTC(m.SendTime)
 	m.SendTime = st.Format("2006-01-02T15:04:05")
 	m.XUtcSendStamp = st.Unix()
@@ -100,8 +106,10 @@ func (m *WeChatProducer) Validated() error {
 }
 
 // Transfer 必要的参数合法
-func (m *WeChatProducer) Transfer() {
-	m.Id = uuid.NewV4().String()
+func (m *WeChatProducer) Transfer(setID bool) {
+	if setID {
+		m.Id = uuid.NewV4().String()
+	}
 	sendTime := gbfToUTC(m.SendTime)
 	m.SendTime = sendTime.Format("2006-01-02T15:04:05")
 	m.XUtcSendStamp = sendTime.Unix()

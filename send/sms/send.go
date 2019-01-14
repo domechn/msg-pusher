@@ -12,13 +12,15 @@
 package sms
 
 import (
-	"encoding/json"
 	"fmt"
+	"github.com/json-iterator/go"
 	"io/ioutil"
 	"net/http"
 	"time"
 	"uuabc.com/sendmsg/send"
 )
+
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 const defaultTimeout = time.Second * 10
 

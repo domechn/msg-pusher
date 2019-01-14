@@ -13,7 +13,6 @@ package handler
 
 import (
 	"context"
-	"encoding/json"
 	"strconv"
 	"uuabc.com/sendmsg/api/model"
 	"uuabc.com/sendmsg/api/service"
@@ -94,6 +93,16 @@ func checkMobileDetail(mobile, p string) error {
 
 // @router(PATCH,"/sms")
 func SmsEdit(ctx context.Context, body []byte) (res []byte, err error) {
+	p := &meta.SmsProducer{}
+	if err = json.Unmarshal(body, p); err != nil {
+		return
+	}
+	// if err = p.Validated() ; err != nil {
+	// 	return
+	// }
+	if err = service.EditerImpl.Edit(ctx, p); err != nil {
+		return
+	}
 	res = successResp
 	return
 }

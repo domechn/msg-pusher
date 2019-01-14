@@ -12,13 +12,12 @@
 package wechat
 
 import (
-	"encoding/json"
 	"fmt"
 	"testing"
 )
 
 func TestClient_AccessTokenData(t *testing.T) {
-	c := NewClient(&Config{
+	c, _ := NewClient(&Config{
 		APPId:      "wxb08951fc140c4b9d",
 		APPSecret:  "46f69c013b01ad309405bb9bf1ec6bf1",
 		CacheAddrs: []string{"127.0.0.1:6379"},

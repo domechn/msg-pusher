@@ -28,7 +28,7 @@ func init() {
 }
 
 func TestInsertEmails(t *testing.T) {
-	tx, err := InsertEmails(
+	tx, err := EmailInsert(
 		context.Background(),
 		&model.DbEmail{
 			ID:          uuid.NewV4().String(),
@@ -60,4 +60,43 @@ func TestInsertEmails(t *testing.T) {
 func TestEmailDetailByID(t *testing.T) {
 	res, err := EmailDetailByID(context.Background(), "d1b1753f-d2d4-4c0c-b24b-bfdeeb8068bf")
 	fmt.Println(res, err)
+}
+
+func TestEmailEdit(t *testing.T) {
+	tx, err := EmailEdit(context.Background(), &model.DbEmail{
+		ID:       "8a9da75d-96ef-40ac-b0be-98a327d5e482",
+		Content:  "hello",
+		SendTime: "2018-08-08 08:08:08",
+	})
+	if err != nil {
+		if tx != nil {
+			if err := tx.Rollback(); err != nil {
+				t.Error(err)
+			}
+		}
+		t.Error(err)
+	}
+	if err := tx.Commit(); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestEmailEditDestination(t *testing.T) {
+	tx, err := EmailEdit(context.Background(), &model.DbEmail{
+		ID:          "8a9da75d-96ef-40ac-b0be-98a327d5e482",
+		Content:     "hello",
+		SendTime:    "2018-08-08 08:08:08",
+		Destination: "test@email.com",
+	})
+	if err != nil {
+		if tx != nil {
+			if err := tx.Rollback(); err != nil {
+				t.Error(err)
+			}
+		}
+		t.Error(err)
+	}
+	if err := tx.Commit(); err != nil {
+		t.Error(err)
+	}
 }

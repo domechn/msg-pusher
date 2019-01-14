@@ -12,9 +12,11 @@
 package model
 
 import (
-	"encoding/json"
+	"github.com/json-iterator/go"
 	"uuabc.com/sendmsg/pkg/pb/meta"
 )
+
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 // DbSms 数据库中smss表的实体类
 type DbSms struct {
@@ -33,6 +35,14 @@ type DbSms struct {
 	ResultStatus int32  `json:"result_status" db:"result_status"`
 	CreatedAt    string `json:"created_at" db:"created_at"`
 	UpdatedAt    string `json:"updated_at" db:"updated_at"`
+}
+
+func (d *DbSms) SetStatus(s int32) {
+	d.Status = s
+}
+
+func (d *DbSms) SetResult(s int32) {
+	d.ResultStatus = s
 }
 
 func (d *DbSms) Marshal() ([]byte, error) {
@@ -62,6 +72,14 @@ type DbWeChat struct {
 	ResultStatus int32  `json:"result_status" db:"result_status"`
 	CreatedAt    string `json:"created_at" db:"created_at"`
 	UpdatedAt    string `json:"updated_at" db:"updated_at"`
+}
+
+func (d *DbWeChat) SetStatus(s int32) {
+	d.Status = s
+}
+
+func (d *DbWeChat) SetResult(s int32) {
+	d.ResultStatus = s
 }
 
 func (d *DbWeChat) Marshal() ([]byte, error) {
@@ -106,4 +124,12 @@ func (d *DbEmail) Unmarshal(b []byte) error {
 
 func (d *DbEmail) GetStatus() meta.Status {
 	return meta.Status(d.Status)
+}
+
+func (d *DbEmail) SetStatus(s int32) {
+	d.Status = s
+}
+
+func (d *DbEmail) SetResult(s int32) {
+	d.ResultStatus = s
 }

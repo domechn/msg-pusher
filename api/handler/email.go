@@ -13,7 +13,6 @@ package handler
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/hellofresh/janus/pkg/errors"
 	"uuabc.com/sendmsg/api/model"
 	"uuabc.com/sendmsg/api/service"

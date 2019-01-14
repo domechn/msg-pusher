@@ -11,10 +11,6 @@
 # ====================================================*/
 package model
 
-import (
-	"encoding/json"
-)
-
 type Response struct {
 	Errcode int         `json:"errcode"`
 	Msg     string      `json:"msg"`

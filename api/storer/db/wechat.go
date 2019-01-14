@@ -13,6 +13,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"github.com/jmoiron/sqlx"
 	"uuabc.com/sendmsg/api/model"
 	"uuabc.com/sendmsg/api/storer"
@@ -24,7 +25,7 @@ func WeChatCancelMsgByID(ctx context.Context, id string) (*sqlx.Tx, error) {
 	if err != nil {
 		return nil, err
 	}
-	stmt, err := storer.DB.PrepareContext(ctx, "UPDATE wechats SET status=2 WHERE id = ?")
+	stmt, err := storer.DB.PrepareContext(ctx, "UPDATE wechats SET status=2,result_status=2 WHERE id = ?")
 	if err != nil {
 		return tx, err
 	}
@@ -73,6 +74,37 @@ func WeChatInsert(ctx context.Context, wechat *model.DbWeChat) (*sqlx.Tx, error)
 	)
 	if err != nil {
 		return tx, err
+	}
+	return tx, nil
+}
+
+func WeChatEdit(ctx context.Context, w *model.DbWeChat) (*sqlx.Tx, error) {
+	tx, err := storer.DB.Beginx()
+	if err != nil {
+		return nil, err
+	}
+	query := "UPDATE wechats SET content=?,send_time=? "
+	if w.Touser != "" {
+		query += ",touser=? WHERE id=?"
+	} else {
+		query += "WHERE id=?"
+	}
+	stmt, err := tx.PrepareContext(ctx, query)
+	if err != nil {
+		return tx, err
+	}
+	defer stmt.Close()
+	var res sql.Result
+	if w.Touser != "" {
+		res, err = stmt.ExecContext(ctx, w.Content, w.SendTime, w.Touser, w.ID)
+	} else {
+		res, err = stmt.ExecContext(ctx, w.Content, w.SendTime, w.ID)
+	}
+	if err != nil {
+		return tx, err
+	}
+	if i, _ := res.RowsAffected(); i == 0 {
+		return tx, ErrNoRowsEffected
 	}
 	return tx, nil
 }

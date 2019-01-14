@@ -86,7 +86,7 @@ func (d detailerImpl) detail(ctx context.Context, typeN, id string) (Marshaler, 
 	if e1 == cache2.ErrCacheMiss {
 		go func() {
 			// 5秒内更新一次
-			gErr := cache.LockID5s(id)
+			gErr := cache.LockID5s(context.Background(), id)
 			if gErr != nil {
 				logrus.WithField("id", id).Errorf("频繁请求更新不存在的key。")
 				return
@@ -97,8 +97,8 @@ func (d detailerImpl) detail(ctx context.Context, typeN, id string) (Marshaler, 
 				logrus.Errorf("后台通过数据库更新cache失败，key:%s,error: %v", id, dbErr)
 				return
 			}
-			cache.PutLastestCache(id, dbRes)
-			cache.PutBaseCache(id, dbRes)
+			cache.PutLastestCache(context.Background(), id, dbRes)
+			cache.PutBaseCache(context.Background(), id, dbRes)
 			logrus.WithField("id", id).Errorf("后台通过数据库添加cache成功")
 		}()
 	}

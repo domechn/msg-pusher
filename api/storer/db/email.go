@@ -13,6 +13,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"github.com/jmoiron/sqlx"
 	"uuabc.com/sendmsg/api/model"
 	"uuabc.com/sendmsg/api/storer"
@@ -24,7 +25,7 @@ func EmailCancelMsgByID(ctx context.Context, id string) (*sqlx.Tx, error) {
 	if err != nil {
 		return nil, err
 	}
-	stmt, err := tx.PrepareContext(ctx, "UPDATE emails SET status=2 WHERE id=?")
+	stmt, err := tx.PrepareContext(ctx, "UPDATE emails SET status=2,result_status=2 WHERE id=?")
 	if err != nil {
 		return tx, err
 	}
@@ -49,8 +50,8 @@ func EmailDetailByID(ctx context.Context, id string) (*model.DbEmail, error) {
 	return res, nil
 }
 
-// InsertEmails 将消息插入emails表
-func InsertEmails(ctx context.Context, email *model.DbEmail) (*sqlx.Tx, error) {
+// EmailInsert 将消息插入emails表
+func EmailInsert(ctx context.Context, email *model.DbEmail) (*sqlx.Tx, error) {
 	tx, err := storer.DB.Beginx()
 	if err != nil {
 		return nil, err
@@ -76,6 +77,37 @@ func InsertEmails(ctx context.Context, email *model.DbEmail) (*sqlx.Tx, error) {
 	)
 	if err != nil {
 		return tx, err
+	}
+	return tx, nil
+}
+
+func EmailEdit(ctx context.Context, e *model.DbEmail) (*sqlx.Tx, error) {
+	tx, err := storer.DB.Beginx()
+	if err != nil {
+		return nil, err
+	}
+	query := "UPDATE emails SET content=?,send_time=? "
+	if e.Destination != "" {
+		query += ",destination=? WHERE id=?"
+	} else {
+		query += "WHERE id=?"
+	}
+	stmt, err := tx.PrepareContext(ctx, query)
+	if err != nil {
+		return tx, err
+	}
+	defer stmt.Close()
+	var res sql.Result
+	if e.Destination != "" {
+		res, err = stmt.ExecContext(ctx, e.Content, e.SendTime, e.Destination, e.ID)
+	} else {
+		res, err = stmt.ExecContext(ctx, e.Content, e.SendTime, e.ID)
+	}
+	if err != nil {
+		return tx, err
+	}
+	if i, _ := res.RowsAffected(); i == 0 {
+		return tx, ErrNoRowsEffected
 	}
 	return tx, nil
 }

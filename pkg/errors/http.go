@@ -13,11 +13,13 @@ package errors
 
 import (
 	"bytes"
-	"encoding/json"
+	"github.com/json-iterator/go"
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"runtime/debug"
 )
+
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 // RecoveryHandler 程序奔溃时的返回
 func ErrHandler(w http.ResponseWriter, _ *http.Request, err interface{}) {

@@ -25,7 +25,7 @@ func SmsCancelMsgByID(ctx context.Context, id string) (*sqlx.Tx, error) {
 	if err != nil {
 		return nil, err
 	}
-	stmt, err := tx.PrepareContext(ctx, "UPDATE smss SET status=2 WHERE id = ?")
+	stmt, err := tx.PrepareContext(ctx, "UPDATE smss SET status=2,result_status=2 WHERE id = ?")
 	if err != nil {
 		return tx, err
 	}

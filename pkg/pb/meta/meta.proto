@@ -25,17 +25,23 @@ enum Message {
 
 enum Server {
     Server_Unknown = 0;
-    Server_Eay =1 ;
-    Server_Ali =2;
+    Server_Eay = 1;
+    Server_Ali = 2;
 }
 
 enum Status {
     Status_Unknown = 0;
     Status_Wait = 1;
-    Status_Cancel =2;
-    Status_Final =3;
+    Status_Cancel = 2;
+    Status_Final = 3;
     // 批量完成
-    Status_LotFinal=4;
+    Status_LotFinal = 4;
+}
+
+enum Result {
+    Result_Unknown = 0;
+    Result_Success = 1;
+    Result_Fail = 2;
 }
 
 // "platform":3,
@@ -48,18 +54,18 @@ enum Status {
 // "send_time":"2018-07-30T07:30:00+08:00",
 // "type": 2
 // SmsProducer 接收短信消息
-message SmsProducer{
-    string id=1 ;
-    int32 platform=2 ;
-    string platformKey=3 ;
-    int32 server=4;
-    string content=5;
-    string template=6;
-    string arguments=7;
-    string mobile=8;
-    string sendTime=9;
+message SmsProducer {
+    string id = 1;
+    int32 platform = 2;
+    string platformKey = 3;
+    int32 server = 4;
+    string content = 5;
+    string template = 6;
+    string arguments = 7;
+    string mobile = 8;
+    string sendTime = 9;
     int64 _utcSendStamp = 10;
-    int32 type=11;
+    int32 type = 11;
 }
 
 // "platform":3,
@@ -77,9 +83,9 @@ message EmailProducer {
     string id = 1;
     int32 platform = 2;
     string platformKey = 3;
-    int32 server =4;
+    int32 server = 4;
     string title = 5;
-    string content= 6;
+    string content = 6;
     string template = 7;
     string arguments = 8;
     string destination = 9;
@@ -100,7 +106,7 @@ message WeChatProducer {
     string id = 1;
     int32 platform = 2;
     string touser = 3;
-    string templateID= 4;
+    string templateID = 4;
     string url = 5;
     string data = 6;
     string sendTime = 7;

@@ -13,7 +13,7 @@ package wechat
 
 import (
 	"bytes"
-	"encoding/json"
+
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -33,7 +33,7 @@ const (
 )
 
 var (
-	ErrTokenOverdue = errors.New("weixin_token is overdued")
+	ErrTokenOverdue = errors.New("weixin token is overdued")
 )
 
 type Client struct {
@@ -42,14 +42,18 @@ type Client struct {
 	cfg     *Config
 }
 
-func NewClient(cfg *Config) *Client {
+func NewClient(cfg *Config) (*Client, error) {
+	cli, err := redis.NewClient(cfg.CacheAddrs, cfg.CachePwd)
+	if err != nil {
+		return nil, err
+	}
 	return &Client{
 		cfg:    cfg,
-		cached: redis.NewClient(cfg.CacheAddrs, cfg.CachePwd),
+		cached: cli,
 		httpCli: &http.Client{
 			Timeout: defaultTimeout,
 		},
-	}
+	}, nil
 }
 
 // accessTokenData 先从缓存中获取token，如果不存在再http请求获取
@@ -102,7 +106,7 @@ func (c *Client) token() (string, error) {
 
 // storeToken 在缓存中存储token
 func (c *Client) storeToken(v string, e int) error {
-	return c.cached.Put(cst.WeiXinAccessToken, []byte(v), int32(e/60))
+	return c.cached.Put(cst.WeiXinAccessToken, []byte(v), int64(e/60))
 }
 
 func (c *Client) Send(msg send.Message, do send.DoRes) error {

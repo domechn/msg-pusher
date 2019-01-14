@@ -11,10 +11,6 @@
 # ====================================================*/
 package wechat
 
-import (
-	"encoding/json"
-)
-
 type Request struct {
 	ToUser     string `json:"touser"`
 	TemplateId string `json:"template_id"`
