@@ -12,26 +12,35 @@
 package model
 
 import (
+	"encoding/json"
 	"uuabc.com/sendmsg/pkg/pb/meta"
 )
 
 // DbSms 数据库中smss表的实体类
 type DbSms struct {
 	ID           string `json:"id" db:"id"`
-	Platform     string `json:"platform" db:"platform"`
+	Platform     int32  `json:"platform" db:"platform"`
 	PlatformKey  string `json:"platform_key" db:"platform_key"`
 	Content      string `json:"content" db:"content"`
 	Mobile       string `json:"mobile" db:"mobile"`
-	Type         int    `json:"type" db:"type"`
+	Type         int32  `json:"type" db:"type"`
 	Template     string `json:"template" db:"template"`
 	Arguments    string `json:"arguments" db:"arguments"`
-	Server       int    `json:"server" db:"server"`
+	Server       int32  `json:"server" db:"server"`
 	SendTime     string `json:"send_time" db:"send_time"`
-	TryNum       int    `json:"try_num" db:"try_num"`
-	Status       int    `json:"status" db:"status"`
-	ResultStatus int    `json:"result_status" db:"result_status"`
+	TryNum       int32  `json:"try_num" db:"try_num"`
+	Status       int32  `json:"status" db:"status"`
+	ResultStatus int32  `json:"result_status" db:"result_status"`
 	CreatedAt    string `json:"created_at" db:"created_at"`
 	UpdatedAt    string `json:"updated_at" db:"updated_at"`
+}
+
+func (d *DbSms) Marshal() ([]byte, error) {
+	return json.Marshal(d)
+}
+
+func (d *DbSms) Unmarshal(b []byte) error {
+	return json.Unmarshal(b, d)
 }
 
 func (d *DbSms) GetStatus() meta.Status {
@@ -41,18 +50,26 @@ func (d *DbSms) GetStatus() meta.Status {
 // DbWeChat 数据库中wechats表的实体类
 type DbWeChat struct {
 	ID           string `json:"id" db:"id"`
-	Platform     string `json:"platform" db:"platform"`
+	Platform     int32  `json:"platform" db:"platform"`
 	Touser       string `json:"touser" db:"touser"`
-	Type         int    `json:"type" db:"type"`
+	Type         int32  `json:"type" db:"type"`
 	Template     string `json:"template" db:"template"`
 	URL          string `json:"url" db:"url"`
 	Content      string `json:"content" db:"content"`
 	SendTime     string `json:"send_time" db:"send_time"`
-	TryNum       int    `json:"try_num" db:"try_num"`
-	Status       int    `json:"status" db:"status"`
-	ResultStatus int    `json:"result_status" db:"result_status"`
+	TryNum       int32  `json:"try_num" db:"try_num"`
+	Status       int32  `json:"status" db:"status"`
+	ResultStatus int32  `json:"result_status" db:"result_status"`
 	CreatedAt    string `json:"created_at" db:"created_at"`
 	UpdatedAt    string `json:"updated_at" db:"updated_at"`
+}
+
+func (d *DbWeChat) Marshal() ([]byte, error) {
+	return json.Marshal(d)
+}
+
+func (d *DbWeChat) Unmarshal(b []byte) error {
+	return json.Unmarshal(b, d)
 }
 
 func (d *DbWeChat) GetStatus() meta.Status {
@@ -62,21 +79,29 @@ func (d *DbWeChat) GetStatus() meta.Status {
 // DbEmail 数据库中emails表的实体类
 type DbEmail struct {
 	ID           string `json:"id" db:"id"`
-	Platform     string `json:"platform" db:"platform"`
+	Platform     int32  `json:"platform" db:"platform"`
 	PlatformKey  string `json:"platform_key" db:"platform_key"`
 	Title        string `json:"title" db:"title"`
 	Content      string `json:"content" db:"content"`
 	Destination  string `json:"destination" db:"destination"`
-	Type         string `json:"type" db:"type"`
+	Type         int32  `json:"type" db:"type"`
 	Template     string `json:"template" db:"template"`
 	Arguments    string `json:"arguments" db:"arguments"`
-	Server       int    `json:"server" db:"server"`
+	Server       int32  `json:"server" db:"server"`
 	SendTime     string `json:"send_time" db:"send_time"`
-	TryNum       int    `json:"try_num" db:"try_num"`
-	Status       int    `json:"status" db:"status"`
-	ResultStatus int    `json:"result_status" db:"result_status"`
+	TryNum       int32  `json:"try_num" db:"try_num"`
+	Status       int32  `json:"status" db:"status"`
+	ResultStatus int32  `json:"result_status" db:"result_status"`
 	CreatedAt    string `json:"created_at" db:"created_at"`
 	UpdatedAt    string `json:"updated_at" db:"updated_at"`
+}
+
+func (d *DbEmail) Marshal() ([]byte, error) {
+	return json.Marshal(d)
+}
+
+func (d *DbEmail) Unmarshal(b []byte) error {
+	return json.Unmarshal(b, d)
 }
 
 func (d *DbEmail) GetStatus() meta.Status {

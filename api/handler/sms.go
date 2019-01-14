@@ -55,7 +55,8 @@ func SmsIDDetail(ctx context.Context, d map[string]string) (res []byte, err erro
 	if err != nil {
 		return nil, err
 	}
-	res = data.MustMarshal()
+	res = model.NewResponseDataKey("detail", data).MustMarshal()
+
 	return
 }
 
@@ -76,7 +77,7 @@ func SmsMobileDetail(ctx context.Context, d map[string]string) (res []byte, err 
 	if err != nil {
 		return
 	}
-	res = data.MustMarshal()
+	res = model.NewResponseDataKey("detail", data).MustMarshal()
 	return
 }
 

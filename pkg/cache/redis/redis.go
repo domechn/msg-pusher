@@ -63,7 +63,7 @@ func (c *Client) Get(s string) ([]byte, error) {
 	return byt, nil
 }
 
-func (c *Client) Put(k string, v []byte, ttl int32) error {
+func (c *Client) Put(k string, v []byte, ttl int64) error {
 	res := c.c.Set(k, v, time.Second*time.Duration(ttl))
 	return res.Err()
 }
@@ -72,7 +72,7 @@ func (c *Client) Del(k string) error {
 	return c.c.Del(k).Err()
 }
 
-func (c *Client) Add(k string, v []byte, ttl int32) error {
+func (c *Client) Add(k string, v []byte, ttl int64) error {
 	b := c.c.SetNX(k, v, time.Second*time.Duration(ttl))
 	if err := b.Err(); err != nil {
 		return err

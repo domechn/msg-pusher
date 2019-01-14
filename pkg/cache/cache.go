@@ -25,10 +25,10 @@ var (
 type Cache interface {
 	Get(s string) ([]byte, error)
 	// 如果ttl等于0 则kv永久有效,ttl单位 秒
-	Put(k string, v []byte, ttl int32) error
+	Put(k string, v []byte, ttl int64) error
 	Del(k string) error
 	// 如果key存在就报错，只有不存在时才能设置成功,ttl单位 秒
-	Add(k string, v []byte, ttl int32) error
+	Add(k string, v []byte, ttl int64) error
 
 	// 将数据添加到set，k为列表名称，v为值
 	Append(k string, v []byte) error

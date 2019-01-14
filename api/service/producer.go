@@ -14,21 +14,22 @@ package service
 import (
 	"context"
 	"github.com/sirupsen/logrus"
+	"uuabc.com/sendmsg/api/model"
+	"uuabc.com/sendmsg/api/storer/cache"
 	"uuabc.com/sendmsg/api/storer/db"
 	"uuabc.com/sendmsg/api/storer/mq"
 	"uuabc.com/sendmsg/pkg/errors"
 	"uuabc.com/sendmsg/pkg/pb/meta"
-	"uuabc.com/sendmsg/pkg/retry/backoff"
 )
 
 var ProducerImpl = producerImpl{}
 
 type producerImpl struct{}
 
-func (p producerImpl) Produce(ctx context.Context, meta Meta) (string, error) {
-	err := p.produce(ctx, meta)
+func (p producerImpl) Produce(ctx context.Context, m Meta) (string, error) {
+	err := p.produce(ctx, m)
 	if err == nil {
-		return meta.GetId(), nil
+		return m.GetId(), nil
 	}
 	// 不是项目用的error
 	if _, ok := err.(*errors.Error); !ok {
@@ -40,76 +41,161 @@ func (p producerImpl) Produce(ctx context.Context, meta Meta) (string, error) {
 	return "", err
 }
 
-func (p producerImpl) produce(ctx context.Context, meta Meta) error {
-	b, err := meta.Marshal()
-	if err != nil {
-		return err
+func (p producerImpl) produce(ctx context.Context, m Meta) error {
+	ttl := m.Delay()
+	switch m.(type) {
+	case *meta.WeChatProducer:
+		return p.produceWechat(
+			ctx,
+			m.(*meta.WeChatProducer),
+			func(p *meta.WeChatProducer) *model.DbWeChat {
+				return &model.DbWeChat{
+					ID:       p.Id,
+					Platform: p.Platform,
+					Touser:   p.Touser,
+					Type:     p.Type,
+					Template: p.TemplateID,
+					URL:      p.Url,
+					Content:  p.Data,
+					SendTime: p.SendTime,
+				}
+			},
+			ttl,
+		)
+	case *meta.EmailProducer:
+		return p.produceEmail(
+			ctx,
+			m.(*meta.EmailProducer),
+			func(p *meta.EmailProducer) *model.DbEmail {
+				return &model.DbEmail{
+					ID:          p.Id,
+					Platform:    p.Platform,
+					PlatformKey: p.PlatformKey,
+					Title:       p.Content,
+					Destination: p.Destination,
+					Type:        p.Type,
+					Template:    p.Template,
+					Arguments:   p.Arguments,
+					Server:      p.Server,
+					SendTime:    p.SendTime,
+				}
+			},
+			ttl,
+		)
+	case *meta.SmsProducer:
+		return p.produceSms(
+			ctx,
+			m.(*meta.SmsProducer),
+			func(p *meta.SmsProducer) *model.DbSms {
+				return &model.DbSms{
+					ID:        p.Id,
+					Platform:  p.Platform,
+					Content:   p.Content,
+					Mobile:    p.Mobile,
+					Template:  p.Template,
+					Arguments: p.Arguments,
+					SendTime:  p.SendTime,
+					Server:    p.Server,
+					Type:      p.Type,
+				}
+			},
+			ttl)
 	}
-	err = p.sendToMq(ctx, meta.TypeName(), b, meta.Delay())
-	if err != nil {
-		logrus.Errorf("消息 %s 插入消息队列失败，error: %v\n", string(b), err)
-		return err
-	}
-	logrus.Infof("消息 %s 插入消息队列成功,正在等待发送,开始准备插入数据库", string(b))
+	return errors.ErrMsgTypeNotFound
+}
 
-	// 异步将数据插入数据库
+func (producerImpl) produceSms(ctx context.Context, sms *meta.SmsProducer, change func(*meta.SmsProducer) *model.DbSms, ttl int64) error {
+	b, err := sms.Marshal()
+	if err != nil {
+		return err
+	}
+	dbSms := change(sms)
+	tx, err := db.SmsInsert(ctx, dbSms)
+	if err != nil {
+		return err
+	}
+	err = mq.ProduceSms(ctx, b, ttl)
+	if err != nil {
+		logrus.Errorf("消息 %s 插入消息队列失败，正在回滚。。。，error: %v\n", string(b), err)
+		rollback(tx)
+		return err
+	}
+	logrus.Infof("消息 %s 插入消息队列成功,正在等待发送,开始提交到数据库", string(b))
+	err = commit(tx)
+	if err != nil {
+		return err
+	}
 	go func() {
-		var err error
-		var count int
-		// 重试机制，最多试两次
-		retryFunc := func() error {
-			if count > 2 {
-				logrus.WithFields(logrus.Fields{
-					"type": meta.TypeName(),
-					"id":   meta.GetId(),
-					"data": string(b),
-				}).Errorf("数据插入数据库失败，请手动尝试,error: %v", err)
-				return nil
-			}
-			count++
-			err = p.saveToDB(context.Background(), meta)
-			if err == nil {
-				logrus.Infof("消息 %s 插入数据库成功", string(b))
-			}
-			return err
+		byt, gErr := dbSms.Marshal()
+		if gErr != nil {
+			logrus.Errorf("set cache go func() error: %v", gErr)
+			return
 		}
-		back := backoff.NewServiceBackOff()
-		err = backoff.Retry(retryFunc, back)
-		if err != nil {
-			logrus.Errorf("unexpected error: %s", err.Error())
-		}
+		// 插入redis
+		cache.PutBaseCache(sms.GetId(), byt)
 	}()
-
+	logrus.Infof("消息 %s 插入数据库成功", string(b))
 	return nil
 }
 
-func (producerImpl) sendToMq(ctx context.Context, n string, b []byte, d int64) (err error) {
-	switch n {
-	case wechat:
-		err = mq.ProduceWeChat(ctx, b, d)
-	case sms:
-		err = mq.ProduceSms(ctx, b, d)
-	case email:
-		err = mq.ProduceEmail(ctx, b, d)
-	default:
-		err = errors.ErrMsgTypeNotFound
+func (producerImpl) produceEmail(ctx context.Context, email *meta.EmailProducer, change func(*meta.EmailProducer) *model.DbEmail, ttl int64) error {
+	b, err := email.Marshal()
+	if err != nil {
+		return err
 	}
-	return
+	dbEmail := change(email)
+	tx, err := db.InsertEmails(ctx, dbEmail)
+	if err != nil {
+		return err
+	}
+	err = mq.ProduceEmail(ctx, b, ttl)
+	if err != nil {
+		rollback(tx)
+		return err
+	}
+	err = commit(tx)
+	if err != nil {
+		return err
+	}
+	go func() {
+		byt, gErr := dbEmail.Marshal()
+		if gErr != nil {
+			logrus.Errorf("set cache go func() error: %v", gErr)
+			return
+		}
+		// 插入redis
+		cache.PutBaseCache(email.GetId(), byt)
+	}()
+	return nil
 }
 
-func (producerImpl) saveToDB(ctx context.Context, m Meta) (err error) {
-	switch m.(type) {
-	case *meta.SmsProducer:
-		v := m.(*meta.SmsProducer)
-		err = db.InsertSmss(ctx, v)
-	case *meta.WeChatProducer:
-		v := m.(*meta.WeChatProducer)
-		err = db.InsertWechats(ctx, v)
-	case *meta.EmailProducer:
-		v := m.(*meta.EmailProducer)
-		err = db.InsertEmails(ctx, v)
-	default:
-		err = errors.ErrMsgTypeNotFound
+func (producerImpl) produceWechat(ctx context.Context, wechat *meta.WeChatProducer, change func(*meta.WeChatProducer) *model.DbWeChat, ttl int64) error {
+	b, err := wechat.Marshal()
+	if err != nil {
+		return err
 	}
-	return
+	dbWechat := change(wechat)
+	tx, err := db.WeChatInsert(ctx, dbWechat)
+	if err != nil {
+		return err
+	}
+	err = mq.ProduceWeChat(ctx, b, ttl)
+	if err != nil {
+		rollback(tx)
+		return err
+	}
+	err = commit(tx)
+	if err != nil {
+		return err
+	}
+	go func() {
+		byt, gErr := dbWechat.Marshal()
+		if gErr != nil {
+			logrus.Errorf("set cache go func() error: %v", gErr)
+			return
+		}
+		// 插入redis
+		cache.PutBaseCache(wechat.GetId(), byt)
+	}()
+	return nil
 }

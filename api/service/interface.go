@@ -19,16 +19,19 @@ type Meta interface {
 	GetId() string
 	// 验证参数
 	Validated() error
-	// 返回消息类型，sms还是wechat还是email
-	TypeName() string
-	Marshal() ([]byte, error)
-	Unmarshal([]byte) error
+	Marshaler
 	// 转换必要的参数,请在validated调用后再使用
 	Transfer()
 	// 获取延迟发送的时间,请在Transfer调用后使用
 	Delay() int64
 }
 
+type Marshaler interface {
+	Marshal() ([]byte, error)
+	Unmarshal([]byte) error
+}
+
 type Messager interface {
+	Marshaler
 	GetStatus() meta.Status
 }

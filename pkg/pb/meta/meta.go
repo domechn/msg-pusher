@@ -20,12 +20,6 @@ import (
 )
 
 // email begin...........
-
-// TypeName 返回接口的类型
-func (m *EmailProducer) TypeName() string {
-	return "email"
-}
-
 // Delay 返回延迟发送的时间 毫秒 单位
 func (m *EmailProducer) Delay() int64 {
 	return delay(m.XUtcSendStamp)
@@ -47,11 +41,6 @@ func (m *EmailProducer) Transfer() {
 // email end...........
 
 // sms begin...........
-// TypeName 返回接口类型
-func (m *SmsProducer) TypeName() string {
-	return "sms"
-}
-
 // Delay 返回延迟发送的时间 毫秒 单位
 func (m *SmsProducer) Delay() int64 {
 	return delay(m.XUtcSendStamp)
@@ -100,11 +89,6 @@ func (m *SmsProducer) Validated() error {
 // sms end...........
 
 // wechat begin..........
-// TypeName 接口的类型
-func (m *WeChatProducer) TypeName() string {
-	return "wechat"
-}
-
 // Delay 延迟发送的时间 毫秒 单位
 func (m *WeChatProducer) Delay() int64 {
 	return delay(m.XUtcSendStamp)

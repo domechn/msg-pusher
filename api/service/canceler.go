@@ -13,20 +13,71 @@ package service
 
 import (
 	"context"
+	"github.com/jmoiron/sqlx"
 	"github.com/sirupsen/logrus"
+	"uuabc.com/sendmsg/api/model"
 	"uuabc.com/sendmsg/api/storer/cache"
 	"uuabc.com/sendmsg/api/storer/db"
 	"uuabc.com/sendmsg/pkg/errors"
 	"uuabc.com/sendmsg/pkg/pb/meta"
-	"uuabc.com/sendmsg/pkg/retry/backoff"
 )
 
-var Canceler cancelerImpl
+var Canceler = newCancelerImpl()
 
 type getFunc func(context.Context, string) (Messager, error)
-type updateFunc func(i context.Context, s string) error
+type updateFunc func(i context.Context, s string) (*sqlx.Tx, error)
 
 type cancelerImpl struct {
+	w cancelWeChatImpl
+	e cancelEmailImpl
+	s cancelSmsImpl
+}
+
+type cancelWeChatImpl struct {
+	g getFunc
+	u updateFunc
+}
+
+type cancelEmailImpl struct {
+	g getFunc
+	u updateFunc
+}
+
+type cancelSmsImpl struct {
+	g getFunc
+	u updateFunc
+}
+
+func newCancelerImpl() cancelerImpl {
+	wi := cancelWeChatImpl{
+		g: func(i context.Context, s string) (Messager, error) {
+			return db.WeChatDetailByID(i, s)
+		},
+		u: func(i context.Context, s string) (*sqlx.Tx, error) {
+			return db.WeChatCancelMsgByID(i, s)
+		},
+	}
+	ei := cancelEmailImpl{
+		g: func(i context.Context, s string) (Messager, error) {
+			return db.EmailDetailByID(i, s)
+		},
+		u: func(i context.Context, s string) (*sqlx.Tx, error) {
+			return db.EmailCancelMsgByID(i, s)
+		},
+	}
+	si := cancelSmsImpl{
+		g: func(i context.Context, s string) (Messager, error) {
+			return db.SmsDetailByID(i, s)
+		},
+		u: func(i context.Context, s string) (*sqlx.Tx, error) {
+			return db.SmsCancelMsgByID(i, s)
+		},
+	}
+	return cancelerImpl{
+		w: wi,
+		e: ei,
+		s: si,
+	}
 }
 
 // Cancel 根据id取消发送消息
@@ -44,79 +95,94 @@ func (c cancelerImpl) Cancel(ctx context.Context, typeN, id string) error {
 	return err
 }
 
-func (cancelerImpl) cancel(ctx context.Context, typeN, id string) (err error) {
-	var g getFunc
-	var u updateFunc
+func (c cancelerImpl) cancel(ctx context.Context, typeN, id string) (err error) {
 	switch typeN {
 	case wechat:
-		g = func(i context.Context, s string) (Messager, error) {
-			return db.WeChatDetailByID(i, s)
-		}
-		u = func(i context.Context, s string) error {
-			return db.CancelWeChatMsgByID(i, s)
-		}
+		err = cancel(ctx, id, c.w.g, c.w.u, &model.DbWeChat{})
 	case sms:
-		g = func(i context.Context, s string) (Messager, error) {
-			return db.SmsDetailByID(i, s)
-		}
-		u = func(i context.Context, s string) error {
-			return db.CancelSmsMsgByID(i, s)
-		}
+		err = cancel(ctx, id, c.s.g, c.s.u, &model.DbSms{})
 	case email:
-		g = func(i context.Context, s string) (Messager, error) {
-			return db.EmailDetailByID(i, s)
-		}
-		u = func(i context.Context, s string) error {
-			return db.CancelEmailMsgByID(i, s)
-		}
+		err = cancel(ctx, id, c.e.g, c.e.u, &model.DbEmail{})
 	default:
 		return errors.ErrMsgTypeNotFound
 	}
-	err = cancel(ctx, id, g, u)
 
 	return
 }
 
-func cancel(ctx context.Context, id string, g getFunc, u updateFunc) error {
-	// TODO 检查msg是否存在
-	data, err := g(ctx, id)
+func cancel(ctx context.Context, id string, g getFunc, u updateFunc, m Messager) error {
+	data, err := cache.BaseDetail(ctx, id)
+	if err != nil {
+		logrus.Errorf("从缓存中获取要取消的数据失败，id: %s,error: %v", id, err)
+		return errors.ErrMsgNotFound
+	}
+
+	logrus.Debug("从缓存中取出数据检查状态")
+	// 查看缓存中的数据的状态
+	err = m.Unmarshal(data)
 	if err != nil {
 		return err
 	}
-	if data.GetStatus() == meta.Status_Cancel {
+	// 如果已取消
+	if st := m.GetStatus(); st == meta.Status_Cancel {
 		return errors.ErrMsgHasCancelled
 	}
-	if data.GetStatus() == meta.Status_Final {
+	// 如果已发送
+	if st := m.GetStatus(); st == meta.Status_Final {
 		return errors.ErrMsgCantEdit
 	}
 
-	if err := cache.CancelMsg(ctx, id); err != nil {
+	logrus.Debug("缓存中的数据状态为可取消状态")
+
+	// 更新数据库中的status
+	tx, err := u(ctx, id)
+	if err != nil {
+		rollback(tx)
+		// 如果没有行被修改说明有别的线程已经修改了该条数据的状态
+		if err == db.ErrNoRowsEffected {
+			return errors.ErrMsgHasCancelled
+		}
 		return err
 	}
 
-	go func() {
-		// 异步将数据插入数据库
-		go func() {
-			var err error
-			var count int
-			// 重试机制，最多试两次
-			retryFunc := func() error {
-				if count > 2 {
-					logrus.WithFields(logrus.Fields{
-						"id": id,
-					}).Errorf("cancel:取消消息请求执行成功，但是更新数据库字段时失败，请手动更新,error: %v", err)
-					return nil
-				}
-				err = u(context.Background(), id)
-				return err
-			}
-			back := backoff.NewServiceBackOff()
-			err = backoff.Retry(retryFunc, back)
-			if err != nil {
-				logrus.Errorf("unexpected error: %s", err.Error())
-			}
-		}()
-	}()
+	// 获取数据库中的值，并更新到缓存,必须同步，因为发送的时候需要检查缓存中信息的状态
+	// 如果异步操作失败，会导致已取消的信息发送
+	msg, err := g(ctx, id)
+	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"method": "getFunc",
+			"id":     id,
+			"error":  err,
+		}).Error("从数据库中获取数据失败")
+		rollback(tx)
+		return err
+	}
+	b, err := msg.Marshal()
+	if err != nil {
+		rollback(tx)
+		return err
+	}
 
-	return nil
+	// 该方法并发安全
+	if err := cache.PutBaseCache(id, b); err != nil {
+		rollback(tx)
+		logrus.WithFields(logrus.Fields{
+			"method": "putBaseCache",
+			"id":     id,
+			"error":  err,
+		}).Error("在取消发送后更新baseCache时出现错误")
+		return err
+	}
+	if err := cache.PutLastestCache(id, b); err != nil {
+		// 更新最新状态失败，无需回滚
+		// rollback(tx)
+		logrus.WithFields(logrus.Fields{
+			"method": "putLastestCache",
+			"id":     id,
+			"error":  err,
+		}).Error("在取消发送后更新lastestCache时出现错误")
+		return err
+	}
+
+	return commit(tx)
 }

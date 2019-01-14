@@ -51,7 +51,8 @@ func WeChatIDDetail(ctx context.Context, d map[string]string) (res []byte, err e
 	if err != nil {
 		return nil, err
 	}
-	res = data.MustMarshal()
+	res = model.NewResponseDataKey("detail", data).MustMarshal()
+
 	return
 
 }

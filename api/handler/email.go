@@ -3,7 +3,7 @@
 #
 #   Author        : domchan
 #   Email         : 814172254@qq.com
-#   File Name     : email.go
+#   File Name     : putter.go
 #   Created       : 2019/1/11 12:01
 #   Last Modified : 2019/1/11 12:01
 #   Describe      :
@@ -54,7 +54,7 @@ func EmailIDDetail(ctx context.Context, d map[string]string) (res []byte, err er
 	if err != nil {
 		return nil, err
 	}
-	res = data.MustMarshal()
+	res = model.NewResponseDataKey("detail", data).MustMarshal()
 	return
 }
 

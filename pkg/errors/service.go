@@ -14,7 +14,7 @@ package errors
 var (
 	ErrMsgCantEdit       = NewError(106001002, "此消息已发送,无法修改或取消")
 	ErrMsgIsNil          = NewError(106001004, "消息内容为空")
-	ErrMsgHasCancelled   = NewError(106001006, "此消息已取消发送,请勿重复操作")
+	ErrMsgHasCancelled   = NewError(106001006, "此消息已取消发送")
 	ErrMsgTypeNotFound   = NewError(106001007, "消息类型不存在")
 	ErrTemplateNo        = NewError(106001008, "模板编号错误")
 	ErrTemplateParam     = NewError(106001009, "模板参数错误")
