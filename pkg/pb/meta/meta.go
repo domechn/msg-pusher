@@ -29,6 +29,46 @@ func (m *EmailProducer) Delay() int64 {
 
 // Validated 验证参数是否合法
 func (m *EmailProducer) Validated() error {
+	if err := checkPlatform(m.Platform); err != nil {
+		return err
+	}
+	if err := checkPlatformKey(m.PlatformKey); err != nil {
+		return err
+	}
+	if err := checkDestination(m.Destination); err != nil {
+		return err
+	}
+	if err := checkSendTime(m.SendTime); err != nil {
+		return err
+	}
+	if err := checkEmailServer(m.Server); err != nil {
+		return err
+	}
+	if err := checkContent(m.Content); err != nil {
+		return err
+	}
+	if err := checkSmsTemplate(m.Template); err != nil {
+		return err
+	}
+	if err := checkArguments(m.Arguments); err != nil {
+		return err
+	}
+	if err := checkType(m.Type); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *EmailProducer) ValidateEdit() error {
+	if err := checkDestination(m.Destination); err != nil {
+		return err
+	}
+	if err := checkContent(m.Content); err != nil {
+		return err
+	}
+	if err := checkSendTime(m.SendTime); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -74,7 +114,7 @@ func (m *SmsProducer) Validated() error {
 	if err := checkSendTime(m.SendTime); err != nil {
 		return err
 	}
-	if err := checkServer(m.Server); err != nil {
+	if err := checkSmsServer(m.Server); err != nil {
 		return err
 	}
 	if err := checkContent(m.Content); err != nil {
@@ -92,6 +132,19 @@ func (m *SmsProducer) Validated() error {
 	return nil
 }
 
+func (m *SmsProducer) ValidateEdit() error {
+	if err := checkMobile(m.Mobile); err != nil {
+		return err
+	}
+	if err := checkSendTime(m.SendTime); err != nil {
+		return err
+	}
+	if err := checkContent(m.Content); err != nil {
+		return err
+	}
+	return nil
+}
+
 // sms end...........
 
 // wechat begin..........
@@ -102,6 +155,37 @@ func (m *WeChatProducer) Delay() int64 {
 
 // Validated 参数是否合法
 func (m *WeChatProducer) Validated() error {
+	if err := checkPlatform(m.Platform); err != nil {
+		return err
+	}
+	if err := checkToUser(m.Touser); err != nil {
+		return err
+	}
+	if err := checkWeChatTemplate(m.TemplateID); err != nil {
+		return err
+	}
+	if err := checkContent(m.Data); err != nil {
+		return err
+	}
+	if err := checkSendTime(m.SendTime); err != nil {
+		return err
+	}
+	if err := checkType(m.Type); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *WeChatProducer) ValidateEdit() error {
+	if err := checkToUser(m.Touser); err != nil {
+		return err
+	}
+	if err := checkContent(m.Data); err != nil {
+		return err
+	}
+	if err := checkSendTime(m.SendTime); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -138,7 +222,24 @@ func checkMobile(s string) error {
 	return nil
 }
 
+func checkToUser(s string) error {
+	if s == "" {
+		return errors.ErrToUser
+	}
+	return nil
+}
+
+func checkDestination(s string) error {
+	if !utils.ValidateEmailAddr(s) {
+		return errors.ErrDestination
+	}
+	return nil
+}
+
 func checkSendTime(s string) error {
+	if s == "0" {
+		return nil
+	}
 	t, err := time.Parse("2006-01-02T15:04:05Z07:00", s)
 	if t.Sub(time.Now()) > time.Hour*24*30 {
 		return errors.ErrSendTimeTooLong
@@ -149,9 +250,16 @@ func checkSendTime(s string) error {
 	return nil
 }
 
-func checkServer(s int32) error {
-	if _, ok := Server_name[s]; !ok || s == 0 {
-		return errors.ErrMsgServerNotFound
+func checkSmsServer(s int32) error {
+	if _, ok := SmsServer_name[s]; !ok || s == 0 {
+		return errors.ErrSmsServerNotFound
+	}
+	return nil
+}
+
+func checkEmailServer(s int32) error {
+	if _, ok := EmailServer_name[s]; !ok || s == 0 {
+		return errors.ErrEmailServerNotFound
 	}
 	return nil
 }
@@ -166,6 +274,13 @@ func checkContent(s string) error {
 func checkSmsTemplate(s string) error {
 	if s == "" || !utils.ValidateTemplate(s) {
 		return errors.ErrTemplateNo
+	}
+	return nil
+}
+
+func checkWeChatTemplate(s string) error {
+	if s == "" {
+		return errors.ErrTemplateParam
 	}
 	return nil
 }
@@ -187,6 +302,9 @@ func checkType(s int32) error {
 }
 
 func gbfToUTC(s string) time.Time {
+	if s == "0" {
+		return time.Now().UTC()
+	}
 	st, _ := time.Parse("2006-01-02T15:04:05Z07:00", s)
 	sts := st.UTC()
 	return sts

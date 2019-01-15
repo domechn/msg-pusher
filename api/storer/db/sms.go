@@ -100,6 +100,7 @@ func SmsEdit(ctx context.Context, s *model.DbSms) (*sqlx.Tx, error) {
 	} else {
 		query += "WHERE id=?"
 	}
+	query += " AND status=1"
 	stmt, err := tx.PrepareContext(ctx, query)
 	if err != nil {
 		return tx, err

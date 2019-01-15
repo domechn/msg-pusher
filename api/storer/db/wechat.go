@@ -89,6 +89,7 @@ func WeChatEdit(ctx context.Context, w *model.DbWeChat) (*sqlx.Tx, error) {
 	} else {
 		query += "WHERE id=?"
 	}
+	query += " AND status=1"
 	stmt, err := tx.PrepareContext(ctx, query)
 	if err != nil {
 		return tx, err

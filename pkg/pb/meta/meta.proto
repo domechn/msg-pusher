@@ -23,10 +23,15 @@ enum Message {
     Message_Notice = 2;
 }
 
-enum Server {
-    Server_Unknown = 0;
-    Server_Eay = 1;
-    Server_Ali = 2;
+enum SmsServer {
+    SmsServer_Unknown = 0;
+    SmsServer_Eay = 1;
+    SmsServer_Ali = 2;
+}
+
+enum EmailServer {
+    EmailServer_Unknown = 0;
+    EmailServer_Tencent = 1;
 }
 
 enum Status {

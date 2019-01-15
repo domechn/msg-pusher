@@ -17,6 +17,7 @@ import (
 	"uuabc.com/sendmsg/api/model"
 	"uuabc.com/sendmsg/api/storer/cache"
 	"uuabc.com/sendmsg/api/storer/db"
+	"uuabc.com/sendmsg/api/storer/mq"
 	cache2 "uuabc.com/sendmsg/pkg/cache"
 	"uuabc.com/sendmsg/pkg/errors"
 	"uuabc.com/sendmsg/pkg/pb/meta"
@@ -26,7 +27,6 @@ var EditerImpl editerImpl
 
 type editerImpl struct{}
 
-// TODO send to mq
 func (e editerImpl) Edit(ctx context.Context, m Meta) error {
 	m.Transfer(false)
 	err := e.edit(ctx, m)
@@ -37,6 +37,8 @@ func (e editerImpl) Edit(ctx context.Context, m Meta) error {
 	if _, ok := err.(*errors.Error); !ok {
 		if err == cache2.ErrCacheMiss {
 			err = errors.ErrMsgNotFound
+		} else if err == db.ErrNoRowsEffected {
+			err = errors.ErrMsgCantEdit
 		} else {
 			logrus.WithFields(logrus.Fields{
 				"method": "Edit",
@@ -102,20 +104,34 @@ func (editerImpl) editEmail(ctx context.Context, m Meta, e *model.DbEmail) error
 		return err
 	}
 
-	b, err := em.Marshal()
+	err = publicEdit(ctx, em, m, mq.EmailProduce)
 	if err != nil {
 		rollback(tx)
+		return err
+	}
+
+	return commit(tx)
+}
+
+func publicEdit(ctx context.Context, msg Messager, m Meta, mqFunc func(context.Context, []byte, int64) error) error {
+	b, err := msg.Marshal()
+	if err != nil {
+		return err
+	}
+	// 如果mq发送失败就回滚返回错误，即使redis中更新失败了了，
+	// mq中的数据无法回滚也不会有影响，因为在发送时会去获取缓存中的数据，
+	// 所以只要保证缓存中的数据和数据库中的数据一致并有效就行
+	err = mqFunc(ctx, []byte(m.GetId()), m.Delay())
+	if err != nil {
 		return err
 	}
 	err = cache.PutBaseCache(ctx, m.GetId(), b)
 	if err != nil {
-		rollback(tx)
 		return err
 	}
-	err = commit(tx)
 	cache.PutLastestCache(ctx, m.GetId(), b)
 
-	return err
+	return nil
 }
 
 func (editerImpl) editWeChat(ctx context.Context, m Meta, e *model.DbWeChat) error {
@@ -137,20 +153,13 @@ func (editerImpl) editWeChat(ctx context.Context, m Meta, e *model.DbWeChat) err
 		return err
 	}
 
-	b, err := em.Marshal()
+	err = publicEdit(ctx, em, m, mq.WeChatProduce)
 	if err != nil {
 		rollback(tx)
 		return err
 	}
-	err = cache.PutBaseCache(ctx, m.GetId(), b)
-	if err != nil {
-		rollback(tx)
-		return err
-	}
-	err = commit(tx)
-	cache.PutLastestCache(ctx, m.GetId(), b)
 
-	return err
+	return commit(tx)
 }
 
 func (editerImpl) editSms(ctx context.Context, m Meta, e *model.DbSms) error {
@@ -172,20 +181,13 @@ func (editerImpl) editSms(ctx context.Context, m Meta, e *model.DbSms) error {
 		return err
 	}
 
-	b, err := em.Marshal()
+	err = publicEdit(ctx, em, m, mq.SmsProduce)
 	if err != nil {
 		rollback(tx)
 		return err
 	}
-	err = cache.PutBaseCache(ctx, m.GetId(), b)
-	if err != nil {
-		rollback(tx)
-		return err
-	}
-	err = commit(tx)
-	cache.PutLastestCache(ctx, m.GetId(), b)
 
-	return err
+	return commit(tx)
 }
 
 func checkStatus(id string, msg Messager) error {

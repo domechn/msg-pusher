@@ -36,7 +36,16 @@ func EmailProducer(ctx context.Context, body []byte) (res []byte, err error) {
 }
 
 func EmailEdit(ctx context.Context, body []byte) (res []byte, err error) {
-
+	p := &meta.EmailProducer{}
+	if err = json.Unmarshal(body, p); err != nil {
+		return
+	}
+	if err = checkEdit(p); err != nil {
+		return
+	}
+	if err = service.EditerImpl.Edit(ctx, p); err != nil {
+		return
+	}
 	res = successResp
 	return
 }

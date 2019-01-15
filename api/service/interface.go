@@ -24,6 +24,8 @@ type Meta interface {
 	Transfer(bool)
 	// 获取延迟发送的时间,请在Transfer调用后使用
 	Delay() int64
+
+	ValidateEdit() error
 }
 
 type Marshaler interface {

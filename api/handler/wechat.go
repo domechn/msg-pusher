@@ -20,6 +20,7 @@ import (
 	"uuabc.com/sendmsg/pkg/utils"
 )
 
+// @router(POST,"/version/wechat")
 // WeChatProducer 接收用户提交的json，并将json转化成消息插入到wechat消息队列
 func WeChatProducer(ctx context.Context, body []byte) (res []byte, err error) {
 	p := &meta.WeChatProducer{}
@@ -35,7 +36,20 @@ func WeChatProducer(ctx context.Context, body []byte) (res []byte, err error) {
 	return
 }
 
+// @router(PATCH,"version/wechat")
+// WeChatEdit 修改微信发送信息
 func WeChatEdit(ctx context.Context, body []byte) (res []byte, err error) {
+	p := &meta.WeChatProducer{}
+	if err = json.Unmarshal(body, p); err != nil {
+		return
+	}
+	if err = checkEdit(p); err != nil {
+		return
+	}
+	if err = service.EditerImpl.Edit(ctx, p); err != nil {
+		return
+	}
+	res = successResp
 	return
 }
 
@@ -56,7 +70,7 @@ func WeChatIDDetail(ctx context.Context, d map[string]string) (res []byte, err e
 
 }
 
-// @router(DELETE,"/sms/{id}")
+// @router(DELETE,"version/wechat/{id}")
 // WeChatCancel 取消发送微信
 func WeChatCancel(ctx context.Context, d map[string]string) (res []byte, err error) {
 	id := d["id"]

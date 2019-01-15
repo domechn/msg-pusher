@@ -24,3 +24,8 @@ func ValidateTemplate(s string) bool {
 	b, _ := regexp.Match(`^SMS_[0-9]{9}`, []byte(s))
 	return b
 }
+
+func ValidateEmailAddr(s string) bool {
+	b, _ := regexp.Match(`^[A-Za-z\d]+([-_.][A-Za-z\d]+)*@([A-Za-z\d]+[-.])+[A-Za-z\d]{2,4}$`, []byte(s))
+	return b
+}

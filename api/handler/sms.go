@@ -80,26 +80,16 @@ func SmsMobileDetail(ctx context.Context, d map[string]string) (res []byte, err 
 	return
 }
 
-func checkMobileDetail(mobile, p string) error {
-	if !utils.ValidatePhone(mobile) {
-		return errors.ErrPhoneNumber
-	}
-	pg, err := strconv.Atoi(p)
-	if err != nil || pg < 1 || pg > 10 {
-		return errors.ErrPageInvalidate
-	}
-	return nil
-}
-
 // @router(PATCH,"/sms")
+// SmsEdit 修改短信发送消息
 func SmsEdit(ctx context.Context, body []byte) (res []byte, err error) {
 	p := &meta.SmsProducer{}
 	if err = json.Unmarshal(body, p); err != nil {
 		return
 	}
-	// if err = p.Validated() ; err != nil {
-	// 	return
-	// }
+	if err = checkEdit(p); err != nil {
+		return
+	}
 	if err = service.EditerImpl.Edit(ctx, p); err != nil {
 		return
 	}

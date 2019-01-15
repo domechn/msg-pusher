@@ -17,15 +17,15 @@ import (
 	"uuabc.com/sendmsg/api/storer"
 )
 
-func ProduceSms(ctx context.Context, msg []byte, delay int64) error {
+func SmsProduce(ctx context.Context, msg []byte, delay int64) error {
 	return produce(ctx, "sms", msg, delay)
 }
 
-func ProduceEmail(ctx context.Context, msg []byte, delay int64) error {
+func EmailProduce(ctx context.Context, msg []byte, delay int64) error {
 	return produce(ctx, "email", msg, delay)
 }
 
-func ProduceWeChat(ctx context.Context, msg []byte, delay int64) error {
+func WeChatProduce(ctx context.Context, msg []byte, delay int64) error {
 	return produce(ctx, "wechat", msg, delay)
 }
 
