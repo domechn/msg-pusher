@@ -31,10 +31,11 @@ func PutLastestCache(ctx context.Context, k string, v []byte) error {
 	return storer.Cache.Put(lastest+k, v, int64(5+rand.Intn(5)))
 }
 
+// LockID5s 独占锁
 func LockID5s(ctx context.Context, k string) error {
 	return storer.Cache.Add("lock-5s-"+k, []byte("lock"), 5)
 }
 
-func AppendEditSet(ctx context.Context, k string) error {
-	return storer.Cache.Append("edit-id-set", []byte(k))
+func PutBaseTemplate(ctx context.Context, k string, v []byte) error {
+	return storer.Cache.Put(template+k, v, 0)
 }

@@ -16,5 +16,6 @@ import (
 )
 
 var (
-	ErrNoRowsEffected = errors.New("db: no rows affected")
+	ErrNoRowsEffected  = errors.New("db: no rows affected")
+	ErrUniqueKeyExsits = errors.New("db: Duplicate entry for key")
 )

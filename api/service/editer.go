@@ -59,25 +59,25 @@ func (e editerImpl) edit(ctx context.Context, m Meta) error {
 		v := m.(*meta.EmailProducer)
 		return e.editEmail(ctx, m, &model.DbEmail{
 			ID:          v.Id,
-			Content:     v.Content,
+			Arguments:   v.Arguments,
 			SendTime:    v.SendTime,
 			Destination: v.Destination,
 		})
 	case *meta.WeChatProducer:
 		v := m.(*meta.WeChatProducer)
 		return e.editWeChat(ctx, m, &model.DbWeChat{
-			ID:       v.Id,
-			Content:  v.Data,
-			SendTime: v.SendTime,
-			Touser:   v.Touser,
+			ID:        v.Id,
+			Arguments: v.Arguments,
+			SendTime:  v.SendTime,
+			Touser:    v.Touser,
 		})
 	case *meta.SmsProducer:
 		v := m.(*meta.SmsProducer)
 		return e.editSms(ctx, m, &model.DbSms{
-			ID:       v.Id,
-			Content:  v.Content,
-			SendTime: v.SendTime,
-			Mobile:   v.Mobile,
+			ID:        v.Id,
+			Arguments: v.Arguments,
+			SendTime:  v.SendTime,
+			Mobile:    v.Mobile,
 		})
 	default:
 		return errors.ErrMsgTypeNotFound

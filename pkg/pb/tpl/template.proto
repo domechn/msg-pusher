@@ -1,0 +1,37 @@
+syntax = "proto3";
+package tpl;
+
+import "gogoproto/gogo.proto";
+
+option (gogoproto.marshaler_all) = true;
+option (gogoproto.sizer_all) = true;
+option (gogoproto.unmarshaler_all) = true;
+option (gogoproto.goproto_enum_prefix_all) = false;
+
+
+enum TemplateType {
+    Template_Unknown = 0 ;
+    Template_Sms = 1 ;
+    Template_WeChat = 2 ;
+    Template_Email = 3 ;
+}
+
+message TemplateAdder{
+    int32 type = 1;
+    //@inject_tag: json:"simple_id,omitempty"
+    string simpleID = 2;
+    string content = 3;
+}
+
+
+message DBTemplate{
+    string id = 1;
+    int32 type =2;
+    //@inject_tag: json:"simple_id,omitempty" db:"simple_id"
+    string simpleID=3;
+    string content=4;
+    //@inject_tag: json:"created_at,omitempty" db:"created_at"
+    string createdAt = 5;
+    //@inject_tag: json:"updated_at,omitempty" db:"updated_at"
+    string updatedAt = 6;
+}

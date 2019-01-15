@@ -24,6 +24,10 @@ type Meta interface {
 	Transfer(bool)
 	// 获取延迟发送的时间,请在Transfer调用后使用
 	Delay() int64
+	// 返回参数
+	GetArguments() string
+	// 返回模板
+	GetTemplate() string
 
 	ValidateEdit() error
 }

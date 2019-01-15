@@ -56,7 +56,7 @@ func WeChatInsert(ctx context.Context, wechat *model.DbWeChat) (*sqlx.Tx, error)
 	if err != nil {
 		return nil, err
 	}
-	stmt, err := tx.PrepareContext(ctx, `INSERT INTO wechats (id,platform,touser,type,template,url,content,send_time) VALUES (?,?,?,?,?,?,?,?)`)
+	stmt, err := tx.PrepareContext(ctx, `INSERT INTO wechats (id,platform,touser,type,template,url,content,arguments,send_time) VALUES (?,?,?,?,?,?,?,?)`)
 	if err != nil {
 		return tx, err
 	}
@@ -70,6 +70,7 @@ func WeChatInsert(ctx context.Context, wechat *model.DbWeChat) (*sqlx.Tx, error)
 		wechat.Template,
 		wechat.URL,
 		wechat.Content,
+		wechat.Arguments,
 		wechat.SendTime,
 	)
 	if err != nil {
@@ -83,7 +84,7 @@ func WeChatEdit(ctx context.Context, w *model.DbWeChat) (*sqlx.Tx, error) {
 	if err != nil {
 		return nil, err
 	}
-	query := "UPDATE wechats SET content=?,send_time=? "
+	query := "UPDATE wechats SET arguments=?,send_time=? "
 	if w.Touser != "" {
 		query += ",touser=? WHERE id=?"
 	} else {
@@ -97,9 +98,9 @@ func WeChatEdit(ctx context.Context, w *model.DbWeChat) (*sqlx.Tx, error) {
 	defer stmt.Close()
 	var res sql.Result
 	if w.Touser != "" {
-		res, err = stmt.ExecContext(ctx, w.Content, w.SendTime, w.Touser, w.ID)
+		res, err = stmt.ExecContext(ctx, w.Arguments, w.SendTime, w.Touser, w.ID)
 	} else {
-		res, err = stmt.ExecContext(ctx, w.Content, w.SendTime, w.ID)
+		res, err = stmt.ExecContext(ctx, w.Arguments, w.SendTime, w.ID)
 	}
 	if err != nil {
 		return tx, err

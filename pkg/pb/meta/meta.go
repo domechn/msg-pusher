@@ -6,7 +6,8 @@
 #   File Name     : meta.go
 #   Created       : 2019/1/10 16:16
 #   Last Modified : 2019/1/10 16:16
-#   Describe      :
+#   Describe      : 用于检查参数是否合法，注意：本层不检查 模板和模板参数，
+#					具体这两项检查需要结合业务在service层做.
 #
 # ====================================================*/
 package meta
@@ -44,15 +45,6 @@ func (m *EmailProducer) Validated() error {
 	if err := checkEmailServer(m.Server); err != nil {
 		return err
 	}
-	if err := checkContent(m.Content); err != nil {
-		return err
-	}
-	if err := checkSmsTemplate(m.Template); err != nil {
-		return err
-	}
-	if err := checkArguments(m.Arguments); err != nil {
-		return err
-	}
 	if err := checkType(m.Type); err != nil {
 		return err
 	}
@@ -61,9 +53,6 @@ func (m *EmailProducer) Validated() error {
 
 func (m *EmailProducer) ValidateEdit() error {
 	if err := checkDestination(m.Destination); err != nil {
-		return err
-	}
-	if err := checkContent(m.Content); err != nil {
 		return err
 	}
 	if err := checkSendTime(m.SendTime); err != nil {
@@ -117,13 +106,23 @@ func (m *SmsProducer) Validated() error {
 	if err := checkSmsServer(m.Server); err != nil {
 		return err
 	}
-	if err := checkContent(m.Content); err != nil {
+	if err := checkType(m.Type); err != nil {
 		return err
 	}
-	if err := checkSmsTemplate(m.Template); err != nil {
+	return nil
+}
+
+func (m *SmsProducer) ValidateBatch() error {
+	if err := checkPlatformKey(m.PlatformKey); err != nil {
 		return err
 	}
-	if err := checkArguments(m.Arguments); err != nil {
+	if err := checkMobile(m.Mobile); err != nil {
+		return err
+	}
+	if err := checkSendTime(m.SendTime); err != nil {
+		return err
+	}
+	if err := checkSmsServer(m.Server); err != nil {
 		return err
 	}
 	if err := checkType(m.Type); err != nil {
@@ -137,9 +136,6 @@ func (m *SmsProducer) ValidateEdit() error {
 		return err
 	}
 	if err := checkSendTime(m.SendTime); err != nil {
-		return err
-	}
-	if err := checkContent(m.Content); err != nil {
 		return err
 	}
 	return nil
@@ -161,12 +157,6 @@ func (m *WeChatProducer) Validated() error {
 	if err := checkToUser(m.Touser); err != nil {
 		return err
 	}
-	if err := checkWeChatTemplate(m.TemplateID); err != nil {
-		return err
-	}
-	if err := checkContent(m.Data); err != nil {
-		return err
-	}
 	if err := checkSendTime(m.SendTime); err != nil {
 		return err
 	}
@@ -178,9 +168,6 @@ func (m *WeChatProducer) Validated() error {
 
 func (m *WeChatProducer) ValidateEdit() error {
 	if err := checkToUser(m.Touser); err != nil {
-		return err
-	}
-	if err := checkContent(m.Data); err != nil {
 		return err
 	}
 	if err := checkSendTime(m.SendTime); err != nil {
@@ -260,36 +247,6 @@ func checkSmsServer(s int32) error {
 func checkEmailServer(s int32) error {
 	if _, ok := EmailServer_name[s]; !ok || s == 0 {
 		return errors.ErrEmailServerNotFound
-	}
-	return nil
-}
-
-func checkContent(s string) error {
-	if s == "" {
-		return errors.ErrMsgIsNil
-	}
-	return nil
-}
-
-func checkSmsTemplate(s string) error {
-	if s == "" || !utils.ValidateTemplate(s) {
-		return errors.ErrTemplateNo
-	}
-	return nil
-}
-
-func checkWeChatTemplate(s string) error {
-	if s == "" {
-		return errors.ErrTemplateParam
-	}
-	return nil
-}
-
-func checkArguments(s string) error {
-	var m map[string]interface{}
-	err := json.Unmarshal([]byte(s), &m)
-	if s == "" || err != nil {
-		return errors.ErrTemplateParam
 	}
 	return nil
 }

@@ -42,6 +42,9 @@ func (p producerImpl) Produce(ctx context.Context, m Meta) (string, error) {
 }
 
 func (p producerImpl) produce(ctx context.Context, m Meta) error {
+	if err := checkTemplateAndArguments(m.GetTemplate(), m.GetArguments()); err != nil {
+		return err
+	}
 	ttl := m.Delay()
 	switch m.(type) {
 	case *meta.WeChatProducer:
@@ -50,19 +53,20 @@ func (p producerImpl) produce(ctx context.Context, m Meta) error {
 			m.(*meta.WeChatProducer),
 			func(p *meta.WeChatProducer) *model.DbWeChat {
 				return &model.DbWeChat{
-					ID:       p.Id,
-					Platform: p.Platform,
-					Touser:   p.Touser,
-					Type:     p.Type,
-					Template: p.TemplateID,
-					URL:      p.Url,
-					Content:  p.Data,
-					SendTime: p.SendTime,
+					ID:        p.Id,
+					Platform:  p.Platform,
+					Touser:    p.Touser,
+					Type:      p.Type,
+					Template:  p.Template,
+					URL:       p.Url,
+					Arguments: p.Arguments,
+					SendTime:  p.SendTime,
 				}
 			},
 			ttl,
 		)
 	case *meta.EmailProducer:
+		content := ""
 		return p.produceEmail(
 			ctx,
 			m.(*meta.EmailProducer),
@@ -71,7 +75,8 @@ func (p producerImpl) produce(ctx context.Context, m Meta) error {
 					ID:          p.Id,
 					Platform:    p.Platform,
 					PlatformKey: p.PlatformKey,
-					Title:       p.Content,
+					Title:       p.Title,
+					Content:     content,
 					Destination: p.Destination,
 					Type:        p.Type,
 					Template:    p.Template,
@@ -83,6 +88,7 @@ func (p producerImpl) produce(ctx context.Context, m Meta) error {
 			ttl,
 		)
 	case *meta.SmsProducer:
+		content := ""
 		return p.produceSms(
 			ctx,
 			m.(*meta.SmsProducer),
@@ -90,7 +96,7 @@ func (p producerImpl) produce(ctx context.Context, m Meta) error {
 				return &model.DbSms{
 					ID:        p.Id,
 					Platform:  p.Platform,
-					Content:   p.Content,
+					Content:   content,
 					Mobile:    p.Mobile,
 					Template:  p.Template,
 					Arguments: p.Arguments,

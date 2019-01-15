@@ -62,9 +62,9 @@ func TestWeChatDetailByID(t *testing.T) {
 
 func TestWeChatEdit(t *testing.T) {
 	tx, err := WeChatEdit(context.Background(), &model.DbWeChat{
-		ID:       "db84e690-fbf6-4e4e-b113-44275282c6fd",
-		Content:  "hello",
-		SendTime: "2018-08-08 08:08:08",
+		ID:        "db84e690-fbf6-4e4e-b113-44275282c6fd",
+		Arguments: "{\"code\":800}",
+		SendTime:  "2018-08-08 08:08:08",
 	})
 	if err != nil {
 		if tx != nil {
@@ -78,10 +78,10 @@ func TestWeChatEdit(t *testing.T) {
 
 func TestWeChatEditToUser(t *testing.T) {
 	tx, err := WeChatEdit(context.Background(), &model.DbWeChat{
-		ID:       "db84e690-fbf6-4e4e-b113-44275282c6fd",
-		Content:  "test-hello",
-		SendTime: "2018-08-08 08:08:08",
-		Touser:   "me",
+		ID:        "db84e690-fbf6-4e4e-b113-44275282c6fd",
+		Arguments: "{\"code\":800}",
+		SendTime:  "2018-08-08 08:08:08",
+		Touser:    "me",
 	})
 	if err != nil {
 		if tx != nil {

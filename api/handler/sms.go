@@ -40,6 +40,34 @@ func SmsProducer(ctx context.Context, body []byte) (res []byte, err error) {
 // @router(POST,"/smss")
 // SmsProducers 批量将用户的消息插入sms队列
 func SmsProducers(ctx context.Context, body []byte) (res []byte, err error) {
+	p := &meta.SmsProducers{}
+	if err = json.Unmarshal(body, p); err != nil {
+		return
+	}
+	var ids []string
+	var fails []*meta.SmsProducer
+	// 检验参数
+	for _, producer := range p.Data {
+		producer.Platform = p.Platform
+		if err = producer.ValidateBatch(); err != nil {
+			return
+		}
+	}
+	// 循环操作，记录成功和失败的数据
+	for _, producer := range p.Data {
+		producer.Transfer(true)
+		id, err := service.ProducerImpl.Produce(ctx, producer)
+		if err != nil {
+			fails = append(fails, producer)
+			continue
+		}
+		ids = append(ids, id)
+	}
+	// 成功的返回id，失败的将该条的详细数据返回
+	var resMap = make(map[string]interface{})
+	resMap["success"] = ids
+	resMap["fail"] = fails
+	res = model.NewResponseData(resMap).MustMarshal()
 	return
 }
 

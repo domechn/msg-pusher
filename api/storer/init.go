@@ -15,6 +15,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"uuabc.com/sendmsg/config"
 	"uuabc.com/sendmsg/pkg/cache"
+	"uuabc.com/sendmsg/pkg/cache/local"
 	"uuabc.com/sendmsg/pkg/cache/redis"
 	"uuabc.com/sendmsg/pkg/db"
 	"uuabc.com/sendmsg/pkg/mq"
@@ -25,6 +26,7 @@ var (
 	ExChangeName string
 	DB           *sqlx.DB
 	Cache        cache.Cache
+	LocalCache   *local.Client
 )
 
 func Init() (err error) {
@@ -48,5 +50,6 @@ func Init() (err error) {
 
 	redisConf := config.RedisConf()
 	Cache, err = redis.NewClient(redisConf.Addrs, redisConf.Password)
+	LocalCache = local.NewClient()
 	return err
 }

@@ -13,11 +13,20 @@ package cache
 
 import (
 	"context"
+	"strings"
 	"uuabc.com/sendmsg/api/storer"
 )
 
 func BaseDetail(ctx context.Context, k string) ([]byte, error) {
 	return storer.Cache.Get(base + k)
+}
+
+func BaseTemplate(ctx context.Context, k string) ([]string, error) {
+	b, err := storer.Cache.Get(template + k)
+	if err != nil {
+		return nil, err
+	}
+	return strings.Split(string(b), ","), nil
 }
 
 func LastestDetail(ctx context.Context, k string) ([]byte, error) {

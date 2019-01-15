@@ -20,6 +20,7 @@ import (
 	"uuabc.com/sendmsg/pkg/utils"
 )
 
+// @router(POST,"/version/email")
 // EmailProducer 接收用户提交的json，并将json转化成消息插入到email消息队列
 func EmailProducer(ctx context.Context, body []byte) (res []byte, err error) {
 	p := &meta.EmailProducer{}
@@ -35,6 +36,8 @@ func EmailProducer(ctx context.Context, body []byte) (res []byte, err error) {
 	return
 }
 
+// @router(PATCH,"/version/email")
+// EmailEdit 修改email发送的信息
 func EmailEdit(ctx context.Context, body []byte) (res []byte, err error) {
 	p := &meta.EmailProducer{}
 	if err = json.Unmarshal(body, p); err != nil {

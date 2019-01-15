@@ -12,6 +12,7 @@
 package cache
 
 const (
-	base    = "base-"
-	lastest = "lst-"
+	base     = "base-"
+	lastest  = "lst-"
+	template = "template_"
 )

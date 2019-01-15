@@ -22,6 +22,8 @@ import (
 const prometheus = "prometheus"
 
 func Init(route *mux.Router) {
+	route = route.PathPrefix("/" + version.Info.Version).Subrouter()
+	// TODO middleware not effect
 	route.Use(
 		mid.RequestIDMiddleware,
 		mid.LoggingMiddleware,
@@ -29,8 +31,6 @@ func Init(route *mux.Router) {
 		mid.NewOpenTracing(false).Handler,
 		mid.NewMetrics(prometheus).Handler,
 	)
-
-	route = route.PathPrefix("/" + version.Info.Version).Subrouter()
 	// restful
 	delVRoute := route.Methods("DELETE").Subrouter()
 	delVRoute.Path("/sms/{id}").HandlerFunc(handler.URLHandler(handler.SmsCancel))
@@ -43,6 +43,7 @@ func Init(route *mux.Router) {
 	postVRoute.Path("/smss").HandlerFunc(handler.JsonHandler(handler.SmsProducers))
 	postVRoute.Path("/wechat").HandlerFunc(handler.JsonHandler(handler.WeChatProducer))
 	postVRoute.Path("/email").HandlerFunc(handler.JsonHandler(handler.EmailProducer))
+	postVRoute.Path("/template").HandlerFunc(handler.JsonHandler(handler.TemplateAdd))
 
 	getVRoute := route.Methods("GET").Subrouter()
 	getVRoute.Path("/sms/{id}").HandlerFunc(handler.URLHandler(handler.SmsIDDetail))
@@ -54,6 +55,7 @@ func Init(route *mux.Router) {
 	putVRoute.Path("/sms").HandlerFunc(handler.JsonHandler(handler.SmsEdit))
 	putVRoute.Path("/wechat").HandlerFunc(handler.JsonHandler(handler.WeChatEdit))
 	putVRoute.Path("/email").HandlerFunc(handler.JsonHandler(handler.EmailEdit))
+
 	// postRoute := route.Methods("POST")
 	//
 	// versionRoute := postRoute.PathPrefix("/" + version.Info.Version).Subrouter()

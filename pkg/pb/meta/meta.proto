@@ -52,8 +52,7 @@ enum Result {
 // "platform":3,
 // "platform_key":"message_test",
 // "server":2,
-// "content": "验证码885588，您正在进行身份验证，打死不要告诉别人哦！",
-// "template": "SMS_130990029",
+// "tpl": "SMS_130990029",
 // "arguments":"{\"code\":885588}",
 // "mobile": "18516051096",
 // "send_time":"2018-07-30T07:30:00+08:00",
@@ -62,23 +61,29 @@ enum Result {
 message SmsProducer {
     string id = 1;
     int32 platform = 2;
+    //@inject_tag: json:"platform_key,omitempty"
     string platformKey = 3;
     int32 server = 4;
-    string content = 5;
-    string template = 6;
-    string arguments = 7;
-    string mobile = 8;
-    string sendTime = 9;
-    int64 _utcSendStamp = 10;
-    int32 type = 11;
+    string template = 5;
+    string arguments = 6;
+    string mobile = 7;
+    //@inject_tag: json:"send_time,omitempty"
+    string sendTime = 8;
+    //@inject_tag: json:"-"
+    int64 _utcSendStamp = 9;
+    int32 type = 10;
+}
+
+message SmsProducers{
+    int32 platform = 1;
+    repeated SmsProducer data =2;
 }
 
 // "platform":3,
 // "platform_key":"email_test",
 // "server":2,
 // "title":"测试邮件",
-// "content": "好嗨哟，感觉人生已经到达了高潮",
-// "template": "test.blade.php",
+// "tpl": "test.blade.php",
 // "arguments":"{\"name\":\"乔治君\"}",
 // "destination": "923143925@qq.com",
 // "send_time":"2018-07-30T07:30:00+08:00",
@@ -87,16 +92,18 @@ message SmsProducer {
 message EmailProducer {
     string id = 1;
     int32 platform = 2;
+    //@inject_tag: json:"platform_key,omitempty"
     string platformKey = 3;
     int32 server = 4;
     string title = 5;
-    string content = 6;
-    string template = 7;
-    string arguments = 8;
-    string destination = 9;
-    string sendTime = 10;
-    int64 _utcSendStamp = 11;
-    int32 type = 12;
+    string template = 6;
+    string arguments = 7;
+    string destination = 8;
+    //@inject_tag: json:"send_time,omitempty"
+    string sendTime = 9;
+    //@inject_tag: json:"-"
+    int64 _utcSendStamp = 10;
+    int32 type = 11;
 }
 
 // "platform":3,
@@ -111,10 +118,12 @@ message WeChatProducer {
     string id = 1;
     int32 platform = 2;
     string touser = 3;
-    string templateID = 4;
+    string template = 4;
     string url = 5;
-    string data = 6;
+    string arguments = 6;
+    //@inject_tag: json:"send_time,omitempty"
     string sendTime = 7;
+    //@inject_tag: json:"-"
     int64 _utcSendStamp = 8;
     int32 type = 9;
 }

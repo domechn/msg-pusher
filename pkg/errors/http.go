@@ -41,7 +41,7 @@ func handler(w http.ResponseWriter, err interface{}) {
 			"stack": string(debug.Stack()),
 		}).Errorf("Internal server error handled")
 		toJson(w, DoErr(internalErr), &Error{
-			ErrCode: DoErr(internalErr),
+			ErrCode: 1000000,
 			Msg:     internalErr.Error(),
 			Data:    nil,
 		})

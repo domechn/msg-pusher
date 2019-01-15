@@ -26,7 +26,7 @@ type DbSms struct {
 	Content      string `json:"content" db:"content"`
 	Mobile       string `json:"mobile" db:"mobile"`
 	Type         int32  `json:"type" db:"type"`
-	Template     string `json:"template" db:"template"`
+	Template     string `json:"tpl" db:"tpl"`
 	Arguments    string `json:"arguments" db:"arguments"`
 	Server       int32  `json:"server" db:"server"`
 	SendTime     string `json:"send_time" db:"send_time"`
@@ -63,9 +63,10 @@ type DbWeChat struct {
 	Platform     int32  `json:"platform" db:"platform"`
 	Touser       string `json:"touser" db:"touser"`
 	Type         int32  `json:"type" db:"type"`
-	Template     string `json:"template" db:"template"`
+	Template     string `json:"tpl" db:"tpl"`
 	URL          string `json:"url" db:"url"`
 	Content      string `json:"content" db:"content"`
+	Arguments    string `json:"arguments" db:"arguments"`
 	SendTime     string `json:"send_time" db:"send_time"`
 	TryNum       int32  `json:"try_num" db:"try_num"`
 	Status       int32  `json:"status" db:"status"`
@@ -103,7 +104,7 @@ type DbEmail struct {
 	Content      string `json:"content" db:"content"`
 	Destination  string `json:"destination" db:"destination"`
 	Type         int32  `json:"type" db:"type"`
-	Template     string `json:"template" db:"template"`
+	Template     string `json:"tpl" db:"tpl"`
 	Arguments    string `json:"arguments" db:"arguments"`
 	Server       int32  `json:"server" db:"server"`
 	SendTime     string `json:"send_time" db:"send_time"`
