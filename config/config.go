@@ -36,11 +36,32 @@ type RabbitMQ struct {
 	ExChangeName string `yaml:"exChangeName"`
 }
 
+type Aliyun struct {
+	AccessKeyId  string `yaml:"accessKeyId"`
+	AccessSecret string `yaml:"accessSecret"`
+	GatewayURL   string `yaml:"gatewayURL"`
+}
+
+type WeChat struct {
+	AppId     string `yaml:"appId"`
+	AppSecret string `yaml:"appSecret"`
+}
+
+type Email struct {
+	ServerAddr string `yaml:"serverAddr"`
+	Username   string `yaml:"username"`
+	Password   string `yaml:"password"`
+	Host       string `yaml:"host"`
+}
+
 type Config struct {
 	Mysql     *Mysql     `yaml:"mysql"`
 	Memcached *Memcached `yaml:"memcached"`
 	MQ        *RabbitMQ  `yaml:"mq"`
 	Redis     *Redis     `yaml:"redis"`
+	Aliyun    *Aliyun    `yaml:"aliyun"`
+	WeChat    *WeChat    `yaml:"wechat"`
+	Email     *Email     `yaml:"email"`
 }
 
 var (
@@ -65,4 +86,16 @@ func MQConf() *RabbitMQ {
 
 func RedisConf() *Redis {
 	return conf.Redis
+}
+
+func AliyunConf() *Aliyun {
+	return conf.Aliyun
+}
+
+func WeChatConf() *WeChat {
+	return conf.WeChat
+}
+
+func EmailConf() *Email {
+	return conf.Email
 }

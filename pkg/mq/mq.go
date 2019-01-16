@@ -14,10 +14,11 @@ package mq
 import (
 	"context"
 	"fmt"
-	"github.com/sirupsen/logrus"
-	"github.com/streadway/amqp"
 	"sync"
 	"time"
+
+	"github.com/sirupsen/logrus"
+	"github.com/streadway/amqp"
 )
 
 type RabbitConn struct {
@@ -59,6 +60,10 @@ func (c *RabbitConn) RabbitMQ(exName, exType string, exArgs amqp.Table) (*Rabbit
 	r.exchangeType = exType
 	r.exchangeArgs = exArgs
 	return r, nil
+}
+
+func (c *RabbitConn) Connection() *amqp.Connection {
+	return c.conn
 }
 
 // Close 关闭连接
@@ -168,16 +173,17 @@ func (r *RabbitMQ) listen(receiver Receiver) {
 
 	// 使用callback消费数据
 	for msg := range msgs {
-		// 当接收者消息处理失败的时候，
-		// 比如网络问题导致的数据库连接失败，redis连接失败等等这种
-		// 通过重试可以成功的操作，那么这个时候是需要重试的
-		// 直到数据处理成功后再返回，然后才会回复rabbitmq ack
-		for !receiver.OnReceive(msg.Body) {
-			time.Sleep(1 * time.Second)
-		}
-
-		// 确认收到本条消息, multiple必须为false
-		msg.Ack(false)
+		go func(mg amqp.Delivery) {
+			// 当接收者消息处理失败的时候，
+			// 比如网络问题导致的数据库连接失败，redis连接失败等等这种
+			// 通过重试可以成功的操作，那么这个时候是需要重试的
+			// 直到数据处理成功后再返回，然后才会回复rabbitmq ack
+			for !receiver.OnReceive(mg.Body) {
+				time.Sleep(1 * time.Second)
+			}
+			// 确认收到本条消息, multiple必须为false
+			mg.Ack(false)
+		}(msg)
 	}
 }
 
@@ -192,7 +198,7 @@ func (r *RabbitMQ) run() error {
 	}
 	r.wg.Wait()
 
-	logrus.Error("所有处理queue的任务都意外退出了")
+	logrus.Error("所有处理queue的任务都退出了")
 	return fmt.Errorf("all queues quit accidently")
 }
 
@@ -210,7 +216,7 @@ func (r *RabbitMQ) Start(conn *amqp.Connection) {
 		time.Sleep(time.Second * 3)
 		// 重新连接
 		if err := r.ReConnect(conn); err != nil {
-			logrus.Errorf("mq连接出现异常，无法重新建立连接")
+			logrus.Errorf("mq连接已关闭，无法重新建立连接")
 			return
 		}
 	}

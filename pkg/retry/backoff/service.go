@@ -18,9 +18,9 @@ import (
 // NewServiceBackOff 返回一个贴合项目需要的backoff
 func NewServiceBackOff() *ExponentialBackOff {
 	back := NewExponentialBackOff()
-	back.InitialInterval = time.Millisecond * 100
+	back.InitialInterval = time.Millisecond * 500
 	back.Multiplier = 1.2
-	back.MaxInterval = time.Millisecond * 300
-	back.MaxElapsedTime = time.Second * 5
+	back.MaxInterval = time.Second * 3
+	back.MaxElapsedTime = time.Second * 30
 	return back
 }

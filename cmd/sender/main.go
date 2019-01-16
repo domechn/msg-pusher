@@ -4,66 +4,54 @@
 #   Author        : domchan
 #   Email         : 814172254@qq.com
 #   File Name     : main.go
-#   Created       : 2019-01-08 14:26:16
-#   Last Modified : 2019-01-08 14:26:16
+#   Created       : 2019/1/16 13:26
+#   Last Modified : 2019/1/16 13:26
 #   Describe      :
 #
 # ====================================================*/
 package main
 
 import (
-	"fmt"
-	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
-	"net/http"
-	"os"
-	"time"
-	"uuabc.com/sendmsg/config"
-	"uuabc.com/sendmsg/pkg/log"
-	"uuabc.com/sendmsg/pkg/opentracing"
-	"uuabc.com/sendmsg/receiver"
-	"uuabc.com/sendmsg/receiver/version"
-
 	"github.com/spf13/cobra"
+	"os"
+	"uuabc.com/sendmsg/config"
 	"uuabc.com/sendmsg/pkg/cmd"
+	"uuabc.com/sendmsg/pkg/log"
+	"uuabc.com/sendmsg/receiver/version"
+	"uuabc.com/sendmsg/sender"
 )
+
+type Options struct {
+	host       string
+	port       int
+	configPath string
+	logPath    string
+	logLevel   string
+}
 
 var (
 	opts = &Options{
 		host:       "0.0.0.0",
-		port:       8990,
+		port:       8991,
 		configPath: "/app/sendmsg/conf/config.yaml",
 		logPath:    "/app/sendmsg/log/log.log",
 		logLevel:   "info",
 	}
 
 	rootCmd = &cobra.Command{
-		Use:          "receiver-server",
-		Short:        "The producer of the message service.",
+		Use:          "sender-server",
+		Short:        "Used to send messages.",
 		SilenceUsage: true,
 	}
 
 	startCmd = &cobra.Command{
 		Use: "start",
-		Long: `Start the service to receive the parameters from the user 
-		and send the parameters to mq for consumption by the consumer`,
+		Long: `Start the service to listen for message queue information 
+				and send the received information to the specified client.`,
 		RunE: start,
 	}
 )
-
-const (
-	defaultTimeout = time.Second * 10
-)
-
-type Options struct {
-	host        string
-	port        int
-	configPath  string
-	logPath     string
-	logLevel    string
-	addrJaeger  string
-	addrMonitor string
-}
 
 func init() {
 	startCmd.PersistentFlags().StringVarP(&opts.host, "host", "s", opts.host, "host for service startup")
@@ -71,8 +59,6 @@ func init() {
 	startCmd.PersistentFlags().StringVarP(&opts.configPath, "config-path", "f", opts.configPath, "the path of the config file")
 	startCmd.PersistentFlags().StringVar(&opts.logPath, "log-path", opts.logPath, "the location of the log file output")
 	startCmd.PersistentFlags().StringVar(&opts.logLevel, "log-level", opts.logLevel, "log file output level")
-	startCmd.PersistentFlags().StringVar(&opts.addrJaeger, "addr-jaeger", opts.addrJaeger, "the address of jaeger")
-	startCmd.PersistentFlags().StringVar(&opts.addrMonitor, "addr-monitor", opts.addrMonitor, "the address of monitor(prometheus)")
 
 	cmd.AddFlags(rootCmd)
 	rootCmd.AddCommand(startCmd)
@@ -82,53 +68,29 @@ func init() {
 func start(_ *cobra.Command, _ []string) error {
 	stopC := cmd.GratefulQuit()
 	var err error
+
 	printFlags()
 
 	// init log
 	log.Init(opts.logPath, opts.logLevel)
-
 	if err = config.Init(opts.configPath); err != nil {
 		return err
 	}
 
-	// init opentracing
-	if err = opentracing.New(opentracing.InitConfig(opts.addrJaeger)).Setup(); err != nil {
+	if err = sender.Init(); err != nil {
 		return err
 	}
 
-	r := mux.NewRouter()
-
-	if err := receiver.Init(r, opts.addrMonitor); err != nil {
-		return err
-	}
-
-	svr := &http.Server{
-		Addr:         fmt.Sprintf("%s:%d", opts.host, opts.port),
-		Handler:      r,
-		ReadTimeout:  defaultTimeout,
-		WriteTimeout: defaultTimeout,
-		IdleTimeout:  defaultTimeout,
-	}
-
-	// grateful quit
 	go func() {
 		<-stopC
 		logrus.Info("stopping server now")
-		receiver.Close()
-		if err := svr.Close(); err != nil {
+		if err := sender.Close(); err != nil {
 			logrus.Errorf("Server Close:", err)
 		}
+		os.Exit(0)
 	}()
-	// start server
-	if err = svr.ListenAndServe(); err != nil {
-		if err == http.ErrServerClosed {
-			logrus.Info("Server closed under request\n")
-			return nil
-		} else {
-			logrus.Infof("Server closed unexpect, %s\n", err.Error())
-		}
-	}
-	return err
+
+	return sender.Start()
 }
 
 func printFlags() {
@@ -137,8 +99,6 @@ func printFlags() {
 	logrus.WithField("Config-Path", opts.configPath).Info()
 	logrus.WithField("Log-Path", opts.logPath).Info()
 	logrus.WithField("Log-Level", opts.logLevel).Info()
-	logrus.WithField("Addr-Jaeger", opts.addrJaeger).Info()
-	logrus.WithField("Addr-Monitor", opts.addrMonitor).Info()
 }
 
 func main() {

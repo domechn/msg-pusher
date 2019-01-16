@@ -74,9 +74,33 @@ message SmsProducer {
     int32 type = 10;
 }
 
-message SmsProducers{
+message SmsProducers {
     int32 platform = 1;
-    repeated SmsProducer data =2;
+    repeated SmsProducer data = 2;
+}
+
+message DbSms {
+    string id = 1;
+    int32 platform = 2;
+    //@inject_tag: json:"platform_key,omitempty" db:"platform_key"
+    string platformKey = 3;
+    string content = 4;
+    string mobile = 5;
+    int32 type = 6;
+    string template = 7;
+    string arguments = 8;
+    int32 server = 9;
+    //@inject_tag: json:"send_time,omitempty" db:"send_time"
+    string sendTime = 10;
+    //@inject_tag: json:"try_num,omitempty" db:"try_num"
+    int32 tryNum = 11;
+    int32 status = 12;
+    //@inject_tag: json:"result_status,omitempty" db:"result_status"
+    int32 resultStatus = 13;
+    //@inject_tag: json:"created_at,omitempty" db:"created_at"
+    string createdAt = 14;
+    //@inject_tag: json:"updated_at,omitempty" db:"updated_at"
+    string updatedAt = 15;
 }
 
 // "platform":3,
@@ -106,6 +130,31 @@ message EmailProducer {
     int32 type = 11;
 }
 
+message DbEmail {
+    string id = 1;
+    int32 platform = 2;
+    //@inject_tag: json:"platform_key,omitempty" db:"platform_key"
+    string platformKey = 3;
+    string title = 4;
+    string content = 5;
+    string destination = 6;
+    int32 type = 7;
+    string template = 8;
+    string arguments = 9;
+    int32 server = 10;
+    //@inject_tag: json:"send_time,omitempty" db:"send_time"
+    string sendTime = 11;
+    //@inject_tag: json:"try_num,omitempty" db:"try_num"
+    int32 tryNum = 12;
+    int32 status = 13;
+    //@inject_tag: json:"result_status,omitempty" db:"result_status"
+    int32 resultStatus = 14;
+    //@inject_tag: json:"created_at,omitempty" db:"created_at"
+    string createdAt = 15;
+    //@inject_tag: json:"updated_at,omitempty" db:"updated_at"
+    string updatedAt = 16;
+}
+
 // "platform":3,
 // "touser": "oAdVsv5nQ-qtBF0F5WGU-xPcrpGY",
 // "template_id": "RlJfVX1SCBW2ncbIblbOE_8PaOUyoxBmr2MKnjzcY80",
@@ -126,4 +175,27 @@ message WeChatProducer {
     //@inject_tag: json:"-"
     int64 _utcSendStamp = 8;
     int32 type = 9;
+}
+
+
+message DbWeChat {
+    string id = 1;
+    int32 platform = 2;
+    string touser = 3;
+    int32 type = 4;
+    string template = 5;
+    string url = 6;
+    string content = 7;
+    string arguments = 8;
+    //@inject_tag: json:"send_time,omitempty" db:"send_time"
+    string sendTime = 9;
+    //@inject_tag: json:"try_num,omitempty" db:"try_num"
+    int32 tryNum = 10;
+    int32 status = 11;
+    //@inject_tag: json:"result_status,omitempty" db:"result_status"
+    int32 resultStatus = 12;
+    //@inject_tag: json:"created_at,omitempty" db:"created_at"
+    string createdAt = 13;
+    //@inject_tag: json:"updated_at,omitempty" db:"updated_at"
+    string updatedAt = 14;
 }

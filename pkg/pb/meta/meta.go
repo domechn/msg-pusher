@@ -12,15 +12,21 @@
 # ====================================================*/
 package meta
 
+// TODO snedtime geshibudui
 import (
+	"time"
+
 	"github.com/json-iterator/go"
 	"github.com/satori/go.uuid"
-	"time"
 	"uuabc.com/sendmsg/pkg/errors"
 	"uuabc.com/sendmsg/pkg/utils"
 )
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
+
+const (
+	layout = "2006-01-02T15:03:04Z"
+)
 
 // email begin...........
 // Delay 返回延迟发送的时间 毫秒 单位
@@ -67,7 +73,7 @@ func (m *EmailProducer) Transfer(setID bool) {
 		m.Id = uuid.NewV4().String()
 	}
 	st := gbfToUTC(m.SendTime)
-	m.SendTime = st.Format("2006-01-02T15:04:05")
+	m.SendTime = st.Format(layout)
 	m.XUtcSendStamp = st.Unix()
 }
 
@@ -85,7 +91,7 @@ func (m *SmsProducer) Transfer(setID bool) {
 		m.Id = uuid.NewV4().String()
 	}
 	st := gbfToUTC(m.SendTime)
-	m.SendTime = st.Format("2006-01-02T15:04:05")
+	m.SendTime = st.Format(layout)
 	m.XUtcSendStamp = st.Unix()
 }
 

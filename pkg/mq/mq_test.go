@@ -54,7 +54,7 @@ func TestRabbitMQ_Publish(t *testing.T) {
 	}
 	p := amqp.Publishing{
 		Headers: amqp.Table{
-			"x-delay": int64(1000000000000),
+			"x-delay": int64(0),
 		},
 		ContentType: "text/plain",
 		Body:        []byte(`{"code":200,"msg":"hello"}`),

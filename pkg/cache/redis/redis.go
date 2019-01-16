@@ -12,6 +12,7 @@
 package redis
 
 import (
+	"context"
 	"github.com/go-redis/redis"
 	"io"
 	"time"
@@ -51,7 +52,7 @@ func newClusterClient(addrs []string, password string) (*Client, error) {
 	return c, err
 }
 
-func (c *Client) Get(s string) ([]byte, error) {
+func (c *Client) Get(ctx context.Context, s string) ([]byte, error) {
 	res := c.c.Get(s)
 	byt, err := res.Bytes()
 	if err != nil {
@@ -63,16 +64,16 @@ func (c *Client) Get(s string) ([]byte, error) {
 	return byt, nil
 }
 
-func (c *Client) Put(k string, v []byte, ttl int64) error {
+func (c *Client) Put(ctx context.Context, k string, v []byte, ttl int64) error {
 	res := c.c.Set(k, v, time.Second*time.Duration(ttl))
 	return res.Err()
 }
 
-func (c *Client) Del(k string) error {
+func (c *Client) Del(ctx context.Context, k string) error {
 	return c.c.Del(k).Err()
 }
 
-func (c *Client) Add(k string, v []byte, ttl int64) error {
+func (c *Client) Add(ctx context.Context, k string, v []byte, ttl int64) error {
 	b := c.c.SetNX(k, v, time.Second*time.Duration(ttl))
 	if err := b.Err(); err != nil {
 		return err
@@ -87,12 +88,12 @@ func (c *Client) Add(k string, v []byte, ttl int64) error {
 	return nil
 }
 
-func (c *Client) Append(k string, v []byte) error {
+func (c *Client) Append(ctx context.Context, k string, v []byte) error {
 	res := c.c.SAdd(k, v)
 	return res.Err()
 }
 
-func (c *Client) IsMember(k string, v []byte) (bool, error) {
+func (c *Client) IsMember(ctx context.Context, k string, v []byte) (bool, error) {
 	res := c.c.SIsMember(k, v)
 	return res.Result()
 }

@@ -12,6 +12,8 @@
 package memcached
 
 import (
+	"context"
+
 	"github.com/bradfitz/gomemcache/memcache"
 	"uuabc.com/sendmsg/pkg/cache"
 )
@@ -29,7 +31,7 @@ func NewClient(server ...string) *Client {
 	return client
 }
 
-func (c *Client) Get(s string) ([]byte, error) {
+func (c *Client) Get(ctx context.Context, s string) ([]byte, error) {
 	item, err := c.c.Get(s)
 	if err != nil {
 		if err == memcache.ErrCacheMiss {
@@ -40,7 +42,7 @@ func (c *Client) Get(s string) ([]byte, error) {
 	return item.Value, nil
 }
 
-func (c *Client) Put(k string, v []byte, ttl int32) error {
+func (c *Client) Put(ctx context.Context, k string, v []byte, ttl int32) error {
 	item := &memcache.Item{
 		Key:   k,
 		Value: v,
@@ -51,11 +53,11 @@ func (c *Client) Put(k string, v []byte, ttl int32) error {
 	return c.c.Set(item)
 }
 
-func (c *Client) Del(k string) error {
+func (c *Client) Del(ctx context.Context, k string) error {
 	return c.c.Delete(k)
 }
 
-func (c *Client) Add(k string, v []byte, ttl int32) error {
+func (c *Client) Add(ctx context.Context, k string, v []byte, ttl int32) error {
 	item := &memcache.Item{
 		Key:   k,
 		Value: v,
@@ -72,11 +74,11 @@ func (c *Client) Add(k string, v []byte, ttl int32) error {
 	return err
 }
 
-func (c *Client) Append(k string, v []byte) error {
+func (c *Client) Append(ctx context.Context, k string, v []byte) error {
 	return nil
 }
 
-func (c *Client) IsMember(k string, v []byte) (bool, error) {
+func (c *Client) IsMember(ctx context.Context, k string, v []byte) (bool, error) {
 	return false, nil
 }
 
