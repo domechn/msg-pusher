@@ -18,7 +18,7 @@ import (
 	"uuabc.com/sendmsg/pkg/pb/tpl"
 )
 
-// @router("POST","/version/tpl")
+// @router("POST","/version/template")
 // TemplateAdd 添加模板
 func TemplateAdd(ctx context.Context, data []byte) (res []byte, err error) {
 	p := &tpl.TemplateAdder{}

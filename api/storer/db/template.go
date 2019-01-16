@@ -19,6 +19,7 @@ import (
 	"uuabc.com/sendmsg/pkg/pb/tpl"
 )
 
+// TemplateInsert 插入消息模板到数据库，如果唯一键重复返回键已存在错误
 func TemplateInsert(ctx context.Context, templ *tpl.DBTemplate) (*sqlx.Tx, error) {
 	tx, err := storer.DB.Beginx()
 	if err != nil {
@@ -35,6 +36,7 @@ func TemplateInsert(ctx context.Context, templ *tpl.DBTemplate) (*sqlx.Tx, error
 	return tx, err
 }
 
+// TemplateList 获取所有模板
 func TemplateList(ctx context.Context) (res []*tpl.DBTemplate, err error) {
 	err = storer.DB.SelectContext(ctx, &res, "SELECT * FROM template")
 	return

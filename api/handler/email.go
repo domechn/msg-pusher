@@ -20,6 +20,8 @@ import (
 	"uuabc.com/sendmsg/pkg/utils"
 )
 
+var emailService = service.NewEmailSeriveImpl()
+
 // @router(POST,"/version/email")
 // EmailProducer 接收用户提交的json，并将json转化成消息插入到email消息队列
 func EmailProducer(ctx context.Context, body []byte) (res []byte, err error) {
@@ -28,7 +30,7 @@ func EmailProducer(ctx context.Context, body []byte) (res []byte, err error) {
 		return
 	}
 	var id string
-	if id, err = processData(ctx, p); err != nil {
+	if id, err = processData(ctx, emailService, p); err != nil {
 		return
 	}
 
@@ -46,7 +48,7 @@ func EmailEdit(ctx context.Context, body []byte) (res []byte, err error) {
 	if err = checkEdit(p); err != nil {
 		return
 	}
-	if err = service.EditerImpl.Edit(ctx, p); err != nil {
+	if err = emailService.Edit(ctx, p); err != nil {
 		return
 	}
 	res = successResp
@@ -61,7 +63,7 @@ func EmailIDDetail(ctx context.Context, d map[string]string) (res []byte, err er
 		err = errors.ErrInvalidID
 		return
 	}
-	data, err := service.DetailerImpl.Detail(ctx, "email", id)
+	data, err := emailService.Detail(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +79,7 @@ func EmailCancel(ctx context.Context, d map[string]string) (res []byte, err erro
 		err = errors.ErrInvalidID
 		return
 	}
-	if err = service.Canceler.Cancel(ctx, "email", id); err != nil {
+	if err = emailService.Cancel(ctx, id); err != nil {
 		return
 	}
 	res = successResp

@@ -20,6 +20,8 @@ import (
 	"uuabc.com/sendmsg/pkg/utils"
 )
 
+var weChatService = service.NewWeChatServiceImpl()
+
 // @router(POST,"/version/wechat")
 // WeChatProducer 接收用户提交的json，并将json转化成消息插入到wechat消息队列
 func WeChatProducer(ctx context.Context, body []byte) (res []byte, err error) {
@@ -28,7 +30,7 @@ func WeChatProducer(ctx context.Context, body []byte) (res []byte, err error) {
 		return
 	}
 	var id string
-	if id, err = processData(ctx, p); err != nil {
+	if id, err = processData(ctx, weChatService, p); err != nil {
 		return
 	}
 
@@ -46,7 +48,7 @@ func WeChatEdit(ctx context.Context, body []byte) (res []byte, err error) {
 	if err = checkEdit(p); err != nil {
 		return
 	}
-	if err = service.EditerImpl.Edit(ctx, p); err != nil {
+	if err = weChatService.Edit(ctx, p); err != nil {
 		return
 	}
 	res = successResp
@@ -60,7 +62,7 @@ func WeChatIDDetail(ctx context.Context, d map[string]string) (res []byte, err e
 		err = errors.ErrInvalidID
 		return
 	}
-	data, err := service.DetailerImpl.Detail(ctx, "wechat", id)
+	data, err := weChatService.Detail(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +80,7 @@ func WeChatCancel(ctx context.Context, d map[string]string) (res []byte, err err
 		err = errors.ErrInvalidID
 		return
 	}
-	if err = service.Canceler.Cancel(ctx, "wechat", id); err != nil {
+	if err = weChatService.Cancel(ctx, id); err != nil {
 		return
 	}
 	res = successResp

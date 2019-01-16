@@ -21,6 +21,8 @@ import (
 	"uuabc.com/sendmsg/pkg/utils"
 )
 
+var smsService = service.NewSmsServiceImpl()
+
 // @router(POST,"/sms")
 // SmsProducer 接收用户提交的json，并将json转化成消息插入到sms消息队列
 func SmsProducer(ctx context.Context, body []byte) (res []byte, err error) {
@@ -29,7 +31,7 @@ func SmsProducer(ctx context.Context, body []byte) (res []byte, err error) {
 		return
 	}
 	var id string
-	if id, err = processData(ctx, p); err != nil {
+	if id, err = processData(ctx, smsService, p); err != nil {
 		return
 	}
 
@@ -56,7 +58,7 @@ func SmsProducers(ctx context.Context, body []byte) (res []byte, err error) {
 	// 循环操作，记录成功和失败的数据
 	for _, producer := range p.Data {
 		producer.Transfer(true)
-		id, err := service.ProducerImpl.Produce(ctx, producer)
+		id, err := smsService.Produce(ctx, producer)
 		if err != nil {
 			fails = append(fails, producer)
 			continue
@@ -78,7 +80,7 @@ func SmsIDDetail(ctx context.Context, d map[string]string) (res []byte, err erro
 		err = errors.ErrIDIsInvalid
 		return
 	}
-	data, err := service.DetailerImpl.Detail(ctx, "sms", id)
+	data, err := smsService.Detail(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +102,7 @@ func SmsMobileDetail(ctx context.Context, d map[string]string) (res []byte, err 
 		return
 	}
 	pg, _ := strconv.Atoi(p)
-	data, err := service.DetailerImpl.DetailByPhonePage(ctx, mobile, pg)
+	data, err := smsService.DetailByPhonePage(ctx, mobile, pg)
 	if err != nil {
 		return
 	}
@@ -118,7 +120,7 @@ func SmsEdit(ctx context.Context, body []byte) (res []byte, err error) {
 	if err = checkEdit(p); err != nil {
 		return
 	}
-	if err = service.EditerImpl.Edit(ctx, p); err != nil {
+	if err = smsService.Edit(ctx, p); err != nil {
 		return
 	}
 	res = successResp
@@ -132,7 +134,7 @@ func SmsCancel(ctx context.Context, d map[string]string) (res []byte, err error)
 	if err = utils.ValidateUUIDV4(id); err != nil {
 		return
 	}
-	if err = service.Canceler.Cancel(ctx, "sms", id); err != nil {
+	if err = smsService.Cancel(ctx, id); err != nil {
 		return
 	}
 	res = successResp

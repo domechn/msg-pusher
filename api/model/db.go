@@ -26,7 +26,7 @@ type DbSms struct {
 	Content      string `json:"content" db:"content"`
 	Mobile       string `json:"mobile" db:"mobile"`
 	Type         int32  `json:"type" db:"type"`
-	Template     string `json:"tpl" db:"tpl"`
+	Template     string `json:"template" db:"template"`
 	Arguments    string `json:"arguments" db:"arguments"`
 	Server       int32  `json:"server" db:"server"`
 	SendTime     string `json:"send_time" db:"send_time"`
@@ -43,6 +43,14 @@ func (d *DbSms) SetStatus(s int32) {
 
 func (d *DbSms) SetResult(s int32) {
 	d.ResultStatus = s
+}
+
+func (d *DbSms) SetCreatedAt(s string) {
+	d.CreatedAt = s
+}
+
+func (d *DbSms) SetUpdatedAt(s string) {
+	d.UpdatedAt = s
 }
 
 func (d *DbSms) Marshal() ([]byte, error) {
@@ -63,7 +71,7 @@ type DbWeChat struct {
 	Platform     int32  `json:"platform" db:"platform"`
 	Touser       string `json:"touser" db:"touser"`
 	Type         int32  `json:"type" db:"type"`
-	Template     string `json:"tpl" db:"tpl"`
+	Template     string `json:"template" db:"template"`
 	URL          string `json:"url" db:"url"`
 	Content      string `json:"content" db:"content"`
 	Arguments    string `json:"arguments" db:"arguments"`
@@ -81,6 +89,14 @@ func (d *DbWeChat) SetStatus(s int32) {
 
 func (d *DbWeChat) SetResult(s int32) {
 	d.ResultStatus = s
+}
+
+func (d *DbWeChat) SetCreatedAt(s string) {
+	d.CreatedAt = s
+}
+
+func (d *DbWeChat) SetUpdatedAt(s string) {
+	d.UpdatedAt = s
 }
 
 func (d *DbWeChat) Marshal() ([]byte, error) {
@@ -104,7 +120,7 @@ type DbEmail struct {
 	Content      string `json:"content" db:"content"`
 	Destination  string `json:"destination" db:"destination"`
 	Type         int32  `json:"type" db:"type"`
-	Template     string `json:"tpl" db:"tpl"`
+	Template     string `json:"template" db:"template"`
 	Arguments    string `json:"arguments" db:"arguments"`
 	Server       int32  `json:"server" db:"server"`
 	SendTime     string `json:"send_time" db:"send_time"`
@@ -133,4 +149,12 @@ func (d *DbEmail) SetStatus(s int32) {
 
 func (d *DbEmail) SetResult(s int32) {
 	d.ResultStatus = s
+}
+
+func (d *DbEmail) SetCreatedAt(s string) {
+	d.CreatedAt = s
+}
+
+func (d *DbEmail) SetUpdatedAt(s string) {
+	d.UpdatedAt = s
 }

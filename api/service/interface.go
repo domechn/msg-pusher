@@ -42,4 +42,6 @@ type Messager interface {
 	GetStatus() meta.Status
 	SetStatus(int32)
 	SetResult(int32)
+	SetCreatedAt(string)
+	SetUpdatedAt(string)
 }

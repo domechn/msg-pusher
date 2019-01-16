@@ -66,7 +66,7 @@ func SmsInsert(ctx context.Context, sms *model.DbSms) (*sqlx.Tx, error) {
 	if err != nil {
 		return nil, err
 	}
-	stmt, err := tx.PrepareContext(ctx, `INSERT INTO smss (id,platform,content,mobile,template,arguments,send_time,server,type) VALUES (?,?,?,?,?,?,?,?,?)`)
+	stmt, err := tx.PrepareContext(ctx, `INSERT INTO smss (id,platform,platform_key,content,mobile,template,arguments,send_time,server,type) VALUES (?,?,?,?,?,?,?,?,?,?)`)
 	if err != nil {
 		return tx, err
 	}
@@ -75,6 +75,7 @@ func SmsInsert(ctx context.Context, sms *model.DbSms) (*sqlx.Tx, error) {
 		ctx,
 		sms.ID,
 		sms.Platform,
+		sms.PlatformKey,
 		sms.Content,
 		sms.Mobile,
 		sms.Template,

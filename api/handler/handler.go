@@ -16,6 +16,8 @@ import (
 	"github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
+	"uuabc.com/sendmsg/api/storer/db"
+	"uuabc.com/sendmsg/pkg/cache"
 	"uuabc.com/sendmsg/pkg/errors"
 )
 
@@ -44,6 +46,7 @@ func JsonHandler(sh BodyHandler) http.HandlerFunc {
 		}
 		res, err := sh(r.Context(), b)
 		if err != nil {
+			err = changeErr(err)
 			errors.ErrHandler(w, r, err)
 			return
 		}
@@ -58,6 +61,7 @@ func URLHandler(sh PathHandler) http.HandlerFunc {
 		data := mux.Vars(r)
 		res, err := sh(r.Context(), data)
 		if err != nil {
+			err = changeErr(err)
 			errors.ErrHandler(w, r, err)
 			return
 		}
@@ -65,4 +69,22 @@ func URLHandler(sh PathHandler) http.HandlerFunc {
 		w.Write(res)
 	}
 
+}
+
+// changeErr 转换error
+func changeErr(err error) error {
+	// 转换err类型
+	if _, ok := err.(*errors.Error); !ok {
+		if err == cache.ErrCacheMiss {
+			err = errors.ErrMsgNotFound
+		} else if err == db.ErrNoRowsEffected {
+			err = errors.ErrMsgCantEdit
+		} else {
+			err = errors.NewError(
+				10000000,
+				err.Error(),
+			)
+		}
+	}
+	return err
 }

@@ -29,7 +29,7 @@ import (
 const (
 	defaultTimeout = time.Second * 10
 	tokenURL       = "https://api.weixin.qq.com/cgi-bin/token"
-	sendURL        = "https://api.weixin.qq.com/cgi-bin/message/tpl/send?access_token="
+	sendURL        = "https://api.weixin.qq.com/cgi-bin/message/template/send?access_token="
 )
 
 var (
