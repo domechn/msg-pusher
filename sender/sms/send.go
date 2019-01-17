@@ -13,115 +13,52 @@ package sms
 
 import (
 	"context"
-	"time"
 
 	"github.com/sirupsen/logrus"
 	"uuabc.com/sendmsg/pkg/pb/meta"
 	"uuabc.com/sendmsg/pkg/send/sms"
-	"uuabc.com/sendmsg/pkg/utils"
 	"uuabc.com/sendmsg/sender/pub"
 	"uuabc.com/sendmsg/storer/cache"
 	"uuabc.com/sendmsg/storer/db"
 )
 
-func (r *Receiver) check(data []byte, msg pub.Messager) error {
+// check 验证data是否符合要求，如果符合要求会返回nil，并且按照data转化的id将数据赋值给msg
+func (r *Receiver) check(data []byte, msg pub.Messager) (err error) {
 	id := string(data)
-	if err := r.checkID(id); err != nil {
-		return err
-	}
-	if err := r.checkStatus(id, msg); err != nil {
-		return err
-	}
-	if err := r.checkSendTime(msg); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (r *Receiver) checkID(id string) error {
-	if err := utils.ValidateUUIDV4(id); err != nil {
-		logrus.WithFields(logrus.Fields{
-			"data": id,
-			"type": r.queueName,
-		}).Error("从mq中接收到的数据不符合要求")
-		return err
-	}
-	return nil
-}
-
-func (r *Receiver) checkStatus(id string, msg pub.Messager) error {
-	b, err := cache.BaseDetail(context.Background(), id)
-	if err != nil {
-		logrus.WithFields(logrus.Fields{
-			"data":  id,
-			"error": err,
-			"type":  r.queueName,
-		}).Error("从cache中获取数据失败")
-		return err
-	}
-	if err := msg.Unmarshal(b); err != nil {
-		logrus.WithFields(logrus.Fields{
-			"data":  string(b),
-			"error": err,
-			"type":  r.queueName,
-		}).Error("数据转码异常")
-		return err
-	}
-	status := msg.GetStatus()
-	if status != int32(meta.Status_Wait) {
-		logrus.WithFields(logrus.Fields{
-			"data":   string(b),
-			"status": meta.Status_name[status],
-			"error":  err,
-			"type":   r.queueName,
-		}).Error("数据状态不是待发送状态，可能已被处理")
-		return pub.ErrMsgHasDealed
-	}
-	return nil
-}
-
-// checkValidate 消息的发送时间是否符合要求，超过当前时间15分钟就不发送，或者发送时间未到
-func (r *Receiver) checkSendTime(msg pub.Messager) error {
-	now := time.Now().UTC()
-	sendT, err := time.Parse("2006-01-02T15:04:05Z", msg.GetSendTime())
-	if err != nil {
-		return err
-	}
-	if sendT.Add(pub.DefaultExpirationTime).Before(now) {
-		logrus.WithFields(logrus.Fields{
-			"now":       now.String(),
-			"send_time": sendT.String(),
-		}).Error("消息已过期")
-		return pub.ErrMsgIsExpiration
-	}
-	if sendT.After(now) {
-		logrus.WithFields(logrus.Fields{
-			"now":       now.String(),
-			"send_time": sendT.String(),
-		}).Error("消息未到发送时间")
-		return pub.ErrMsgDeliveryNotArrived
-	}
-	return nil
+	logrus.WithField("type", r.queueName).Info("开始验证消息的有效性")
+	defer logrus.WithField("type", r.queueName).Infof("消息验证结束,err: %v", err)
+	err = pub.Check(id, msg)
+	return
 }
 
 func (r *Receiver) send(msg pub.Messager) pub.RetryFunc {
+	// 失败原因
+	var reason error
 	return func(count int) error {
 		lockKey := "send_" + msg.GetId()
 		smsMsg := msg.(*meta.DbSms)
+		// 发送之前检查状态,如果已处理就直接返回成功
+		if bl, _ := cache.SendResult(context.Background(), msg.GetId()); bl {
+			logrus.Info("消息已发送，无需重复发送")
+			return nil
+		}
 		// 分布式锁，防止资源竞争
 		err := cache.LockID5s(context.Background(), lockKey)
+		defer func() { reason = err }()
 		if err != nil {
 			logrus.WithField("id", smsMsg.Id).Error("获取分布式锁失败，消息可能正在被其他线程在处理")
-			return err
-		} else {
-			logrus.WithField("id", smsMsg.Id).Info("获取分布式锁成功，正在发送消息")
+			return nil
 		}
+		logrus.WithField("id", smsMsg.Id).Info("获取分布式锁成功，正在发送消息")
 		// 释放分布式锁
 		defer cache.ReleaseLock(context.Background(), lockKey)
 		if count > pub.TryNum {
 			smsMsg.SetStatus(int32(meta.Status_Final))
 			smsMsg.SetResult(int32(meta.Result_Fail))
 			smsMsg.SetTryNum(pub.TryNum)
+			if reason != nil {
+				smsMsg.Reason = reason.Error()
+			}
 			updateDbAndCache(smsMsg)
 			return pub.ErrTooManyTimes
 		}
@@ -159,6 +96,7 @@ func (r *Receiver) send(msg pub.Messager) pub.RetryFunc {
 			}).Errorf("消息发送成功但是更新缓存和数据库时发生错误，请手动修改")
 		}
 
+		logrus.WithField("id", smsMsg.Id).Info("消息成功发送")
 		return nil
 	}
 }
@@ -172,8 +110,10 @@ func updateDbAndCache(msg *meta.DbSms) error {
 		return err
 	}
 	b, _ := msg.Marshal()
-	err = cache.PutBaseCache(context.Background(), msg.Id, b)
+	// 强制更新缓存
+	err = cache.PutBaseCacheForce(context.Background(), msg.Id, b)
 	cache.PutLastestCache(context.Background(), msg.Id, b)
+	cache.PutSendSuccess(context.Background(), msg.Id)
 	if err != nil {
 		db.RollBack(tx)
 		return err

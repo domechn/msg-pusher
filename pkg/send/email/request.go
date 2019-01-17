@@ -11,16 +11,22 @@
 # ====================================================*/
 package email
 
+import (
+	"strings"
+)
+
 // Message implements send.Message
 type Request struct {
-	to   string
-	data []byte
+	to      string
+	data    string
+	subject string
 }
 
-func NewMessage(to string, data []byte) *Request {
+func NewMessage(to, subject, data string) *Request {
 	return &Request{
-		to:   to,
-		data: data,
+		to:      to,
+		subject: subject,
+		data:    data,
 	}
 }
 
@@ -29,5 +35,12 @@ func (m *Request) To() string {
 }
 
 func (m *Request) Content() []byte {
-	return m.data
+	return []byte(m.data)
+}
+
+func (m *Request) textType(data string) string {
+	if strings.Contains(data, "<html>") {
+		return "html"
+	}
+	return "text"
 }

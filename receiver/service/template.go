@@ -13,12 +13,11 @@ package service
 
 import (
 	"context"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/satori/go.uuid"
-	"strings"
 	"uuabc.com/sendmsg/pkg/errors"
 	"uuabc.com/sendmsg/pkg/pb/tpl"
-	"uuabc.com/sendmsg/pkg/utils"
 	"uuabc.com/sendmsg/storer/cache"
 	"uuabc.com/sendmsg/storer/db"
 )
@@ -32,7 +31,7 @@ type templateImpl struct {
 func (t templateImpl) AddTemplate(ctx context.Context, a *tpl.TemplateAdder) (string, error) {
 	uid := uuid.NewV4().String()
 
-	tx, paramStr, err := t.add(ctx, uid, a)
+	tx, err := t.add(ctx, uid, a)
 	if err != nil {
 		db.RollBack(tx)
 		return "", err
@@ -40,14 +39,12 @@ func (t templateImpl) AddTemplate(ctx context.Context, a *tpl.TemplateAdder) (st
 	err = db.Commit(tx)
 	if err == nil {
 		// 更新本地缓存
-		go func() {
-			cache.AddLocalTemplate(a.SimpleID, paramStr)
-		}()
+		cache.AddLocalTemplate(a.SimpleID, a.Content)
 	}
 	return uid, nil
 }
 
-func (templateImpl) add(ctx context.Context, id string, a *tpl.TemplateAdder) (tx *sqlx.Tx, paramStr string, err error) {
+func (templateImpl) add(ctx context.Context, id string, a *tpl.TemplateAdder) (tx *sqlx.Tx, err error) {
 	tx, err = db.TemplateInsert(ctx, &tpl.DBTemplate{
 		Id:       id,
 		SimpleID: a.SimpleID,
@@ -57,15 +54,9 @@ func (templateImpl) add(ctx context.Context, id string, a *tpl.TemplateAdder) (t
 	if err != nil {
 		if err == db.ErrUniqueKeyExsits {
 			err = errors.ErrTemplateIsExsited
-			return
 		}
+		return
 	}
-	content := a.Content
-	params := utils.StrFromCurlyBraces(content)
-	paramStr = strings.Join(params, ",")
-	if paramStr == "" {
-		paramStr = " "
-	}
-	err = cache.PutBaseTemplate(ctx, a.SimpleID, []byte(paramStr))
+	err = cache.PutBaseTemplate(ctx, a.SimpleID, []byte(a.Content))
 	return
 }

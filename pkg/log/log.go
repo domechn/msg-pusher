@@ -12,12 +12,16 @@
 package log
 
 import (
-	"github.com/sirupsen/logrus"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
+
+	"github.com/lestrrat-go/file-rotatelogs"
+	"github.com/sirupsen/logrus"
 )
 
-func Init(path, level string) {
+func Init(typeN, path, level string) {
 	l := logrus.InfoLevel
 	switch strings.ToUpper(level) {
 	case "DEBUG":
@@ -28,10 +32,34 @@ func Init(path, level string) {
 		l = logrus.ErrorLevel
 	}
 	logrus.SetLevel(l)
-	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	if err == nil {
-		logrus.SetOutput(f)
-	} else {
-		logrus.Warn("logrus init:cannot open log file,log will only be printed on std")
+	if path != "" {
+		// 日志分割 "/path/typeN.log.20060102"
+		rl, err := rotatelogs.New(transferPath(path)+typeN+".log.%Y%m%d", rotatelogs.WithClock(rotatelogs.UTC))
+		rotate(rl)
+		if err == nil {
+			logrus.SetOutput(rl)
+		} else {
+			logrus.Warn("logrus init:cannot open log file,log will only be printed on std")
+		}
 	}
+}
+
+func transferPath(s string) string {
+	if s == "" {
+		return "/"
+	}
+	if s[len(s)-1] != '/' {
+		return s + "/"
+	}
+	return s
+}
+
+// 当进程启动时如果遇到log文件名冲突，则为表单的数字后缀“。1”、“。2“,”。3”等等被附加到日志文件的末尾
+func rotate(rl *rotatelogs.RotateLogs) {
+	ch := make(chan os.Signal)
+	signal.Notify(ch, syscall.SIGHUP)
+	go func(ch chan os.Signal) {
+		<-ch
+		rl.Rotate()
+	}(ch)
 }

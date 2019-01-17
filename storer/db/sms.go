@@ -130,11 +130,11 @@ func SmsUpdateSendResult(ctx context.Context, s *meta.DbSms) (*sqlx.Tx, error) {
 	if err != nil {
 		return nil, err
 	}
-	stmt, err := tx.PrepareContext(ctx, "UPDATE smss SET try_num=?,status=?,result_status=? WHERE id=?")
+	stmt, err := tx.PrepareContext(ctx, "UPDATE smss SET try_num=?,status=?,result_status=?,reason=? WHERE id=?")
 	if err != nil {
 		return tx, err
 	}
 	defer stmt.Close()
-	_, err = stmt.ExecContext(ctx, s.TryNum, s.Status, s.ResultStatus, s.Id)
+	_, err = stmt.ExecContext(ctx, s.TryNum, s.Status, s.ResultStatus, s.Reason, s.Id)
 	return tx, err
 }

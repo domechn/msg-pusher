@@ -13,7 +13,7 @@ package cache
 
 import (
 	"context"
-	"strings"
+
 	"uuabc.com/sendmsg/storer"
 )
 
@@ -21,10 +21,10 @@ func AddLocalTemplate(s string, v string) error {
 	return storer.LocalCache.Put(context.Background(), s, []byte(v), 60)
 }
 
-func LocalTemplate(s string) ([]string, error) {
+func LocalTemplate(s string) (string, error) {
 	b, err := storer.LocalCache.Get(context.Background(), s)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	return strings.Split(string(b), ","), nil
+	return string(b), nil
 }

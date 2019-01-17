@@ -28,20 +28,24 @@ func NewSmsServiceImpl() smsServiceImpl {
 }
 
 func (s smsServiceImpl) Produce(ctx context.Context, m Meta) (string, error) {
-	if err := checkTemplateAndArguments(m.GetTemplate(), m.GetArguments()); err != nil {
+	var templ string
+	var args map[string]string
+	var err error
+	if templ, args, err = checkTemplateAndArguments(m.GetTemplate(), m.GetArguments()); err != nil {
 		return "", err
 	}
+	content := getContent(args, templ)
 	ttl := m.Delay()
-	err := s.produce(ctx, m.(*meta.SmsProducer), ttl)
+	err = s.produce(ctx, m.(*meta.SmsProducer), content, ttl)
 	return m.GetId(), err
 }
 
-func (smsServiceImpl) produce(ctx context.Context, p *meta.SmsProducer, ttl int64) error {
+func (smsServiceImpl) produce(ctx context.Context, p *meta.SmsProducer, content string, ttl int64) error {
 	dbSms := &meta.DbSms{
 		Id:          p.Id,
 		Platform:    p.Platform,
 		PlatformKey: p.PlatformKey,
-		Content:     "",
+		Content:     content,
 		Mobile:      p.Mobile,
 		Template:    p.Template,
 		Arguments:   p.Arguments,

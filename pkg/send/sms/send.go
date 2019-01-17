@@ -49,7 +49,7 @@ func (c *Client) Send(msg send.Message, do send.DoRes) error {
 	var req *Request
 	var ok bool
 	if req, ok = msg.(*Request); !ok {
-		return fmt.Errorf("this type is not supported, use sms.newrequest()")
+		return fmt.Errorf("this type is not supported, use sms.NewRequest()")
 	}
 	req.AccessKeyId = c.cfg.AccessKeyId
 	sign, err := req.Encode(c.cfg.AccessSecret, c.cfg.GatewayURL)

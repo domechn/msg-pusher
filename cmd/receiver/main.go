@@ -85,7 +85,7 @@ func start(_ *cobra.Command, _ []string) error {
 	printFlags()
 
 	// init log
-	log.Init(opts.logPath, opts.logLevel)
+	log.Init("receiver", opts.logPath, opts.logLevel)
 
 	if err = config.Init(opts.configPath); err != nil {
 		return err

@@ -28,6 +28,7 @@ var (
 )
 
 var (
+	ErrParam                 = NewError(106001001, "参数格式错误")
 	ErrPhoneNumber           = NewError(100002006, "手机号码格式错误")
 	ErrToUser                = NewError(106001025, "接收者为空")
 	ErrDestination           = NewError(106001026, "接收邮箱不合法")

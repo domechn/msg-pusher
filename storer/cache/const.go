@@ -15,4 +15,10 @@ const (
 	base     = "base-"
 	lastest  = "lst-"
 	template = "template_"
+	lock5s   = "lock-5s-"
+	sentSet  = "has-sent-msg-set"
+)
+
+var (
+	success = []byte{1}
 )

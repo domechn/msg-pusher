@@ -13,6 +13,7 @@ package service
 
 import (
 	"context"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/sirupsen/logrus"
 	"uuabc.com/sendmsg/pkg/pb/meta"
@@ -28,20 +29,25 @@ func NewWeChatServiceImpl() weChatServiceImpl {
 }
 
 func (s weChatServiceImpl) Produce(ctx context.Context, m Meta) (string, error) {
-	if err := checkTemplateAndArguments(m.GetTemplate(), m.GetArguments()); err != nil {
+	var templ string
+	var args map[string]string
+	var err error
+	if templ, args, err = checkTemplateAndArguments(m.GetTemplate(), m.GetArguments()); err != nil {
 		return "", err
 	}
+	content := getContent(args, templ)
 	ttl := m.Delay()
-	err := s.produce(ctx, m.(*meta.WeChatProducer), ttl)
+	err = s.produce(ctx, m.(*meta.WeChatProducer), content, ttl)
 	return m.GetId(), err
 }
 
-func (weChatServiceImpl) produce(ctx context.Context, p *meta.WeChatProducer, ttl int64) error {
+func (weChatServiceImpl) produce(ctx context.Context, p *meta.WeChatProducer, content string, ttl int64) error {
 	dbWeChat := &meta.DbWeChat{
 		Id:        p.Id,
 		Platform:  p.Platform,
 		Touser:    p.Touser,
 		Type:      p.Type,
+		Content:   content,
 		Template:  p.Template,
 		Url:       p.Url,
 		Arguments: p.Arguments,

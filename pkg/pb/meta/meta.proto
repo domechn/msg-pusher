@@ -97,10 +97,11 @@ message DbSms {
     int32 status = 12;
     //@inject_tag: json:"result_status,omitempty" db:"result_status"
     int32 resultStatus = 13;
+    string reason = 14;
     //@inject_tag: json:"created_at,omitempty" db:"created_at"
-    string createdAt = 14;
+    string createdAt = 15;
     //@inject_tag: json:"updated_at,omitempty" db:"updated_at"
-    string updatedAt = 15;
+    string updatedAt = 16;
 }
 
 // "platform":3,
@@ -149,10 +150,11 @@ message DbEmail {
     int32 status = 13;
     //@inject_tag: json:"result_status,omitempty" db:"result_status"
     int32 resultStatus = 14;
+    string reason = 15;
     //@inject_tag: json:"created_at,omitempty" db:"created_at"
-    string createdAt = 15;
+    string createdAt = 16;
     //@inject_tag: json:"updated_at,omitempty" db:"updated_at"
-    string updatedAt = 16;
+    string updatedAt = 17;
 }
 
 // "platform":3,
@@ -194,8 +196,9 @@ message DbWeChat {
     int32 status = 11;
     //@inject_tag: json:"result_status,omitempty" db:"result_status"
     int32 resultStatus = 12;
+    string reason = 13;
     //@inject_tag: json:"created_at,omitempty" db:"created_at"
-    string createdAt = 13;
+    string createdAt = 14;
     //@inject_tag: json:"updated_at,omitempty" db:"updated_at"
-    string updatedAt = 14;
+    string updatedAt = 15;
 }

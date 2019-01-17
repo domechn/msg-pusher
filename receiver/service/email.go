@@ -29,21 +29,25 @@ func NewEmailSeriveImpl() emailServiceImpl {
 
 // Produce 接收要发送的email信息，并保存
 func (s emailServiceImpl) Produce(ctx context.Context, m Meta) (string, error) {
-	if err := checkTemplateAndArguments(m.GetTemplate(), m.GetArguments()); err != nil {
+	var templ string
+	var args map[string]string
+	var err error
+	if templ, args, err = checkTemplateAndArguments(m.GetTemplate(), m.GetArguments()); err != nil {
 		return "", err
 	}
+	content := getContent(args, templ)
 	ttl := m.Delay()
-	err := s.produce(ctx, m.(*meta.EmailProducer), ttl)
+	err = s.produce(ctx, m.(*meta.EmailProducer), content, ttl)
 	return m.GetId(), err
 }
 
-func (emailServiceImpl) produce(ctx context.Context, p *meta.EmailProducer, ttl int64) error {
+func (emailServiceImpl) produce(ctx context.Context, p *meta.EmailProducer, content string, ttl int64) error {
 	dbEmail := &meta.DbEmail{
 		Id:          p.Id,
 		Platform:    p.Platform,
 		PlatformKey: p.PlatformKey,
 		Title:       p.Title,
-		Content:     "",
+		Content:     content,
 		Destination: p.Destination,
 		Type:        p.Type,
 		Template:    p.Template,

@@ -14,7 +14,6 @@ package storer
 import (
 	"github.com/jmoiron/sqlx"
 	"uuabc.com/sendmsg/config"
-	"uuabc.com/sendmsg/pkg/cache"
 	"uuabc.com/sendmsg/pkg/cache/local"
 	"uuabc.com/sendmsg/pkg/cache/redis"
 	"uuabc.com/sendmsg/pkg/db"
@@ -25,7 +24,7 @@ var (
 	MqCli        *mq.RabbitConn
 	ExChangeName string
 	DB           *sqlx.DB
-	Cache        cache.Cache
+	Cache        *redis.Client
 	LocalCache   *local.Client
 )
 

@@ -12,9 +12,11 @@
 package email
 
 import (
-	"fmt"
+	"time"
 
 	"github.com/sirupsen/logrus"
+	"uuabc.com/sendmsg/pkg/pb/meta"
+	"uuabc.com/sendmsg/sender/pub"
 )
 
 type Receiver struct {
@@ -44,7 +46,14 @@ func (r *Receiver) OnError(err error) {
 	}).Error("初始化消费队列失败")
 }
 
-func (r *Receiver) OnReceive(data []byte) bool {
-	fmt.Printf("%s", string(data))
-	return true
+func (r *Receiver) OnReceive(data []byte) (res bool) {
+	// 防止立即发送的数据还没有存入缓存中
+	time.Sleep(time.Millisecond * 300)
+	res = true
+	de := &meta.DbEmail{}
+	if err := r.check(data, de); err != nil {
+		return
+	}
+	pub.Send(r.send(de))
+	return
 }

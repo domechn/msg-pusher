@@ -28,6 +28,7 @@ var smsService = service.NewSmsServiceImpl()
 func SmsProducer(ctx context.Context, body []byte) (res []byte, err error) {
 	p := &meta.SmsProducer{}
 	if err = json.Unmarshal(body, p); err != nil {
+		err = errors.ErrParam
 		return
 	}
 	var id string
@@ -44,6 +45,7 @@ func SmsProducer(ctx context.Context, body []byte) (res []byte, err error) {
 func SmsProducers(ctx context.Context, body []byte) (res []byte, err error) {
 	p := &meta.SmsProducers{}
 	if err = json.Unmarshal(body, p); err != nil {
+		err = errors.ErrParam
 		return
 	}
 	var ids []string
@@ -115,6 +117,7 @@ func SmsMobileDetail(ctx context.Context, d map[string]string) (res []byte, err 
 func SmsEdit(ctx context.Context, body []byte) (res []byte, err error) {
 	p := &meta.SmsProducer{}
 	if err = json.Unmarshal(body, p); err != nil {
+		err = errors.ErrParam
 		return
 	}
 	if err = checkEdit(p); err != nil {

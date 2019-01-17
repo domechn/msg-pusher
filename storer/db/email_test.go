@@ -36,7 +36,12 @@ func TestInsertEmails(t *testing.T) {
 			PlatformKey: "123",
 			Server:      1,
 			Title:       "test",
-			Content:     "test",
+			Content: "<html><head><title>忘记密码验证码</title><style>p " +
+				"{margin:0px;margin-bottom:5px;}</style></head><body>" +
+				"<div style=\"margin-bottom:25px\"><p>亲爱的学生,</p></div>" +
+				"<div style=\"margin-bottom:25px;\"><p>你正在使用找回密码功能.</p>" +
+				"</div><div style=\"margin-bottom:25px;\"><p>验证码是 ${code}</p>" +
+				"</div><div><p>Sincerely,</p><p>UUabc</p></div></body></html>",
 			Template:    "hello",
 			Arguments:   "123test",
 			Destination: "abc@uuabc.com",

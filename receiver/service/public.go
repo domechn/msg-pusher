@@ -14,45 +14,74 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"strconv"
 	"strings"
 
 	"uuabc.com/sendmsg/pkg/errors"
+	"uuabc.com/sendmsg/pkg/utils"
 	"uuabc.com/sendmsg/storer/cache"
 )
 
-func checkTemplateAndArguments(s string, args string) error {
-	params, err := cache.LocalTemplate(s)
+type ArgParams map[string]string
+
+// checkTemplateAndArguments 验证参数,并返回具体模板内容和处理好的参数
+func checkTemplateAndArguments(templateID string, args string) (string, ArgParams, error) {
+	template, err := cache.LocalTemplate(templateID)
+	params := utils.StrFromCurlyBraces(template)
 	if err == nil {
-		return checkArguments(params, args)
+		ag, er := checkArguments(params, args)
+		return template, ag, er
 	}
-	params, err = cache.BaseTemplate(context.Background(), s)
+	template, err = cache.BaseTemplate(context.Background(), templateID)
+	params = utils.StrFromCurlyBraces(template)
 	if err != nil {
-		return errors.ErrTemplateTypeInvalid
+		return template, nil, errors.ErrTemplateTypeInvalid
 	}
-	cache.AddLocalTemplate(s, strings.Join(params, ","))
-	return checkArguments(params, args)
+	cache.AddLocalTemplate(templateID, template)
+	ag, er := checkArguments(params, args)
+	return template, ag, er
 }
 
-func checkArguments(params []string, args string) error {
+// checkArguments 查看参数是否合法，是否和模板匹配
+func checkArguments(params []string, args string) (ArgParams, error) {
 	var ags = make(map[string]interface{})
 	if err := json.Unmarshal([]byte(args), &ags); err != nil {
-		return err
+		return nil, err
 	}
+	var res = make(ArgParams, len(ags))
 	var i int
-	for a := range ags {
+	for a, g := range ags {
+		switch g.(type) {
+		case string:
+			res[a] = g.(string)
+		case float64:
+			res[a] = strconv.Itoa(int(g.(float64)))
+		default:
+			return nil, errors.ErrArgumentsInvalid
+		}
 		var flag bool
 		for _, v := range params {
 			if v == "${"+a+"}" {
 				flag = true
 				i++
 			}
-			if !flag {
-				return errors.ErrArgumentsInvalid
-			}
+		}
+		if !flag {
+			return nil, errors.ErrArgumentsInvalid
 		}
 	}
 	if i != len(params) {
-		return errors.ErrArgumentsInvalid
+		return nil, errors.ErrArgumentsInvalid
 	}
-	return nil
+	return res, nil
+}
+
+// getContent 将模板内的参数替换成用户传入的值
+func getContent(params map[string]string, template string) string {
+	for k, v := range params {
+		trans := "${" + k + "}"
+		template = strings.Replace(template, trans, v, -1)
+	}
+
+	return template
 }

@@ -50,10 +50,10 @@ func (r *Receiver) OnReceive(data []byte) (res bool) {
 	// 防止立即发送的数据还没有存入缓存中
 	time.Sleep(time.Millisecond * 300)
 	res = true
-	ba := &meta.DbSms{}
-	if err := r.check(data, ba); err != nil {
+	ds := &meta.DbSms{}
+	if err := r.check(data, ds); err != nil {
 		return
 	}
-	pub.Send(r.send(ba))
+	pub.Send(r.send(ds))
 	return
 }

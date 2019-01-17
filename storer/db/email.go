@@ -121,11 +121,11 @@ func EmailUpdateSendResult(ctx context.Context, e *meta.DbEmail) (*sqlx.Tx, erro
 	if err != nil {
 		return nil, err
 	}
-	stmt, err := tx.PrepareContext(ctx, "UPDATE emails SET try_num=?,status=?,result_status=? WHERE id=?")
+	stmt, err := tx.PrepareContext(ctx, "UPDATE emails SET try_num=?,status=?,result_status=?,reason=? WHERE id=?")
 	if err != nil {
 		return tx, err
 	}
 	defer stmt.Close()
-	_, err = stmt.ExecContext(ctx, e.TryNum, e.Status, e.ResultStatus, e.Id)
+	_, err = stmt.ExecContext(ctx, e.TryNum, e.Status, e.ResultStatus, e.Reason, e.Id)
 	return tx, err
 }

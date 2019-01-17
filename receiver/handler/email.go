@@ -14,7 +14,7 @@ package handler
 import (
 	"context"
 
-	"github.com/hellofresh/janus/pkg/errors"
+	"uuabc.com/sendmsg/pkg/errors"
 	"uuabc.com/sendmsg/pkg/pb/meta"
 	"uuabc.com/sendmsg/pkg/utils"
 	"uuabc.com/sendmsg/receiver/model"
@@ -28,6 +28,7 @@ var emailService = service.NewEmailSeriveImpl()
 func EmailProducer(ctx context.Context, body []byte) (res []byte, err error) {
 	p := &meta.EmailProducer{}
 	if err = json.Unmarshal(body, p); err != nil {
+		err = errors.ErrParam
 		return
 	}
 	var id string
@@ -44,6 +45,7 @@ func EmailProducer(ctx context.Context, body []byte) (res []byte, err error) {
 func EmailEdit(ctx context.Context, body []byte) (res []byte, err error) {
 	p := &meta.EmailProducer{}
 	if err = json.Unmarshal(body, p); err != nil {
+		err = errors.ErrParam
 		return
 	}
 	if err = checkEdit(p); err != nil {
@@ -61,7 +63,7 @@ func EmailEdit(ctx context.Context, body []byte) (res []byte, err error) {
 func EmailIDDetail(ctx context.Context, d map[string]string) (res []byte, err error) {
 	id := d["id"]
 	if err = utils.ValidateUUIDV4(id); err != nil {
-		err = errors.ErrInvalidID
+		err = errors.ErrIDIsInvalid
 		return
 	}
 	data, err := emailService.Detail(ctx, id)
@@ -77,7 +79,7 @@ func EmailIDDetail(ctx context.Context, d map[string]string) (res []byte, err er
 func EmailCancel(ctx context.Context, d map[string]string) (res []byte, err error) {
 	id := d["id"]
 	if err = utils.ValidateUUIDV4(id); err != nil {
-		err = errors.ErrInvalidID
+		err = errors.ErrIDIsInvalid
 		return
 	}
 	if err = emailService.Cancel(ctx, id); err != nil {
