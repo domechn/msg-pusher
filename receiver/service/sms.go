@@ -55,6 +55,7 @@ func (smsServiceImpl) produce(ctx context.Context, p *meta.SmsProducer, content 
 	}
 	tx, err := db.SmsInsert(ctx, dbSms)
 	if err != nil {
+		db.RollBack(tx)
 		return err
 	}
 	id := dbSms.Id

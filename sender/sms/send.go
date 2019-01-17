@@ -63,23 +63,15 @@ func (r *Receiver) send(msg pub.Messager) pub.RetryFunc {
 			return pub.ErrTooManyTimes
 		}
 
-		var res *sms.Response
-
 		err = pub.SmsClient.Send(sms.NewRequest(
 			smsMsg.Mobile,
 			"UUabc",
 			smsMsg.Template,
 			smsMsg.Arguments,
 			"12345",
-		), func(rs interface{}) {
-			if rs != nil {
-				res = rs.(*sms.Response)
-			}
-		})
+		), nil)
 		if err != nil {
-			logrus.WithFields(logrus.Fields{
-				"res": res,
-			}).Errorf("短信发送失败，error: %v", err)
+			logrus.WithFields(logrus.Fields{"type": r.queueName}).Errorf("发送失败，error: %v", err)
 			return pub.ErrMsgSendFailed
 		}
 

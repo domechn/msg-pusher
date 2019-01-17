@@ -25,7 +25,7 @@ enum Message {
 
 enum SmsServer {
     SmsServer_Unknown = 0;
-    SmsServer_Eay = 1;
+//    SmsServer_Eay = 1;
     SmsServer_Ali = 2;
 }
 

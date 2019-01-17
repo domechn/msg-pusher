@@ -57,7 +57,7 @@ func WeChatInsert(ctx context.Context, wechat *meta.DbWeChat) (*sqlx.Tx, error) 
 	if err != nil {
 		return nil, err
 	}
-	stmt, err := tx.PrepareContext(ctx, `INSERT INTO wechats (id,platform,touser,type,template,url,content,arguments,send_time) VALUES (?,?,?,?,?,?,?,?)`)
+	stmt, err := tx.PrepareContext(ctx, `INSERT INTO wechats (id,platform,touser,type,template,url,content,arguments,send_time) VALUES (?,?,?,?,?,?,?,?,?)`)
 	if err != nil {
 		return tx, err
 	}

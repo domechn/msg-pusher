@@ -69,7 +69,7 @@ func (r *Receiver) send(msg pub.Messager) pub.RetryFunc {
 			emailMsg.Content,
 		), nil)
 		if err != nil {
-			logrus.WithFields(logrus.Fields{}).Errorf("邮件发送失败，error: %v", err)
+			logrus.WithFields(logrus.Fields{"type": r.queueName}).Errorf("发送失败，error: %v", err)
 			return pub.ErrMsgSendFailed
 		}
 

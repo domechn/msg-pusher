@@ -58,6 +58,7 @@ func (emailServiceImpl) produce(ctx context.Context, p *meta.EmailProducer, cont
 	id := dbEmail.Id
 	tx, err := db.EmailInsert(ctx, dbEmail)
 	if err != nil {
+		db.RollBack(tx)
 		return err
 	}
 	err = mq.EmailProduce(ctx, []byte(id), ttl)

@@ -55,6 +55,7 @@ func (weChatServiceImpl) produce(ctx context.Context, p *meta.WeChatProducer, co
 	}
 	tx, err := db.WeChatInsert(ctx, dbWeChat)
 	if err != nil {
+		db.RollBack(tx)
 		return err
 	}
 	id := dbWeChat.Id
@@ -65,14 +66,10 @@ func (weChatServiceImpl) produce(ctx context.Context, p *meta.WeChatProducer, co
 		return err
 	}
 	logrus.WithField("type", "WeChat").Infof("消息 %s 插入消息队列成功,正在等待发送,开始提交到数据库", id)
-	err = db.Commit(tx)
-	if err != nil {
-		return err
-	}
 
 	go updateCache(context.Background(), id, dbWeChat)
 	logrus.WithField("type", "WeChat").Infof("消息 %s 插入数据库成功", id)
-	return nil
+	return db.Commit(tx)
 }
 
 func (s weChatServiceImpl) Detail(ctx context.Context, id string) (Marshaler, error) {
