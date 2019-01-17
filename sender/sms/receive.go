@@ -12,7 +12,6 @@
 package sms
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -48,17 +47,13 @@ func (r *Receiver) OnError(err error) {
 }
 
 func (r *Receiver) OnReceive(data []byte) (res bool) {
-	fmt.Println(string(data))
 	// 防止立即发送的数据还没有存入缓存中
 	time.Sleep(time.Millisecond * 300)
 	res = true
 	ba := &meta.DbSms{}
 	if err := r.check(data, ba); err != nil {
-		logrus.Error(err)
 		return
 	}
-	if err := pub.Send(r.send(ba)); err != nil {
-		logrus.Error(err)
-	}
+	pub.Send(r.send(ba))
 	return
 }

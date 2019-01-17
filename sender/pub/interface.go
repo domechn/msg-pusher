@@ -12,6 +12,7 @@
 package pub
 
 type Messager interface {
+	GetId() string
 	Marshal() ([]byte, error)
 	Unmarshal([]byte) error
 	GetStatus() int32

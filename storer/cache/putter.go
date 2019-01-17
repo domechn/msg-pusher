@@ -36,6 +36,11 @@ func LockID5s(ctx context.Context, k string) error {
 	return storer.Cache.Add(ctx, "lock-5s-"+k, []byte("lock"), 5)
 }
 
+// ReleaseLock 释放独占锁
+func ReleaseLock(ctx context.Context, k string) error {
+	return storer.Cache.Del(ctx, "lock-5s-"+k)
+}
+
 func PutBaseTemplate(ctx context.Context, k string, v []byte) error {
 	return storer.Cache.Put(ctx, template+k, v, 0)
 }

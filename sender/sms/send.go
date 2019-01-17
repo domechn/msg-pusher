@@ -106,7 +106,18 @@ func (r *Receiver) checkSendTime(msg pub.Messager) error {
 
 func (r *Receiver) send(msg pub.Messager) pub.RetryFunc {
 	return func(count int) error {
+		lockKey := "send_" + msg.GetId()
 		smsMsg := msg.(*meta.DbSms)
+		// 分布式锁，防止资源竞争
+		err := cache.LockID5s(context.Background(), lockKey)
+		if err != nil {
+			logrus.WithField("id", smsMsg.Id).Error("获取分布式锁失败，消息可能正在被其他线程在处理")
+			return err
+		} else {
+			logrus.WithField("id", smsMsg.Id).Info("获取分布式锁成功，正在发送消息")
+		}
+		// 释放分布式锁
+		defer cache.ReleaseLock(context.Background(), lockKey)
 		if count > pub.TryNum {
 			smsMsg.SetStatus(int32(meta.Status_Final))
 			smsMsg.SetResult(int32(meta.Result_Fail))
@@ -117,7 +128,7 @@ func (r *Receiver) send(msg pub.Messager) pub.RetryFunc {
 
 		var res *sms.Response
 
-		err := pub.SmsClient.Send(sms.NewRequest(
+		err = pub.SmsClient.Send(sms.NewRequest(
 			smsMsg.Mobile,
 			"UUabc",
 			smsMsg.Template,
