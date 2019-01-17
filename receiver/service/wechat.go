@@ -54,12 +54,12 @@ func (weChatServiceImpl) produce(ctx context.Context, p *meta.WeChatProducer, tt
 	id := dbWeChat.Id
 	err = mq.WeChatProduce(ctx, []byte(id), ttl)
 	if err != nil {
-		rollback(tx)
+		db.RollBack(tx)
 		logrus.WithField("type", "WeChat").Errorf("消息 %s 插入消息队列失败，正在回滚。。。，error: %v\n", id, err)
 		return err
 	}
 	logrus.WithField("type", "WeChat").Infof("消息 %s 插入消息队列成功,正在等待发送,开始提交到数据库", id)
-	err = commit(tx)
+	err = db.Commit(tx)
 	if err != nil {
 		return err
 	}
@@ -121,17 +121,17 @@ func (weChatServiceImpl) edit(ctx context.Context, m Meta, e *meta.DbWeChat) err
 
 	tx, err := db.WeChatEdit(ctx, e)
 	if err != nil {
-		rollback(tx)
+		db.RollBack(tx)
 		logrus.WithField("type", "WeChat").Errorf("edit修改数据库失败,error: %v", err)
 		return err
 	}
 
 	err = edit(ctx, em, m, mq.WeChatProduce)
 	if err != nil {
-		rollback(tx)
+		db.RollBack(tx)
 		logrus.WithField("type", "WeChat").Errorf("edit更新mq失败，正在回滚,error: %v", err)
 		return err
 	}
 
-	return commit(tx)
+	return db.Commit(tx)
 }

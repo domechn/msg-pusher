@@ -27,6 +27,7 @@ func NewEmailSeriveImpl() emailServiceImpl {
 	return emailServiceImpl{}
 }
 
+// Produce 接收要发送的email信息，并保存
 func (s emailServiceImpl) Produce(ctx context.Context, m Meta) (string, error) {
 	if err := checkTemplateAndArguments(m.GetTemplate(), m.GetArguments()); err != nil {
 		return "", err
@@ -57,12 +58,12 @@ func (emailServiceImpl) produce(ctx context.Context, p *meta.EmailProducer, ttl 
 	}
 	err = mq.EmailProduce(ctx, []byte(id), ttl)
 	if err != nil {
-		rollback(tx)
+		db.RollBack(tx)
 		logrus.WithField("type", "Email").Errorf("消息 %s 插入消息队列失败，正在回滚。。。，error: %v\n", id, err)
 		return err
 	}
 	logrus.WithField("type", "Email").Infof("消息 %s 插入消息队列成功,正在等待发送,开始提交到数据库", id)
-	err = commit(tx)
+	err = db.Commit(tx)
 	if err != nil {
 		return err
 	}
@@ -71,6 +72,7 @@ func (emailServiceImpl) produce(ctx context.Context, p *meta.EmailProducer, ttl 
 	return nil
 }
 
+// Detail 返回要发送的email的具体信息
 func (s emailServiceImpl) Detail(ctx context.Context, id string) (Marshaler, error) {
 	return s.detail(ctx, id)
 }
@@ -122,17 +124,17 @@ func (s emailServiceImpl) edit(ctx context.Context, m Meta, e *meta.DbEmail) err
 
 	tx, err := db.EmailEdit(ctx, e)
 	if err != nil {
-		rollback(tx)
+		db.RollBack(tx)
 		logrus.WithField("type", "Email").Errorf("edit修改数据库失败,error: %v", err)
 		return err
 	}
 
 	err = edit(ctx, em, m, mq.EmailProduce)
 	if err != nil {
-		rollback(tx)
+		db.RollBack(tx)
 		logrus.WithField("type", "Email").Errorf("edit更新mq失败，正在回滚,error: %v", err)
 		return err
 	}
 
-	return commit(tx)
+	return db.Commit(tx)
 }

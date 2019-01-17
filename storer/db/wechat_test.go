@@ -93,3 +93,23 @@ func TestWeChatEditToUser(t *testing.T) {
 		tx.Commit()
 	}
 }
+
+func TestWeChatUpdateSendResult(t *testing.T) {
+	tx, err := WeChatUpdateSendResult(context.Background(), &meta.DbWeChat{
+		Id:           "8ea57cba-64dd-4477-9389-3a85d7269d38",
+		Status:       3,
+		ResultStatus: 1,
+		TryNum:       2,
+	})
+	if err != nil {
+		if tx != nil {
+			if err := tx.Rollback(); err != nil {
+				t.Error(err)
+			}
+		}
+		t.Error(err)
+	}
+	if err := tx.Commit(); err != nil {
+		t.Error(err)
+	}
+}

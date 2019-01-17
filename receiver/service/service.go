@@ -155,7 +155,7 @@ func cancel(ctx context.Context, id string, u updateFunc, m Messager) error {
 	// 更新数据库中的status
 	tx, err := u(ctx, id)
 	if err != nil {
-		rollback(tx)
+		db.RollBack(tx)
 		// 如果没有行被修改说明有别的线程已经修改了该条数据的状态
 		if err == db.ErrNoRowsEffected {
 			return errors.ErrMsgHasCancelled
@@ -172,7 +172,7 @@ func cancel(ctx context.Context, id string, u updateFunc, m Messager) error {
 
 	// 该方法并发安全
 	if err := cache.PutBaseCache(ctx, id, b); err != nil {
-		rollback(tx)
+		db.RollBack(tx)
 		logrus.WithFields(logrus.Fields{
 			"method": "putBaseCache",
 			"id":     id,
@@ -191,7 +191,7 @@ func cancel(ctx context.Context, id string, u updateFunc, m Messager) error {
 		return err
 	}
 
-	return commit(tx)
+	return db.Commit(tx)
 }
 
 func checkStatus(id string, msg Messager) error {

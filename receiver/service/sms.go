@@ -57,11 +57,11 @@ func (smsServiceImpl) produce(ctx context.Context, p *meta.SmsProducer, ttl int6
 	err = mq.SmsProduce(ctx, []byte(id), ttl)
 	if err != nil {
 		logrus.WithField("type", "Sms").Errorf("消息 %s 插入消息队列失败，正在回滚。。。，error: %v\n", id, err)
-		rollback(tx)
+		db.RollBack(tx)
 		return err
 	}
 	logrus.WithField("type", "Sms").Infof("消息 %s 插入消息队列成功,正在等待发送,开始提交到数据库", id)
-	err = commit(tx)
+	err = db.Commit(tx)
 	if err != nil {
 		return err
 	}
@@ -125,17 +125,17 @@ func (s smsServiceImpl) edit(ctx context.Context, m Meta, e *meta.DbSms) error {
 
 	tx, err := db.SmsEdit(ctx, e)
 	if err != nil {
-		rollback(tx)
+		db.RollBack(tx)
 		logrus.WithField("type", "Sms").Errorf("edit修改数据库失败,error: %v", err)
 		return err
 	}
 
 	err = edit(ctx, em, m, mq.SmsProduce)
 	if err != nil {
-		rollback(tx)
+		db.RollBack(tx)
 		logrus.WithField("type", "Sms").Errorf("edit更新mq失败，正在回滚,error: %v", err)
 		return err
 	}
 
-	return commit(tx)
+	return db.Commit(tx)
 }

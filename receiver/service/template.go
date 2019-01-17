@@ -34,10 +34,10 @@ func (t templateImpl) AddTemplate(ctx context.Context, a *tpl.TemplateAdder) (st
 
 	tx, paramStr, err := t.add(ctx, uid, a)
 	if err != nil {
-		rollback(tx)
+		db.RollBack(tx)
 		return "", err
 	}
-	err = commit(tx)
+	err = db.Commit(tx)
 	if err == nil {
 		// 更新本地缓存
 		go func() {

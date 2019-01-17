@@ -14,6 +14,7 @@ package db
 import (
 	"context"
 	"database/sql"
+
 	"github.com/jmoiron/sqlx"
 	"uuabc.com/sendmsg/pkg/pb/meta"
 	"uuabc.com/sendmsg/storer"
@@ -80,7 +81,7 @@ func SmsInsert(ctx context.Context, sms *meta.DbSms) (*sqlx.Tx, error) {
 		sms.Mobile,
 		sms.Template,
 		sms.Arguments,
-		sms.SendTime,
+		changeSendTime(sms.SendTime),
 		sms.Server,
 		sms.Type,
 	)
@@ -108,10 +109,11 @@ func SmsEdit(ctx context.Context, s *meta.DbSms) (*sqlx.Tx, error) {
 	}
 	defer stmt.Close()
 	var res sql.Result
+	sendT := changeSendTime(s.SendTime)
 	if s.Mobile != "" {
-		res, err = stmt.ExecContext(ctx, s.Arguments, s.SendTime, s.Mobile, s.Id)
+		res, err = stmt.ExecContext(ctx, s.Arguments, sendT, s.Mobile, s.Id)
 	} else {
-		res, err = stmt.ExecContext(ctx, s.Arguments, s.SendTime, s.Id)
+		res, err = stmt.ExecContext(ctx, s.Arguments, sendT, s.Id)
 	}
 	if err != nil {
 		return tx, err
@@ -120,4 +122,19 @@ func SmsEdit(ctx context.Context, s *meta.DbSms) (*sqlx.Tx, error) {
 		return tx, ErrNoRowsEffected
 	}
 	return tx, nil
+}
+
+// SmsUpdateSendResult 更新短信发送结果
+func SmsUpdateSendResult(ctx context.Context, s *meta.DbSms) (*sqlx.Tx, error) {
+	tx, err := storer.DB.Beginx()
+	if err != nil {
+		return nil, err
+	}
+	stmt, err := tx.PrepareContext(ctx, "UPDATE smss SET try_num=?,status=?,result_status=? WHERE id=?")
+	if err != nil {
+		return tx, err
+	}
+	defer stmt.Close()
+	_, err = stmt.ExecContext(ctx, s.TryNum, s.Status, s.ResultStatus, s.Id)
+	return tx, err
 }

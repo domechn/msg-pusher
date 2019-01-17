@@ -116,3 +116,23 @@ func TestSmsEditMobile(t *testing.T) {
 		tx.Commit()
 	}
 }
+
+func TestSmsUpdateSendResult(t *testing.T) {
+	tx, err := SmsUpdateSendResult(context.Background(), &meta.DbSms{
+		Id:           "ce0f3c45-0a59-4b88-a057-9898de999e8d",
+		Status:       3,
+		ResultStatus: 1,
+		TryNum:       2,
+	})
+	if err != nil {
+		if tx != nil {
+			if err := tx.Rollback(); err != nil {
+				t.Error(err)
+			}
+		}
+		t.Error(err)
+	}
+	if err := tx.Commit(); err != nil {
+		t.Error(err)
+	}
+}

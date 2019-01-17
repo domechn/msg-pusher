@@ -14,26 +14,11 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"github.com/jmoiron/sqlx"
 	"strings"
+
 	"uuabc.com/sendmsg/pkg/errors"
 	"uuabc.com/sendmsg/storer/cache"
 )
-
-func rollback(tx *sqlx.Tx) error {
-	if tx == nil {
-		return nil
-	}
-	return tx.Rollback()
-}
-
-func commit(tx *sqlx.Tx) error {
-	if tx == nil {
-		return fmt.Errorf("commit: tx is nil")
-	}
-	return tx.Commit()
-}
 
 func checkTemplateAndArguments(s string, args string) error {
 	params, err := cache.LocalTemplate(s)

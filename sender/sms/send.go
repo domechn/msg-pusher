@@ -21,6 +21,7 @@ import (
 	"uuabc.com/sendmsg/pkg/utils"
 	"uuabc.com/sendmsg/sender/pub"
 	"uuabc.com/sendmsg/storer/cache"
+	"uuabc.com/sendmsg/storer/db"
 )
 
 func (r *Receiver) check(data []byte, msg pub.Messager) error {
@@ -87,9 +88,17 @@ func (r *Receiver) checkSendTime(msg pub.Messager) error {
 		return err
 	}
 	if sendT.Add(pub.DefaultExpirationTime).Before(now) {
+		logrus.WithFields(logrus.Fields{
+			"now":       now.String(),
+			"send_time": sendT.String(),
+		}).Error("消息已过期")
 		return pub.ErrMsgIsExpiration
 	}
 	if sendT.After(now) {
+		logrus.WithFields(logrus.Fields{
+			"now":       now.String(),
+			"send_time": sendT.String(),
+		}).Error("消息未到发送时间")
 		return pub.ErrMsgDeliveryNotArrived
 	}
 	return nil
@@ -130,18 +139,34 @@ func (r *Receiver) send(msg pub.Messager) pub.RetryFunc {
 		smsMsg.SetResult(int32(meta.Result_Success))
 		smsMsg.SetTryNum(int32(count))
 		// 更新数据库和缓存，如果出错打印日志，不做错误处理
-		updateDbAndCache(smsMsg)
+		err = updateDbAndCache(smsMsg)
+		if err != nil {
+			logrus.WithFields(logrus.Fields{
+				"id":    smsMsg.Id,
+				"data":  smsMsg,
+				"error": err,
+			}).Errorf("消息发送成功但是更新缓存和数据库时发生错误，请手动修改")
+		}
 
 		return nil
 	}
 }
 
-func updateDbAndCache(msg *meta.DbSms) {
+// 更新数据库和缓存
+func updateDbAndCache(msg *meta.DbSms) error {
 	var err error
-	logrus.WithFields(logrus.Fields{
-		"id":    msg.Id,
-		"data":  msg,
-		"error": err,
-	}).Errorf("消息发送成功但是更新缓存和数据库时发生错误，请手动修改")
+	tx, err := db.SmsUpdateSendResult(context.Background(), msg)
+	if err != nil {
+		db.RollBack(tx)
+		return err
+	}
+	b, _ := msg.Marshal()
+	err = cache.PutBaseCache(context.Background(), msg.Id, b)
+	cache.PutLastestCache(context.Background(), msg.Id, b)
+	if err != nil {
+		db.RollBack(tx)
+		return err
+	}
 
+	return db.Commit(tx)
 }

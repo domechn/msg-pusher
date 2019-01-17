@@ -14,6 +14,7 @@ package db
 import (
 	"context"
 	"database/sql"
+
 	"github.com/jmoiron/sqlx"
 	"uuabc.com/sendmsg/pkg/pb/meta"
 	"uuabc.com/sendmsg/storer"
@@ -73,7 +74,7 @@ func EmailInsert(ctx context.Context, email *meta.DbEmail) (*sqlx.Tx, error) {
 		email.Template,
 		email.Arguments,
 		email.Server,
-		email.SendTime,
+		changeSendTime(email.SendTime),
 	)
 	if err != nil {
 		return tx, err
@@ -99,10 +100,11 @@ func EmailEdit(ctx context.Context, e *meta.DbEmail) (*sqlx.Tx, error) {
 	}
 	defer stmt.Close()
 	var res sql.Result
+	sendT := changeSendTime(e.SendTime)
 	if e.Destination != "" {
-		res, err = stmt.ExecContext(ctx, e.Arguments, e.SendTime, e.Destination, e.Id)
+		res, err = stmt.ExecContext(ctx, e.Arguments, sendT, e.Destination, e.Id)
 	} else {
-		res, err = stmt.ExecContext(ctx, e.Arguments, e.SendTime, e.Id)
+		res, err = stmt.ExecContext(ctx, e.Arguments, sendT, e.Id)
 	}
 	if err != nil {
 		return tx, err
@@ -111,4 +113,19 @@ func EmailEdit(ctx context.Context, e *meta.DbEmail) (*sqlx.Tx, error) {
 		return tx, ErrNoRowsEffected
 	}
 	return tx, nil
+}
+
+// EmailUpdateSendResult 修改短信发送结果
+func EmailUpdateSendResult(ctx context.Context, e *meta.DbEmail) (*sqlx.Tx, error) {
+	tx, err := storer.DB.Beginx()
+	if err != nil {
+		return nil, err
+	}
+	stmt, err := tx.PrepareContext(ctx, "UPDATE emails SET try_num=?,status=?,result_status=? WHERE id=?")
+	if err != nil {
+		return tx, err
+	}
+	defer stmt.Close()
+	_, err = stmt.ExecContext(ctx, e.TryNum, e.Status, e.ResultStatus, e.Id)
+	return tx, err
 }

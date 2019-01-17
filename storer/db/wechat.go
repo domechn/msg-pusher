@@ -14,6 +14,7 @@ package db
 import (
 	"context"
 	"database/sql"
+
 	"github.com/jmoiron/sqlx"
 	"uuabc.com/sendmsg/pkg/pb/meta"
 	"uuabc.com/sendmsg/storer"
@@ -71,7 +72,7 @@ func WeChatInsert(ctx context.Context, wechat *meta.DbWeChat) (*sqlx.Tx, error) 
 		wechat.Url,
 		wechat.Content,
 		wechat.Arguments,
-		wechat.SendTime,
+		changeSendTime(wechat.SendTime),
 	)
 	if err != nil {
 		return tx, err
@@ -97,10 +98,11 @@ func WeChatEdit(ctx context.Context, w *meta.DbWeChat) (*sqlx.Tx, error) {
 	}
 	defer stmt.Close()
 	var res sql.Result
+	sendT := changeSendTime(w.SendTime)
 	if w.Touser != "" {
-		res, err = stmt.ExecContext(ctx, w.Arguments, w.SendTime, w.Touser, w.Id)
+		res, err = stmt.ExecContext(ctx, w.Arguments, sendT, w.Touser, w.Id)
 	} else {
-		res, err = stmt.ExecContext(ctx, w.Arguments, w.SendTime, w.Id)
+		res, err = stmt.ExecContext(ctx, w.Arguments, sendT, w.Id)
 	}
 	if err != nil {
 		return tx, err
@@ -109,4 +111,19 @@ func WeChatEdit(ctx context.Context, w *meta.DbWeChat) (*sqlx.Tx, error) {
 		return tx, ErrNoRowsEffected
 	}
 	return tx, nil
+}
+
+// WeChatUpdateSendResult 修改微信发送结果
+func WeChatUpdateSendResult(ctx context.Context, w *meta.DbWeChat) (*sqlx.Tx, error) {
+	tx, err := storer.DB.Beginx()
+	if err != nil {
+		return nil, err
+	}
+	stmt, err := tx.PrepareContext(ctx, "UPDATE wechats SET try_num=?,status=?,result_status=? WHERE id=?")
+	if err != nil {
+		return tx, err
+	}
+	defer stmt.Close()
+	_, err = stmt.ExecContext(ctx, w.TryNum, w.Status, w.ResultStatus, w.Id)
+	return tx, err
 }

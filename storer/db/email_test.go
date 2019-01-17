@@ -101,3 +101,23 @@ func TestEmailEditDestination(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestEmailUpdateSendResult(t *testing.T) {
+	tx, err := EmailUpdateSendResult(context.Background(), &meta.DbEmail{
+		Id:           "8a9da75d-96ef-40ac-b0be-98a327d5e482",
+		Status:       3,
+		ResultStatus: 1,
+		TryNum:       2,
+	})
+	if err != nil {
+		if tx != nil {
+			if err := tx.Rollback(); err != nil {
+				t.Error(err)
+			}
+		}
+		t.Error(err)
+	}
+	if err := tx.Commit(); err != nil {
+		t.Error(err)
+	}
+}
