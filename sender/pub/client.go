@@ -37,7 +37,7 @@ func Init() {
 	WeChatClient = wechat.NewClient(
 		wechat.Config{
 			APPId:     weChatConf.AppId,
-			APPSecret: weChatConf.AppId,
+			APPSecret: weChatConf.AppSecret,
 		},
 		storer.Cache)
 
@@ -47,6 +47,7 @@ func Init() {
 		Username:   emailConf.Username,
 		Password:   emailConf.Password,
 		Host:       emailConf.Host,
+		TLS:        emailConf.TLS,
 	})
 
 	config.MQConf()

@@ -19,13 +19,8 @@ import (
 	"uuabc.com/sendmsg/storer"
 )
 
-// PutBaseCache 底层缓存，跟数据库数据同步，不过期,并发安全
+// PutBaseCache 底层缓存，跟数据库数据同步，不过期
 func PutBaseCache(ctx context.Context, k string, v []byte) error {
-	return putBaseCache(ctx, k, v, true)
-}
-
-// PutBaseCacheForce 强制更新底层缓存
-func PutBaseCacheForce(ctx context.Context, k string, v []byte) error {
 	return putBaseCache(ctx, k, v, false)
 }
 
@@ -44,16 +39,6 @@ func putBaseCache(ctx context.Context, k string, v []byte, b bool) error {
 // PutLastestCache 最新缓存，保证数据时效性，默认5+n(n<5)秒缓存
 func PutLastestCache(ctx context.Context, k string, v []byte) error {
 	return storer.Cache.Put(ctx, lastest+k, v, int64(5+rand.Intn(5)))
-}
-
-// LockID5s 独占锁
-func LockID5s(ctx context.Context, k string) error {
-	return storer.Cache.Add(ctx, lock5s+k, []byte("lock"), 5)
-}
-
-// ReleaseLock 释放独占锁
-func ReleaseLock(ctx context.Context, k string) error {
-	return storer.Cache.Del(ctx, lock5s+k)
 }
 
 // PutBaseTemplate 将添加的模板存入缓存中

@@ -21,4 +21,6 @@ type Config struct {
 	Password string
 	// 邮件服务的域名
 	Host string
+	// 是否是tls服务
+	TLS bool
 }

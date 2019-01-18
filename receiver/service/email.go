@@ -13,6 +13,7 @@ package service
 
 import (
 	"context"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/sirupsen/logrus"
 	"uuabc.com/sendmsg/pkg/pb/meta"
@@ -72,7 +73,7 @@ func (emailServiceImpl) produce(ctx context.Context, p *meta.EmailProducer, cont
 	if err != nil {
 		return err
 	}
-	go updateCache(context.Background(), id, dbEmail)
+	go addCache(context.Background(), id, dbEmail)
 	logrus.WithField("type", "Email").Infof("消息 %s 插入数据库成功", id)
 	return nil
 }
@@ -99,47 +100,15 @@ func (emailServiceImpl) cancel(ctx context.Context, id string) error {
 	}, &meta.DbSms{})
 }
 
+// 修改信息
 func (s emailServiceImpl) Edit(ctx context.Context, m Meta) error {
-	m.Transfer(false)
-	v := m.(*meta.EmailProducer)
-	return s.edit(
-		ctx,
+	dbParam := &meta.DbEmail{}
+	return edit(ctx,
 		m,
-		&meta.DbEmail{
-			Id:          v.Id,
-			Arguments:   v.Arguments,
-			SendTime:    v.SendTime,
-			Destination: v.Destination,
-		})
-}
-
-func (s emailServiceImpl) edit(ctx context.Context, m Meta, e *meta.DbEmail) error {
-	// 用于更新缓存
-	em := &meta.DbEmail{}
-	if err := checkStatus(m.GetId(), em); err != nil {
-		return err
-	}
-
-	// 修改数据
-	em.Arguments = e.Arguments
-	em.SendTime = e.SendTime
-	if e.Destination != "" {
-		em.Destination = e.Destination
-	}
-
-	tx, err := db.EmailEdit(ctx, e)
-	if err != nil {
-		db.RollBack(tx)
-		logrus.WithField("type", "Email").Errorf("edit修改数据库失败,error: %v", err)
-		return err
-	}
-
-	err = edit(ctx, em, m, mq.EmailProduce)
-	if err != nil {
-		db.RollBack(tx)
-		logrus.WithField("type", "Email").Errorf("edit更新mq失败，正在回滚,error: %v", err)
-		return err
-	}
-
-	return db.Commit(tx)
+		dbParam,
+		func(i context.Context, messager Messager) (*sqlx.Tx, error) {
+			return db.EmailEdit(i, messager.(*meta.DbEmail))
+		},
+		mq.EmailProduce,
+	)
 }

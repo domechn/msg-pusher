@@ -31,7 +31,7 @@ func checkMobileDetail(mobile, p string) error {
 
 func checkEdit(m service.Meta) error {
 	if err := utils.ValidateUUIDV4(m.GetId()); err != nil {
-		return err
+		return errors.ErrIDIsInvalid
 	}
 	return m.ValidateEdit()
 }

@@ -50,10 +50,17 @@ func (r *Receiver) OnReceive(data []byte) (res bool) {
 	// 防止立即发送的数据还没有存入缓存中
 	time.Sleep(time.Millisecond * 300)
 	res = true
-	de := &meta.DbWeChat{}
-	if err := r.check(data, de); err != nil {
+	dw := &meta.DbWeChat{}
+	if err := r.check(data, dw); err != nil {
 		return
 	}
-	pub.Send(r.send(de))
+	if err := pub.Send(dw.Id, pub.SendRetryFunc(dw, r.send, r.doDB)); err != nil {
+		logrus.WithFields(logrus.Fields{
+			"type":  r.queueName,
+			"id":    dw.Id,
+			"data":  dw,
+			"error": err,
+		}).Error("发送失败")
+	}
 	return
 }

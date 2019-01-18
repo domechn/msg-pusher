@@ -96,13 +96,7 @@ func SmsEdit(ctx context.Context, s *meta.DbSms) (*sqlx.Tx, error) {
 	if err != nil {
 		return nil, err
 	}
-	query := "UPDATE smss SET arguments=?,send_time=? "
-	if s.Mobile != "" {
-		query += ",mobile=? WHERE id=?"
-	} else {
-		query += "WHERE id=?"
-	}
-	query += " AND status=1"
+	query := "UPDATE smss SET arguments=?,send_time=?,template=?,mobile=? WHERE id=? AND status=1"
 	stmt, err := tx.PrepareContext(ctx, query)
 	if err != nil {
 		return tx, err
@@ -110,11 +104,7 @@ func SmsEdit(ctx context.Context, s *meta.DbSms) (*sqlx.Tx, error) {
 	defer stmt.Close()
 	var res sql.Result
 	sendT := changeSendTime(s.SendTime)
-	if s.Mobile != "" {
-		res, err = stmt.ExecContext(ctx, s.Arguments, sendT, s.Mobile, s.Id)
-	} else {
-		res, err = stmt.ExecContext(ctx, s.Arguments, sendT, s.Id)
-	}
+	res, err = stmt.ExecContext(ctx, s.Arguments, sendT, s.Template, s.Mobile, s.Id)
 	if err != nil {
 		return tx, err
 	}

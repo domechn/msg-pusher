@@ -18,5 +18,7 @@ type Messager interface {
 	GetStatus() int32
 	SetStatus(int32)
 	SetTryNum(int32)
+	SetResult(int32)
+	SetReason(string)
 	GetSendTime() string
 }

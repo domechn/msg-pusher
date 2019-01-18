@@ -15,6 +15,7 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
+	"math/rand"
 	"net/http"
 	"os"
 	"time"
@@ -84,6 +85,7 @@ func start(_ *cobra.Command, _ []string) error {
 	var err error
 	printFlags()
 
+	rand.Seed(time.Now().UnixNano())
 	// init log
 	log.Init("receiver", opts.logPath, opts.logLevel)
 

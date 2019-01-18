@@ -18,7 +18,6 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"uuabc.com/sendmsg/pkg/pb/meta"
-	"uuabc.com/sendmsg/pkg/retry/backoff"
 	"uuabc.com/sendmsg/pkg/utils"
 	"uuabc.com/sendmsg/storer/cache"
 )
@@ -41,25 +40,6 @@ var (
 const (
 	TryNum = 3
 )
-
-type RetryFunc func(count int) error
-
-// Send 发送消息到客户端，有重试机制，重试次数根据retryFunc里判断
-func Send(sendFunc RetryFunc) error {
-	bk := backoff.NewServiceBackOff()
-	var count int
-	doFunc := func() error {
-		count++
-		if err := sendFunc(count); err != nil {
-			if err == ErrTooManyTimes {
-				logrus.WithField("error", err).Error("发送消息失败")
-			}
-			return err
-		}
-		return nil
-	}
-	return backoff.Retry(doFunc, bk)
-}
 
 func Check(id string, msg Messager) error {
 	if err := checkId(id); err != nil {

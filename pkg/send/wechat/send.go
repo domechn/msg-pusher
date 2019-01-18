@@ -17,9 +17,11 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"time"
 
+	"github.com/sirupsen/logrus"
 	"uuabc.com/sendmsg/pkg/cache"
 	"uuabc.com/sendmsg/pkg/cst"
 	"uuabc.com/sendmsg/pkg/send"
@@ -27,6 +29,7 @@ import (
 
 const (
 	defaultTimeout = time.Second * 10
+	lockKey        = cst.WeiXinAccessToken + "_lock"
 	tokenURL       = "https://api.weixin.qq.com/cgi-bin/token"
 	sendURL        = "https://api.weixin.qq.com/cgi-bin/message/template/send?access_token="
 )
@@ -53,17 +56,35 @@ func NewClient(cfg Config, cli cache.Cache) *Client {
 
 // accessTokenData 先从缓存中获取token，如果不存在再http请求获取
 func (c *Client) accessTokenData() (string, error) {
+	var count int
+TOKEN:
 	token, err := c.token()
 	if err == nil {
 		return token, nil
 	}
+	// 获取分布式锁
+	err = c.lockTokenGet()
+	if err == cache.ErrKeyExsit {
+		logrus.Debug("获取weixin-token的分布式锁失败")
+		// 如果超过三次还没有从缓存中获取到token，那么就直接去请求token
+		if count > 2 {
+			logrus.Debug("获取weixin-token分布式锁失败次数过多，直接去请求连接获取")
+			goto GET_TOKEN
+		}
+		// 如果已有线程在更新token，那么其他线程会进入等待，等待后会重新去缓存中获取token
+		// 防止竞争，随机设置等待时间
+		sleepTime := 1000 + rand.Intn(1000)
+		time.Sleep(time.Millisecond * time.Duration(sleepTime))
+		count++
+		goto TOKEN
+	}
+GET_TOKEN:
 	result, err := c.requestAccessToken()
 	if err != nil {
 		return "", err
 	}
-	go func() {
-		c.storeToken(result.AccessToken, result.ExpiresIn)
-	}()
+	c.storeToken(result.AccessToken, result.ExpiresIn)
+	c.unLockTokenGet()
 	return result.AccessToken, nil
 }
 
@@ -92,9 +113,6 @@ func (c *Client) requestAccessToken() (*Response, error) {
 
 // token 从缓存中获取token
 func (c *Client) token() (string, error) {
-	if c.cached == nil {
-		return "", fmt.Errorf("cache is nil")
-	}
 	b, err := c.cached.Get(context.Background(), cst.WeiXinAccessToken)
 	if err != nil {
 		return "", err
@@ -104,10 +122,20 @@ func (c *Client) token() (string, error) {
 
 // storeToken 在缓存中存储token
 func (c *Client) storeToken(v string, e int) error {
-	if c.cached == nil {
-		return nil
-	}
 	return c.cached.Put(context.Background(), cst.WeiXinAccessToken, []byte(v), int64(e/60))
+}
+
+func (c *Client) removeToken() {
+	c.cached.Del(context.Background(), cst.WeiXinAccessToken)
+}
+
+// 分布式锁，防止多进程或协程去同时去获取accesstoken
+func (c *Client) lockTokenGet() error {
+	return c.cached.Add(context.Background(), lockKey, []byte("lock"), 10)
+}
+
+func (c *Client) unLockTokenGet() {
+	c.cached.Del(context.Background(), lockKey)
 }
 
 func (c *Client) Send(msg send.Message, do send.DoRes) error {
@@ -137,6 +165,8 @@ func (c *Client) Send(msg send.Message, do send.DoRes) error {
 		return err
 	}
 	if result.ErrCode == 40001 {
+		// token超时，移除token
+		c.removeToken()
 		return ErrTokenOverdue
 	}
 	if result.ErrCode != 0 {

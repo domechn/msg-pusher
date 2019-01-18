@@ -25,7 +25,7 @@ import (
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 const (
-	layout = "2006-01-02T15:03:04Z"
+	layout = "2006-01-02T15:04:05Z"
 )
 
 // email begin...........
@@ -58,11 +58,15 @@ func (m *EmailProducer) Validated() error {
 }
 
 func (m *EmailProducer) ValidateEdit() error {
-	if err := checkDestination(m.Destination); err != nil {
-		return err
+	if m.Destination != "" {
+		if err := checkDestination(m.Destination); err != nil {
+			return err
+		}
 	}
-	if err := checkSendTime(m.SendTime); err != nil {
-		return err
+	if m.SendTime != "" {
+		if err := checkSendTime(m.SendTime); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -138,11 +142,15 @@ func (m *SmsProducer) ValidateBatch() error {
 }
 
 func (m *SmsProducer) ValidateEdit() error {
-	if err := checkMobile(m.Mobile); err != nil {
-		return err
+	if m.Mobile != "" {
+		if err := checkMobile(m.Mobile); err != nil {
+			return err
+		}
 	}
-	if err := checkSendTime(m.SendTime); err != nil {
-		return err
+	if m.SendTime != "" {
+		if err := checkSendTime(m.SendTime); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -173,11 +181,15 @@ func (m *WeChatProducer) Validated() error {
 }
 
 func (m *WeChatProducer) ValidateEdit() error {
-	if err := checkToUser(m.Touser); err != nil {
-		return err
+	if m.Touser != "" {
+		if err := checkToUser(m.Touser); err != nil {
+			return err
+		}
 	}
-	if err := checkSendTime(m.SendTime); err != nil {
-		return err
+	if m.SendTime != "" {
+		if err := checkSendTime(m.SendTime); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -280,4 +292,28 @@ func delay(begin int64) int64 {
 		d = 0
 	}
 	return d
+}
+
+func (m *EmailProducer) GetSendTo() string {
+	return m.Destination
+}
+
+func (m *EmailProducer) SetSendTo(s string) {
+	m.Destination = s
+}
+
+func (m *WeChatProducer) GetSendTo() string {
+	return m.Touser
+}
+
+func (m *WeChatProducer) SetSendTo(s string) {
+	m.Touser = s
+}
+
+func (m *SmsProducer) GetSendTo() string {
+	return m.Mobile
+}
+
+func (m *SmsProducer) SetSendTo(s string) {
+	m.Mobile = s
 }

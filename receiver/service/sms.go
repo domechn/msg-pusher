@@ -70,7 +70,7 @@ func (smsServiceImpl) produce(ctx context.Context, p *meta.SmsProducer, content 
 	if err != nil {
 		return err
 	}
-	go updateCache(context.Background(), id, dbSms)
+	go addCache(context.Background(), id, dbSms)
 	logrus.WithField("type", "Sms").Infof("消息 %s 插入数据库成功", id)
 	return nil
 }
@@ -102,45 +102,13 @@ func (smsServiceImpl) cancel(ctx context.Context, id string) error {
 }
 
 func (s smsServiceImpl) Edit(ctx context.Context, m Meta) error {
-	m.Transfer(false)
-	v := m.(*meta.SmsProducer)
-	return s.edit(
-		ctx,
+	dbParam := &meta.DbSms{}
+	return edit(ctx,
 		m,
-		&meta.DbSms{
-			Id:        v.Id,
-			Arguments: v.Arguments,
-			SendTime:  v.SendTime,
-			Mobile:    v.Mobile,
-		})
-}
-
-func (s smsServiceImpl) edit(ctx context.Context, m Meta, e *meta.DbSms) error {
-	em := &meta.DbSms{}
-	if err := checkStatus(m.GetId(), em); err != nil {
-		return err
-	}
-
-	// 修改数据
-	em.Arguments = e.Arguments
-	em.SendTime = e.SendTime
-	if e.Mobile != "" {
-		em.Mobile = e.Mobile
-	}
-
-	tx, err := db.SmsEdit(ctx, e)
-	if err != nil {
-		db.RollBack(tx)
-		logrus.WithField("type", "Sms").Errorf("edit修改数据库失败,error: %v", err)
-		return err
-	}
-
-	err = edit(ctx, em, m, mq.SmsProduce)
-	if err != nil {
-		db.RollBack(tx)
-		logrus.WithField("type", "Sms").Errorf("edit更新mq失败，正在回滚,error: %v", err)
-		return err
-	}
-
-	return db.Commit(tx)
+		dbParam,
+		func(i context.Context, messager Messager) (*sqlx.Tx, error) {
+			return db.SmsEdit(i, messager.(*meta.DbSms))
+		},
+		mq.SmsProduce,
+	)
 }

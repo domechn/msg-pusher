@@ -42,5 +42,5 @@ func (m *Request) textType(data string) string {
 	if strings.Contains(data, "<html>") {
 		return "html"
 	}
-	return "text"
+	return "plain"
 }

@@ -87,13 +87,7 @@ func EmailEdit(ctx context.Context, e *meta.DbEmail) (*sqlx.Tx, error) {
 	if err != nil {
 		return nil, err
 	}
-	query := "UPDATE emails SET arguments=?,send_time=? "
-	if e.Destination != "" {
-		query += ",destination=? WHERE id=?"
-	} else {
-		query += "WHERE id=?"
-	}
-	query += " AND status=1"
+	query := "UPDATE emails SET template=?,content=?,arguments=?,send_time=? WHERE id=? AND status=1"
 	stmt, err := tx.PrepareContext(ctx, query)
 	if err != nil {
 		return tx, err
@@ -101,11 +95,7 @@ func EmailEdit(ctx context.Context, e *meta.DbEmail) (*sqlx.Tx, error) {
 	defer stmt.Close()
 	var res sql.Result
 	sendT := changeSendTime(e.SendTime)
-	if e.Destination != "" {
-		res, err = stmt.ExecContext(ctx, e.Arguments, sendT, e.Destination, e.Id)
-	} else {
-		res, err = stmt.ExecContext(ctx, e.Arguments, sendT, e.Id)
-	}
+	res, err = stmt.ExecContext(ctx, e.Template, e.Content, e.Arguments, sendT, e.Id)
 	if err != nil {
 		return tx, err
 	}

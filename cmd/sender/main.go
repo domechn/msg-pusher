@@ -14,7 +14,10 @@ package main
 import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"math/rand"
 	"os"
+	"time"
+
 	"uuabc.com/sendmsg/config"
 	"uuabc.com/sendmsg/pkg/cmd"
 	"uuabc.com/sendmsg/pkg/log"
@@ -70,6 +73,7 @@ func start(_ *cobra.Command, _ []string) error {
 	var err error
 
 	printFlags()
+	rand.Seed(time.Now().UnixNano())
 
 	// init log
 	log.Init("sender", opts.logPath, opts.logLevel)

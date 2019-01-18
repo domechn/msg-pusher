@@ -54,6 +54,13 @@ func (r *Receiver) OnReceive(data []byte) (res bool) {
 	if err := r.check(data, de); err != nil {
 		return
 	}
-	pub.Send(r.send(de))
+	if err := pub.Send(de.Id, pub.SendRetryFunc(de, r.send, r.doDB)); err != nil {
+		logrus.WithFields(logrus.Fields{
+			"type":  r.queueName,
+			"id":    de.Id,
+			"data":  de,
+			"error": err,
+		}).Error("发送失败")
+	}
 	return
 }

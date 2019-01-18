@@ -67,7 +67,7 @@ func (weChatServiceImpl) produce(ctx context.Context, p *meta.WeChatProducer, co
 	}
 	logrus.WithField("type", "WeChat").Infof("消息 %s 插入消息队列成功,正在等待发送,开始提交到数据库", id)
 
-	go updateCache(context.Background(), id, dbWeChat)
+	go addCache(context.Background(), id, dbWeChat)
 	logrus.WithField("type", "WeChat").Infof("消息 %s 插入数据库成功", id)
 	return db.Commit(tx)
 }
@@ -95,46 +95,13 @@ func (weChatServiceImpl) cancel(ctx context.Context, id string) error {
 }
 
 func (s weChatServiceImpl) Edit(ctx context.Context, m Meta) error {
-	m.Transfer(false)
-	v := m.(*meta.WeChatProducer)
-	return s.edit(
-		ctx,
+	dbParam := &meta.DbWeChat{}
+	return edit(ctx,
 		m,
-		&meta.DbWeChat{
-			Id:        v.Id,
-			Arguments: v.Arguments,
-			SendTime:  v.SendTime,
-			Touser:    v.Touser,
-		})
-}
-
-// todo 验证参数
-func (weChatServiceImpl) edit(ctx context.Context, m Meta, e *meta.DbWeChat) error {
-	em := &meta.DbWeChat{}
-	if err := checkStatus(m.GetId(), em); err != nil {
-		return err
-	}
-
-	// 修改数据
-	em.Arguments = e.Arguments
-	em.SendTime = e.SendTime
-	if e.Touser != "" {
-		em.Touser = e.Touser
-	}
-
-	tx, err := db.WeChatEdit(ctx, e)
-	if err != nil {
-		db.RollBack(tx)
-		logrus.WithField("type", "WeChat").Errorf("edit修改数据库失败,error: %v", err)
-		return err
-	}
-
-	err = edit(ctx, em, m, mq.WeChatProduce)
-	if err != nil {
-		db.RollBack(tx)
-		logrus.WithField("type", "WeChat").Errorf("edit更新mq失败，正在回滚,error: %v", err)
-		return err
-	}
-
-	return db.Commit(tx)
+		dbParam,
+		func(i context.Context, messager Messager) (*sqlx.Tx, error) {
+			return db.WeChatEdit(i, messager.(*meta.DbWeChat))
+		},
+		mq.WeChatProduce,
+	)
 }

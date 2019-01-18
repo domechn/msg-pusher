@@ -18,9 +18,6 @@ import (
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 type Config struct {
-	CacheAddrs []string
-	CachePwd   string
-
 	APPId     string
 	APPSecret string
 }

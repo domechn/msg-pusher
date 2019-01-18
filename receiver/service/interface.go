@@ -25,6 +25,9 @@ type Meta interface {
 	// 返回模板
 	GetTemplate() string
 
+	GetSendTo() string
+	SetSendTo(string)
+	GetSendTime() string
 	ValidateEdit() error
 }
 
@@ -35,9 +38,20 @@ type Marshaler interface {
 
 type Messager interface {
 	Marshaler
+	GetId() string
+	GetContent() string
+	SetContent(string)
 	GetStatus() int32
 	SetStatus(int32)
 	SetResult(int32)
 	SetCreatedAt(string)
 	SetUpdatedAt(string)
+	GetSendTo() string
+	SetSendTo(string)
+	SetArguments(string)
+	GetArguments() string
+	SetTemplate(string)
+	GetTemplate() string
+	SetSendTime(string)
+	GetSendTime() string
 }

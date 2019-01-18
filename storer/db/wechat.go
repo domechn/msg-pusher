@@ -85,13 +85,7 @@ func WeChatEdit(ctx context.Context, w *meta.DbWeChat) (*sqlx.Tx, error) {
 	if err != nil {
 		return nil, err
 	}
-	query := "UPDATE wechats SET arguments=?,send_time=? "
-	if w.Touser != "" {
-		query += ",touser=? WHERE id=?"
-	} else {
-		query += "WHERE id=?"
-	}
-	query += " AND status=1"
+	query := "UPDATE wechats SET arguments=?,send_time=?,touser=?,template=? WHERE id=? AND status=1"
 	stmt, err := tx.PrepareContext(ctx, query)
 	if err != nil {
 		return tx, err
@@ -99,11 +93,7 @@ func WeChatEdit(ctx context.Context, w *meta.DbWeChat) (*sqlx.Tx, error) {
 	defer stmt.Close()
 	var res sql.Result
 	sendT := changeSendTime(w.SendTime)
-	if w.Touser != "" {
-		res, err = stmt.ExecContext(ctx, w.Arguments, sendT, w.Touser, w.Id)
-	} else {
-		res, err = stmt.ExecContext(ctx, w.Arguments, sendT, w.Id)
-	}
+	res, err = stmt.ExecContext(ctx, w.Arguments, sendT, w.Touser, w.Template, w.Id)
 	if err != nil {
 		return tx, err
 	}
@@ -119,11 +109,11 @@ func WeChatUpdateSendResult(ctx context.Context, w *meta.DbWeChat) (*sqlx.Tx, er
 	if err != nil {
 		return nil, err
 	}
-	stmt, err := tx.PrepareContext(ctx, "UPDATE wechats SET try_num=?,status=?,result_status=? WHERE id=?")
+	stmt, err := tx.PrepareContext(ctx, "UPDATE wechats SET try_num=?,status=?,result_status=?,reason=? WHERE id=?")
 	if err != nil {
 		return tx, err
 	}
 	defer stmt.Close()
-	_, err = stmt.ExecContext(ctx, w.TryNum, w.Status, w.ResultStatus, w.Id)
+	_, err = stmt.ExecContext(ctx, w.TryNum, w.Status, w.ResultStatus, w.Reason, w.Id)
 	return tx, err
 }
