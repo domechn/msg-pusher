@@ -1,0 +1,25 @@
+mysql:
+  url: #root:root@tcp(localhost:3306)/uuabc?charset=utf8&parseTime=True
+  maxIdleConns: #10
+  maxOpenConns: #30
+  connMaxLifetime: #1800
+mq:
+  url: #amqp://guest:guest@127.0.0.1:5672/test
+  exChangeName: #exchangeName
+redis:
+  addrs: #[127.0.0.1:6379]
+  password: #""
+
+aliyun:
+  accessKeyId: #accessKeyId
+  accessSecret: #accessSecret
+  gatewayURL: http://dysmsapi.aliyuncs.com/
+email:
+  serverAddr: smtp.qq.com:25
+  username: #814172254@qq.com
+  host: smtp.qq.com
+  password: #password
+  tls: false
+wechat:
+  appId: #appId
+  appSecret: #appSecret

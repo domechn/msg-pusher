@@ -1,0 +1,6 @@
+.DS_Store/
+conf.yaml
+history/
+log/
+todo
+.idea/
