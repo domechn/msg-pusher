@@ -62,3 +62,42 @@ func SendResult(ctx context.Context, k string) (bool, error) {
 	}
 	return false, nil
 }
+
+// MobileCache1Min 一分钟限流器+1，并返回+1后的结果，限制每个号码每分钟发送的频率
+func MobileCache1Min(ctx context.Context, mobile string) (int64, error) {
+	key := mobile + "_1_min"
+	res, err := storer.Cache.Incr(ctx, key)
+	if err != nil {
+		return res, err
+	}
+	if res == 1 {
+		return res, storer.Cache.Expire(ctx, key, 60)
+	}
+	return res, nil
+}
+
+// MobileCache1Hour 一小时限流器+1，并返回+1后的结果，限制一个号码的发送频率
+func MobileCache1Hour(ctx context.Context, mobile string) (int64, error) {
+	key := mobile + "_1_hour"
+	res, err := storer.Cache.Incr(ctx, key)
+	if err != nil {
+		return res, err
+	}
+	if res == 1 {
+		return res, storer.Cache.Expire(ctx, key, 60*60)
+	}
+	return res, nil
+}
+
+// MobileCache1Day 一天限流器+1，并返回+1后的结果，限制一个号码每天的发送频率
+func MobileCache1Day(ctx context.Context, mobile string) (int64, error) {
+	key := mobile + "_1_day"
+	res, err := storer.Cache.Incr(ctx, key)
+	if err != nil {
+		return res, err
+	}
+	if res == 1 {
+		return res, storer.Cache.Expire(ctx, key, 60*60*24)
+	}
+	return res, nil
+}

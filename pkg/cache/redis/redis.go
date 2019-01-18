@@ -110,6 +110,16 @@ func (c *Client) GetBit(ctx context.Context, k string, offset int64) (int, error
 	return int(r), err
 }
 
+func (c *Client) Incr(ctx context.Context, k string) (int64, error) {
+	res := c.c.Incr(k)
+	return res.Result()
+}
+
+func (c *Client) Expire(ctx context.Context, k string, ttl int64) error {
+	res := c.c.Expire(k, time.Second*time.Duration(ttl))
+	return res.Err()
+}
+
 func (c *Client) Close() error {
 	if c.c != nil {
 		if v, ok := c.c.(io.Closer); ok {

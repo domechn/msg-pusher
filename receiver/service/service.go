@@ -219,16 +219,9 @@ func detail(ctx context.Context, id string, res Marshaler, getDbData func(ctx2 c
 }
 
 func cancel(ctx context.Context, id string, u updateFunc, m Messager) error {
-	data, err := cache.BaseDetail(ctx, id)
+	err := messagerFromCache(id, m)
 	if err != nil {
 		logrus.Errorf("从缓存中获取要取消的数据失败，id: %s,error: %v", id, err)
-		return errors.ErrMsgNotFound
-	}
-
-	logrus.Debug("从缓存中取出数据检查状态")
-	// 查看缓存中的数据的状态
-	err = m.Unmarshal(data)
-	if err != nil {
 		return err
 	}
 	// 如果已取消

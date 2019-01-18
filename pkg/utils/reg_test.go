@@ -3,75 +3,123 @@
 #
 #   Author        : domchan
 #   Email         : 814172254@qq.com
-#   File Name     : reg_test.go
-#   Created       : 2019/1/15 16:12
-#   Last Modified : 2019/1/15 16:12
+#   File Name     : reg.go
+#   Created       : 2019/1/10 16:37
+#   Last Modified : 2019/1/10 16:37
 #   Describe      :
 #
 # ====================================================*/
 package utils
 
 import (
+	"reflect"
 	"testing"
 )
 
-func TestValidateUUIDV4(t *testing.T) {
-
+func TestValidatePhone(t *testing.T) {
+	type args struct {
+		s string
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		// TODO: Add test cases.
+		{
+			name: "case1",
+			args: args{
+				s: "13143234543",
+			},
+			want: true,
+		}, {
+			name: "case2",
+			args: args{
+				s: "123",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ValidatePhone(tt.args.s); got != tt.want {
+				t.Errorf("ValidatePhone() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
 
 func TestValidateEmailAddr(t *testing.T) {
-
-}
-
-func TestValidatePhone(t *testing.T) {
-
-}
-
-func TestValidateTemplate(t *testing.T) {
-
+	type args struct {
+		s string
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		// TODO: Add test cases.
+		{
+			name: "case1",
+			args: args{
+				s: "safd",
+			},
+		}, {
+			name: "case2",
+			args: args{
+				s: "abc@a.b",
+			},
+			want: true,
+		}, {
+			name: "case3",
+			args: args{
+				s: "abc.cmb_@ac.com",
+			},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ValidateEmailAddr(tt.args.s); got != tt.want {
+				t.Errorf("ValidateEmailAddr() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
 
 func TestStrFromCurlyBraces(t *testing.T) {
-	var cases = []struct {
+	type args struct {
+		s string
+	}
+	tests := []struct {
 		name string
-		v    string
+		args args
 		want []string
 	}{
+		// TODO: Add test cases.
 		{
 			name: "case1",
-			v:    "${aa}asddsfg${cc}asdafd${abc}",
-			want: []string{"${aa}", "${cc}", "${abc}"},
+			args: args{
+				s: "hello,${abc}",
+			},
+			want: []string{"${abc}"},
 		}, {
 			name: "case2",
-			v:    "abc",
-			want: []string{},
+			args: args{
+				s: "hello,${abc}${bcd}",
+			},
+			want: []string{"${abc}", "${bcd}"},
 		}, {
 			name: "case3",
-			v:    "${aa}asddsfg{cc}asdafd${abc}",
-			want: []string{"${aa}", "${abc}"},
+			args: args{
+				s: "asd",
+			},
 		},
 	}
-	for _, v := range cases {
-		if res := StrFromCurlyBraces(v.v); !equal(res, v.want) {
-			t.Errorf("case:%s,do StrFromCurlyBraces() error,want: %v,actual: %v", v.name, v.want, res)
-		}
-	}
-}
-
-func equal(a, b []string) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for _, v := range a {
-		var flag bool
-		for _, v2 := range b {
-			if v2 == v {
-				flag = true
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := StrFromCurlyBraces(tt.args.s); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("StrFromCurlyBraces() = %v, want %v", got, tt.want)
 			}
-		}
-		if !flag {
-			return false
-		}
+		})
 	}
-	return true
 }

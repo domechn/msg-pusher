@@ -13,9 +13,12 @@ package service
 
 import (
 	"context"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/sirupsen/logrus"
+	"uuabc.com/sendmsg/pkg/errors"
 	"uuabc.com/sendmsg/pkg/pb/meta"
+	"uuabc.com/sendmsg/storer/cache"
 	"uuabc.com/sendmsg/storer/db"
 	"uuabc.com/sendmsg/storer/mq"
 )
@@ -31,6 +34,10 @@ func (s smsServiceImpl) Produce(ctx context.Context, m Meta) (string, error) {
 	var templ string
 	var args map[string]string
 	var err error
+	mobile := m.GetSendTo()
+	if err := s.checkSendRate(ctx, mobile); err != nil {
+		return "", err
+	}
 	if templ, args, err = checkTemplateAndArguments(m.GetTemplate(), m.GetArguments()); err != nil {
 		return "", err
 	}
@@ -111,4 +118,29 @@ func (s smsServiceImpl) Edit(ctx context.Context, m Meta) error {
 		},
 		mq.SmsProduce,
 	)
+}
+
+func (s smsServiceImpl) checkSendRate(ctx context.Context, mobile string) error {
+	m1, err := cache.MobileCache1Min(ctx, mobile)
+	if err != nil {
+		return err
+	}
+	if m1 > 1 {
+		return errors.ErrMsg1MinuteLimit
+	}
+	m2, err := cache.MobileCache1Hour(ctx, mobile)
+	if err != nil {
+		return err
+	}
+	if m2 > 5 {
+		return errors.ErrMsg1HourLimit
+	}
+	m3, err := cache.MobileCache1Day(ctx, mobile)
+	if err != nil {
+		return err
+	}
+	if m3 > 10 {
+		return errors.ErrMsg1DayLimit
+	}
+	return nil
 }
