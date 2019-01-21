@@ -25,6 +25,7 @@ import (
 type smsServiceImpl struct {
 }
 
+// NewSmsServiceImpl 初始化消息service
 func NewSmsServiceImpl() smsServiceImpl {
 	return smsServiceImpl{}
 }
@@ -73,8 +74,8 @@ func (s smsServiceImpl) Detail(ctx context.Context, id string) (Marshaler, error
 }
 
 // DetailByPhonePage 直接数据库中取,不走缓存
-func (s smsServiceImpl) DetailByPhonePage(ctx context.Context, mobile string, page int) ([]byte, error) {
-	return nil, nil
+func (s smsServiceImpl) DetailByPhonePage(ctx context.Context, mobile string, page int) ([]*meta.DbSms, error) {
+	return db.SmsDetailByPhoneAndPage(ctx, mobile, page)
 }
 
 func (smsServiceImpl) detail(ctx context.Context, id string) (Marshaler, error) {

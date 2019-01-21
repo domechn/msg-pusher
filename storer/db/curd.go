@@ -86,7 +86,7 @@ func update(ctx context.Context, typeN, sqlStr string, args ...interface{}) (*sq
 	return tx, nil
 }
 
-func insert(ctx context.Context, typeN, sqlStr string, args ...interface{}) (*sqlx.Tx, error) {
+func insert(ctx context.Context, typeN, sqlStr string, args ...interface{}) (tx *sqlx.Tx, err error) {
 	if parentSpan := opentracing.SpanFromContext(ctx); parentSpan != nil {
 		parentCtx := parentSpan.Context()
 		span := opentracing.StartSpan(typeN, opentracing.ChildOf(parentCtx))
@@ -98,7 +98,7 @@ func insert(ctx context.Context, typeN, sqlStr string, args ...interface{}) (*sq
 		ctx = opentracing.ContextWithSpan(ctx, span)
 	}
 
-	tx, err := storer.DB.Beginx()
+	tx, err = storer.DB.Beginx()
 	if err != nil {
 		return nil, err
 	}

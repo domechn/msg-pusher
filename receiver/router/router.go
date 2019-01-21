@@ -12,7 +12,10 @@
 package router
 
 import (
+	"net/http"
+
 	"github.com/gorilla/mux"
+	"github.com/sirupsen/logrus"
 	"uuabc.com/sendmsg/pkg/errors"
 	"uuabc.com/sendmsg/receiver/handler"
 	mid "uuabc.com/sendmsg/receiver/middleware"
@@ -21,38 +24,121 @@ import (
 
 const prometheus = "prometheus"
 
+var (
+	routes = []struct {
+		name    string
+		method  string
+		path    string
+		handler http.Handler
+	}{
+		// delete
+		{
+			name:    "CancelSmsByID",
+			method:  "DELETE",
+			path:    "/sms/{id}",
+			handler: handler.URLHandler(handler.SmsCancel),
+		}, {
+			name:    "CancelSmsByKey",
+			method:  "DELETE",
+			path:    "/sms/key/{key}",
+			handler: handler.URLHandler(handler.SmsKeyCancel),
+		}, {
+			name:    "CancelWeChatByID",
+			method:  "DELETE",
+			path:    "/wechat/{id}",
+			handler: handler.URLHandler(handler.WeChatCancel),
+		}, {
+			name:    "CancelEmailByID",
+			method:  "DELETE",
+			path:    "/email/{id}",
+			handler: handler.URLHandler(handler.EmailCancel),
+		},
+		// post
+		{
+			name:    "ProduceSms",
+			method:  "POST",
+			path:    "/sms",
+			handler: handler.JsonHandler(handler.SmsProducer),
+		}, {
+			name:    "ProduceSmss",
+			method:  "POST",
+			path:    "/smss",
+			handler: handler.JsonHandler(handler.SmsProducers),
+		}, {
+			name:    "ProduceWeChat",
+			method:  "POST",
+			path:    "/wechat",
+			handler: handler.JsonHandler(handler.WeChatProducer),
+		}, {
+			name:    "ProduceEmail",
+			method:  "POST",
+			path:    "/email",
+			handler: handler.JsonHandler(handler.EmailProducer),
+		}, {
+			name:    "AddTemplate",
+			method:  "POST",
+			path:    "/template",
+			handler: handler.JsonHandler(handler.TemplateAdd),
+		},
+		// get
+		{
+			name:    "SmsDetailByID",
+			method:  "GET",
+			path:    "/sms/{id}",
+			handler: handler.URLHandler(handler.SmsIDDetail),
+		}, {
+			name:    "WeChatDetailByID",
+			method:  "GET",
+			path:    "/wechat/{id}",
+			handler: handler.URLHandler(handler.WeChatIDDetail),
+		}, {
+			name:    "EmailDetailById",
+			method:  "GET",
+			path:    "/email/{id}",
+			handler: handler.URLHandler(handler.EmailIDDetail),
+		}, {
+			name:    "SmsDetailByMobileAndPage",
+			method:  "GET",
+			path:    "/sms/mobile/{mobile}/page/{p}",
+			handler: handler.URLHandler(handler.SmsMobileDetail),
+		},
+		// Patch
+		{
+			name:    "SmsEdit",
+			method:  "PATCH",
+			path:    "/sms",
+			handler: handler.JsonHandler(handler.SmsEdit),
+		}, {
+			name:    "WeChatEdit",
+			method:  "PATCH",
+			path:    "/wechat",
+			handler: handler.JsonHandler(handler.WeChatEdit),
+		}, {
+			name:    "EmailEdit",
+			method:  "PATCH",
+			path:    "/email",
+			handler: handler.JsonHandler(handler.EmailEdit),
+		},
+	}
+)
+
 func Init(route *mux.Router) {
-	route = route.PathPrefix("/" + version.Info.Version).Subrouter()
 
-	// restful
-	delVRoute := route.Methods("DELETE").Subrouter()
-	delVRoute.Path("/sms/{id}").HandlerFunc(handler.URLHandler(handler.SmsCancel))
-	delVRoute.Path("/sms/key/{key}").HandlerFunc(handler.URLHandler(handler.SmsKeyCancel))
-	delVRoute.Path("/wechat/{id}").HandlerFunc(handler.URLHandler(handler.WeChatCancel))
-	delVRoute.Path("/email/{id}").HandlerFunc(handler.URLHandler(handler.EmailCancel))
-	handlerMiddleware(delVRoute)
+	handlerMiddleware(route)
 
-	postVRoute := route.Methods("POST").Subrouter()
-	postVRoute.Path("/sms").HandlerFunc(handler.JsonHandler(handler.SmsProducer))
-	postVRoute.Path("/smss").HandlerFunc(handler.JsonHandler(handler.SmsProducers))
-	postVRoute.Path("/wechat").HandlerFunc(handler.JsonHandler(handler.WeChatProducer))
-	postVRoute.Path("/email").HandlerFunc(handler.JsonHandler(handler.EmailProducer))
-	postVRoute.Path("/template").HandlerFunc(handler.JsonHandler(handler.TemplateAdd))
-	handlerMiddleware(postVRoute)
-
-	getVRoute := route.Methods("GET").Subrouter()
-	getVRoute.Path("/sms/{id}").HandlerFunc(handler.URLHandler(handler.SmsIDDetail))
-	getVRoute.Path("/wechat/{id}").HandlerFunc(handler.URLHandler(handler.WeChatIDDetail))
-	getVRoute.Path("/email/{id}").HandlerFunc(handler.URLHandler(handler.EmailIDDetail))
-	getVRoute.Path("/sms/mobile/{mobile}/page/{p}").HandlerFunc(handler.URLHandler(handler.SmsMobileDetail))
-	handlerMiddleware(getVRoute)
-
-	putVRoute := route.Methods("PATCH").Subrouter()
-	putVRoute.Path("/sms").HandlerFunc(handler.JsonHandler(handler.SmsEdit))
-	putVRoute.Path("/wechat").HandlerFunc(handler.JsonHandler(handler.WeChatEdit))
-	putVRoute.Path("/email").HandlerFunc(handler.JsonHandler(handler.EmailEdit))
-	handlerMiddleware(putVRoute)
-
+	for _, v := range routes {
+		logrus.WithFields(logrus.Fields{
+			"type":   "route",
+			"method": v.method,
+			"name":   v.name,
+			"path":   "/" + version.Info.Version + v.path,
+		}).Info()
+		route.StrictSlash(true).
+			Methods(v.method).
+			Path("/" + version.Info.Version + v.path).
+			Name(v.name).
+			Handler(v.handler)
+	}
 	// postRoute := route.Methods("POST")
 	//
 	// versionRoute := postRoute.PathPrefix("/" + version.Info.Version).Subrouter()

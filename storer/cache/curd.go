@@ -25,6 +25,7 @@ func get(ctx context.Context, typeN, k string) ([]byte, error) {
 		span := opentracing.StartSpan(typeN, opentracing.ChildOf(parentCtx))
 		ext.SpanKindRPCClient.Set(span)
 		ext.PeerService.Set(span, "redis")
+		span.SetTag("cache.type", "get")
 		span.SetTag("cache.key", k)
 		defer span.Finish()
 		ctx = opentracing.ContextWithSpan(ctx, span)
@@ -39,6 +40,7 @@ func put(ctx context.Context, typeN, k string, b []byte, ttl int64) error {
 		span := opentracing.StartSpan(typeN, opentracing.ChildOf(parentCtx))
 		ext.SpanKindRPCClient.Set(span)
 		ext.PeerService.Set(span, "redis")
+		span.SetTag("cache.type", "put")
 		span.SetTag("cache.key", k)
 		span.SetTag("cache.value", string(b))
 		span.SetTag("cache.ttl", ttl)
@@ -56,6 +58,7 @@ func limit(ctx context.Context, typeN, k string, ttl int64) (int64, error) {
 		ext.SpanKindRPCClient.Set(span)
 		ext.PeerService.Set(span, "redis")
 		span.SetTag("cache.key", k)
+		span.SetTag("cache.type", "limit")
 		defer span.Finish()
 		ctx = opentracing.ContextWithSpan(ctx, span)
 	}
@@ -67,4 +70,34 @@ func limit(ctx context.Context, typeN, k string, ttl int64) (int64, error) {
 		return res, storer.Cache.Expire(ctx, k, ttl)
 	}
 	return res, nil
+}
+
+func add(ctx context.Context, typeN, k string, v []byte, ttl int64) error {
+	if parentSpan := opentracing.SpanFromContext(ctx); parentSpan != nil {
+		parentCtx := parentSpan.Context()
+		span := opentracing.StartSpan(typeN, opentracing.ChildOf(parentCtx))
+		ext.PeerService.Set(span, "redis")
+		ext.SpanKindRPCClient.Set(span)
+		span.SetTag("cache.type", "add")
+		span.SetTag("cache.key", k)
+		span.SetTag("cache.value", string(v))
+		span.SetTag("cache.ttl", ttl)
+		defer span.Finish()
+		ctx = opentracing.ContextWithSpan(ctx, span)
+	}
+	return storer.Cache.Add(ctx, k, v, ttl)
+}
+
+func del(ctx context.Context, typeN, k string) error {
+	if parentSpan := opentracing.SpanFromContext(ctx); parentSpan != nil {
+		parentCtx := parentSpan.Context()
+		span := opentracing.StartSpan(typeN, opentracing.ChildOf(parentCtx))
+		ext.PeerService.Set(span, "redis")
+		ext.SpanKindRPCClient.Set(span)
+		span.SetTag("cache.type", "del")
+		span.SetTag("cache.id", k)
+		defer span.Finish()
+		ctx = opentracing.ContextWithSpan(ctx, span)
+	}
+	return storer.Cache.Del(ctx, k)
 }

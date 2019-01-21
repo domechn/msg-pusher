@@ -138,10 +138,10 @@ func edit(ctx context.Context, m Meta, em Messager, dbParamFunc func(context.Con
 		em.SetContent(content)
 	}
 	// redis中设置分布式锁
-	if err := cache.LockId(m.GetId()); err != nil {
+	if err := cache.LockId(ctx, m.GetId()); err != nil {
 		return errors.ErrMsgBusy
 	}
-	defer cache.UnlockId(m.GetId())
+	defer cache.UnlockId(ctx, m.GetId())
 	// 修改db中的数据
 	tx, err := dbParamFunc(ctx, em)
 	if err != nil {
@@ -213,10 +213,10 @@ func updateDetailCache(ctx context.Context, id string, getDbData func(ctx2 conte
 		return
 	}
 	// 获取锁
-	if err = cache.LockId(id); err != nil {
+	if err = cache.LockId(ctx, id); err != nil {
 		return
 	}
-	defer cache.UnlockId(id)
+	defer cache.UnlockId(ctx, id)
 	cache.PutBaseCache(context.Background(), id, dbRes)
 	cache.PutLastestCache(context.Background(), id, dbRes)
 	logrus.WithField("id", id).Errorf("后台通过数据库添加cache成功")
@@ -262,10 +262,10 @@ func cancel(ctx context.Context, id string, u updateFunc, m Messager) error {
 	if st := m.GetStatus(); st == int32(meta.Status_Final) {
 		return errors.ErrMsgCantEdit
 	}
-	if err := cache.LockId(id); err != nil {
+	if err := cache.LockId(ctx, id); err != nil {
 		return errors.ErrMsgBusy
 	}
-	defer cache.UnlockId(id)
+	defer cache.UnlockId(ctx, id)
 	logrus.Debug("缓存中的数据状态为可取消状态")
 
 	// 更新数据库中的status

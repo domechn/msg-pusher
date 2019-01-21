@@ -154,7 +154,7 @@ func (r *RabbitMQ) listen(receiver Receiver) {
 
 	// 获取消费通道
 	r.channel.Qos(
-		10, // prefetchCount mq不要同时给一个消费者推送多余N个消息，即一旦有N个消息没有ack，该consumer会block掉，直到有消息ack
+		100, // prefetchCount mq不要同时给一个消费者推送多余N个消息，即一旦有N个消息没有ack，该consumer会block掉，直到有消息ack
 		0,
 		true, // global 如果为true，prefetchCount和prefetchSize的限制级别为channel，否则为consumer
 	) // 确保rabbitmq会一个一个发消息

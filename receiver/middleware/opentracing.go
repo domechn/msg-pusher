@@ -13,11 +13,13 @@ package middleware
 
 import (
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"net"
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
@@ -46,18 +48,43 @@ func NewOpenTracing(https bool) *OpenTracing {
 	}
 }
 
+func spanStartName(r *http.Request) string {
+	m := strings.ToUpper(r.Method)
+	do := "Unknown"
+	switch m {
+	case "GET":
+		do = "Detail"
+	case "POST":
+		do = "Produce"
+	case "PATCH":
+		do = "Edit"
+	case "DELETE":
+		do = "Cancel"
+	}
+	param := "Unknown"
+	if strings.Contains(r.URL.Path, "email") {
+		param = "Email"
+	} else if strings.Contains(r.URL.Path, "sms") {
+		param = "Sms"
+	} else if strings.Contains(r.URL.Path, "wechat") {
+		param = "WeChat"
+	}
+	return param + "/" + do
+}
+
 // Handler middleware接口
 func (h *OpenTracing) Handler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var span opentracing.Span
 		var err error
 
+		name := spanStartName(r)
 		if parent, err := opentracing.GlobalTracer().Extract(
 			opentracing.HTTPHeaders,
 			opentracing.HTTPHeadersCarrier(r.Header)); err != nil {
-			span = opentracing.StartSpan(r.URL.Path)
+			span = opentracing.StartSpan(name)
 		} else {
-			span = opentracing.StartSpan(r.URL.Path, opentracing.ChildOf(parent))
+			span = opentracing.StartSpan(name, opentracing.ChildOf(parent))
 		}
 		defer span.Finish()
 
