@@ -14,16 +14,31 @@ package cache
 import (
 	"context"
 
+	"github.com/opentracing/opentracing-go"
 	"uuabc.com/sendmsg/storer"
 )
 
 // LockID5s 独占锁
 func LockID5s(ctx context.Context, k string) error {
+	if parentSpan := opentracing.SpanFromContext(ctx); parentSpan != nil {
+		parentCtx := parentSpan.Context()
+		span := opentracing.StartSpan("LockID5s", opentracing.ChildOf(parentCtx))
+		defer span.Finish()
+		ctx = opentracing.ContextWithSpan(ctx, span)
+	}
+
 	return storer.Cache.Add(ctx, lock5s+k, []byte("lock"), 5)
 }
 
 // ReleaseLock 释放独占锁
 func ReleaseLock(ctx context.Context, k string) error {
+	if parentSpan := opentracing.SpanFromContext(ctx); parentSpan != nil {
+		parentCtx := parentSpan.Context()
+		span := opentracing.StartSpan("ReleaseLock", opentracing.ChildOf(parentCtx))
+		defer span.Finish()
+		ctx = opentracing.ContextWithSpan(ctx, span)
+	}
+
 	return storer.Cache.Del(ctx, lock5s+k)
 }
 

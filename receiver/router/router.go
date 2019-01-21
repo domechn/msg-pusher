@@ -23,20 +23,14 @@ const prometheus = "prometheus"
 
 func Init(route *mux.Router) {
 	route = route.PathPrefix("/" + version.Info.Version).Subrouter()
-	// TODO middleware not effect
-	route.Use(
-		mid.RequestIDMiddleware,
-		mid.LoggingMiddleware,
-		mid.RecoveryMiddleware(errors.ErrHandler),
-		mid.NewOpenTracing(false).Handler,
-		mid.NewMetrics(prometheus).Handler,
-	)
+
 	// restful
 	delVRoute := route.Methods("DELETE").Subrouter()
 	delVRoute.Path("/sms/{id}").HandlerFunc(handler.URLHandler(handler.SmsCancel))
 	delVRoute.Path("/sms/key/{key}").HandlerFunc(handler.URLHandler(handler.SmsKeyCancel))
 	delVRoute.Path("/wechat/{id}").HandlerFunc(handler.URLHandler(handler.WeChatCancel))
 	delVRoute.Path("/email/{id}").HandlerFunc(handler.URLHandler(handler.EmailCancel))
+	handlerMiddleware(delVRoute)
 
 	postVRoute := route.Methods("POST").Subrouter()
 	postVRoute.Path("/sms").HandlerFunc(handler.JsonHandler(handler.SmsProducer))
@@ -44,17 +38,20 @@ func Init(route *mux.Router) {
 	postVRoute.Path("/wechat").HandlerFunc(handler.JsonHandler(handler.WeChatProducer))
 	postVRoute.Path("/email").HandlerFunc(handler.JsonHandler(handler.EmailProducer))
 	postVRoute.Path("/template").HandlerFunc(handler.JsonHandler(handler.TemplateAdd))
+	handlerMiddleware(postVRoute)
 
 	getVRoute := route.Methods("GET").Subrouter()
 	getVRoute.Path("/sms/{id}").HandlerFunc(handler.URLHandler(handler.SmsIDDetail))
 	getVRoute.Path("/wechat/{id}").HandlerFunc(handler.URLHandler(handler.WeChatIDDetail))
 	getVRoute.Path("/email/{id}").HandlerFunc(handler.URLHandler(handler.EmailIDDetail))
 	getVRoute.Path("/sms/mobile/{mobile}/page/{p}").HandlerFunc(handler.URLHandler(handler.SmsMobileDetail))
+	handlerMiddleware(getVRoute)
 
 	putVRoute := route.Methods("PATCH").Subrouter()
 	putVRoute.Path("/sms").HandlerFunc(handler.JsonHandler(handler.SmsEdit))
 	putVRoute.Path("/wechat").HandlerFunc(handler.JsonHandler(handler.WeChatEdit))
 	putVRoute.Path("/email").HandlerFunc(handler.JsonHandler(handler.EmailEdit))
+	handlerMiddleware(putVRoute)
 
 	// postRoute := route.Methods("POST")
 	//
@@ -75,4 +72,14 @@ func Init(route *mux.Router) {
 	//
 	// emailRoute := versionRoute.PathPrefix("/emails").Subrouter()
 	// emailRoute.Path("/producer").HandlerFunc(handler.JsonHandler(handler.EmailProducer))
+}
+
+func handlerMiddleware(r *mux.Router) {
+	r.Use(
+		mid.RequestIDMiddleware,
+		mid.LoggingMiddleware,
+		mid.RecoveryMiddleware(errors.ErrHandler),
+		mid.NewOpenTracing(false).Handler,
+		mid.NewMetrics(prometheus).Handler,
+	)
 }

@@ -17,7 +17,7 @@ import (
 	"strings"
 )
 
-// Error gateway代理出现错误时的返回值
+// Error 现错误时的返回值
 type Error struct {
 	ErrCode int         `json:"errcode"`
 	Msg     string      `json:"msg"`

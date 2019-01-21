@@ -4,7 +4,7 @@ import (
 	"errors"
 	"log"
 	"time"
-	"uuabc.com/gateway/pkg/retry/backoff"
+	"uuabc.com/sendmsg/pkg/retry/backoff"
 )
 
 func main() {

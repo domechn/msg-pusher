@@ -25,8 +25,8 @@ import (
 type ArgParams map[string]string
 
 // checkTemplateAndArguments 验证参数,并返回具体模板内容和处理好的参数
-func checkTemplateAndArguments(templateID string, args string) (string, ArgParams, error) {
-	template, err := cache.LocalTemplate(templateID)
+func checkTemplateAndArguments(ctx context.Context, templateID string, args string) (string, ArgParams, error) {
+	template, err := cache.LocalTemplate(ctx, templateID)
 	params := utils.StrFromCurlyBraces(template)
 	if err == nil {
 		ag, er := checkArguments(params, args)
@@ -37,7 +37,7 @@ func checkTemplateAndArguments(templateID string, args string) (string, ArgParam
 	if err != nil {
 		return template, nil, errors.ErrTemplateTypeInvalid
 	}
-	cache.AddLocalTemplate(templateID, template)
+	cache.AddLocalTemplate(ctx, templateID, template)
 	ag, er := checkArguments(params, args)
 	return template, ag, er
 }

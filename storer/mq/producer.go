@@ -13,6 +13,8 @@ package mq
 
 import (
 	"context"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/ext"
 	"github.com/streadway/amqp"
 	"uuabc.com/sendmsg/storer"
 )
@@ -29,8 +31,19 @@ func WeChatProduce(ctx context.Context, msg []byte, delay int64) error {
 	return produce(ctx, "wechat", msg, delay)
 }
 
-// TODO 修改err类型
 func produce(ctx context.Context, typeName string, msg []byte, delay int64) error {
+	if parentSpan := opentracing.SpanFromContext(ctx); parentSpan != nil {
+		parentCtx := parentSpan.Context()
+		span := opentracing.StartSpan("MqProduce", opentracing.ChildOf(parentCtx))
+		ext.SpanKindRPCClient.Set(span)
+		ext.PeerService.Set(span, "rabbit-mq")
+		span.SetTag("mq.queuename", typeName)
+		span.SetTag("mq.msg", string(msg))
+		span.SetTag("mq.delay", delay)
+		defer span.Finish()
+		ctx = opentracing.ContextWithSpan(ctx, span)
+	}
+
 	channel, err := storer.MqCli.RabbitMQ(storer.ExChangeName, "x-delayed-message", amqp.Table{
 		"x-delayed-type": "direct",
 	})

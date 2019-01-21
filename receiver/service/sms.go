@@ -15,7 +15,6 @@ import (
 	"context"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/sirupsen/logrus"
 	"uuabc.com/sendmsg/pkg/errors"
 	"uuabc.com/sendmsg/pkg/pb/meta"
 	"uuabc.com/sendmsg/storer/cache"
@@ -38,7 +37,7 @@ func (s smsServiceImpl) Produce(ctx context.Context, m Meta) (string, error) {
 	if err := s.checkSendRate(ctx, mobile); err != nil {
 		return "", err
 	}
-	if templ, args, err = checkTemplateAndArguments(m.GetTemplate(), m.GetArguments()); err != nil {
+	if templ, args, err = checkTemplateAndArguments(ctx, m.GetTemplate(), m.GetArguments()); err != nil {
 		return "", err
 	}
 	content := getContent(args, templ)
@@ -60,26 +59,13 @@ func (smsServiceImpl) produce(ctx context.Context, p *meta.SmsProducer, content 
 		Server:      p.Server,
 		Type:        p.Type,
 	}
-	tx, err := db.SmsInsert(ctx, dbSms)
-	if err != nil {
-		db.RollBack(tx)
-		return err
-	}
-	id := dbSms.Id
-	err = mq.SmsProduce(ctx, []byte(id), ttl)
-	if err != nil {
-		logrus.WithField("type", "Sms").Errorf("消息 %s 插入消息队列失败，正在回滚。。。，error: %v\n", id, err)
-		db.RollBack(tx)
-		return err
-	}
-	logrus.WithField("type", "Sms").Infof("消息 %s 插入消息队列成功,正在等待发送,开始提交到数据库", id)
-	err = db.Commit(tx)
-	if err != nil {
-		return err
-	}
-	go addCache(context.Background(), id, dbSms)
-	logrus.WithField("type", "Sms").Infof("消息 %s 插入数据库成功", id)
-	return nil
+	return produce(ctx,
+		p,
+		dbSms,
+		func(i context.Context, messager Messager) (*sqlx.Tx, error) {
+			return db.SmsInsert(i, messager.(*meta.DbSms))
+		},
+		mq.SmsProduce)
 }
 
 func (s smsServiceImpl) Detail(ctx context.Context, id string) (Marshaler, error) {

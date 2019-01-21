@@ -15,7 +15,6 @@ import (
 	"context"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/sirupsen/logrus"
 	"uuabc.com/sendmsg/pkg/pb/meta"
 	"uuabc.com/sendmsg/storer/db"
 	"uuabc.com/sendmsg/storer/mq"
@@ -33,7 +32,7 @@ func (s emailServiceImpl) Produce(ctx context.Context, m Meta) (string, error) {
 	var templ string
 	var args map[string]string
 	var err error
-	if templ, args, err = checkTemplateAndArguments(m.GetTemplate(), m.GetArguments()); err != nil {
+	if templ, args, err = checkTemplateAndArguments(ctx, m.GetTemplate(), m.GetArguments()); err != nil {
 		return "", err
 	}
 	content := getContent(args, templ)
@@ -56,26 +55,13 @@ func (emailServiceImpl) produce(ctx context.Context, p *meta.EmailProducer, cont
 		Server:      p.Server,
 		SendTime:    p.SendTime,
 	}
-	id := dbEmail.Id
-	tx, err := db.EmailInsert(ctx, dbEmail)
-	if err != nil {
-		db.RollBack(tx)
-		return err
-	}
-	err = mq.EmailProduce(ctx, []byte(id), ttl)
-	if err != nil {
-		db.RollBack(tx)
-		logrus.WithField("type", "Email").Errorf("消息 %s 插入消息队列失败，正在回滚。。。，error: %v\n", id, err)
-		return err
-	}
-	logrus.WithField("type", "Email").Infof("消息 %s 插入消息队列成功,正在等待发送,开始提交到数据库", id)
-	err = db.Commit(tx)
-	if err != nil {
-		return err
-	}
-	go addCache(context.Background(), id, dbEmail)
-	logrus.WithField("type", "Email").Infof("消息 %s 插入数据库成功", id)
-	return nil
+	return produce(ctx,
+		p,
+		dbEmail,
+		func(i context.Context, messager Messager) (*sqlx.Tx, error) {
+			return db.EmailInsert(i, messager.(*meta.DbEmail))
+		},
+		mq.EmailProduce)
 }
 
 // Detail 返回要发送的email的具体信息

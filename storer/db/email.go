@@ -13,109 +13,65 @@ package db
 
 import (
 	"context"
-	"database/sql"
 
 	"github.com/jmoiron/sqlx"
 	"uuabc.com/sendmsg/pkg/pb/meta"
-	"uuabc.com/sendmsg/storer"
 )
 
 // EmailCancelMsgByID 将email信息的发送状态设置为取消
 func EmailCancelMsgByID(ctx context.Context, id string) (*sqlx.Tx, error) {
-	tx, err := storer.DB.Beginx()
-	if err != nil {
-		return nil, err
-	}
-	stmt, err := tx.PrepareContext(ctx, "UPDATE emails SET status=2,result_status=2 WHERE id=?")
-	if err != nil {
-		return tx, err
-	}
-	defer stmt.Close()
-	res, err := stmt.ExecContext(ctx, id)
-	if err != nil {
-		return tx, err
-	}
-	if i, _ := res.RowsAffected(); i == 0 {
-		return tx, ErrNoRowsEffected
-	}
-	return tx, nil
+	return update(ctx,
+		"EmailCancelMsgByID",
+		`UPDATE emails SET status=2,result_status=2 WHERE id=?`,
+		id)
 }
 
 // EmailDetailByID 按照id查询email所有字段信息，如果未找到返回error
 func EmailDetailByID(ctx context.Context, id string) (*meta.DbEmail, error) {
 	res := &meta.DbEmail{}
-	err := storer.DB.GetContext(ctx, res, "SELECT * FROM emails WHERE id = ? LIMIT 1", id)
-	if err != nil {
-		return nil, err
-	}
-	return res, nil
+	err := query(ctx, res, "EmailDetailByID", `SELECT * FROM emails WHERE id = ? LIMIT 1`, id)
+
+	return res, err
 }
 
 // EmailInsert 将消息插入emails表
-func EmailInsert(ctx context.Context, email *meta.DbEmail) (*sqlx.Tx, error) {
-	tx, err := storer.DB.Beginx()
-	if err != nil {
-		return nil, err
-	}
-	stmt, err := tx.PrepareContext(ctx, `INSERT INTO emails (id,platform,platform_key,title,content,destination,type,template,arguments,server,send_time) VALUES (?,?,?,?,?,?,?,?,?,?,?)`)
-	if err != nil {
-		return tx, err
-	}
-	defer stmt.Close()
-	_, err = stmt.ExecContext(
-		ctx,
-		email.Id,
-		email.Platform,
-		email.PlatformKey,
-		email.Title,
-		email.Content,
-		email.Destination,
-		email.Type,
-		email.Template,
-		email.Arguments,
-		email.Server,
-		changeSendTime(email.SendTime),
-	)
-	if err != nil {
-		return tx, err
-	}
-	return tx, nil
+func EmailInsert(ctx context.Context, e *meta.DbEmail) (*sqlx.Tx, error) {
+	return insert(ctx,
+		"EmailInsert",
+		`INSERT INTO emails (id,platform,platform_key,title,content,destination,type,template,arguments,server,send_time) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+		e.Id,
+		e.Platform,
+		e.PlatformKey,
+		e.Title,
+		e.Content,
+		e.Destination,
+		e.Type,
+		e.Template,
+		e.Arguments,
+		e.Server,
+		changeSendTime(e.SendTime))
 }
 
 func EmailEdit(ctx context.Context, e *meta.DbEmail) (*sqlx.Tx, error) {
-	tx, err := storer.DB.Beginx()
-	if err != nil {
-		return nil, err
-	}
-	query := "UPDATE emails SET template=?,content=?,arguments=?,send_time=? WHERE id=? AND status=1"
-	stmt, err := tx.PrepareContext(ctx, query)
-	if err != nil {
-		return tx, err
-	}
-	defer stmt.Close()
-	var res sql.Result
 	sendT := changeSendTime(e.SendTime)
-	res, err = stmt.ExecContext(ctx, e.Template, e.Content, e.Arguments, sendT, e.Id)
-	if err != nil {
-		return tx, err
-	}
-	if i, _ := res.RowsAffected(); i == 0 {
-		return tx, ErrNoRowsEffected
-	}
-	return tx, nil
+	return update(ctx,
+		"EmailEdit",
+		`UPDATE emails SET template=?,content=?,arguments=?,send_time=? WHERE id=? AND status=1`,
+		e.Template,
+		e.Content,
+		e.Arguments,
+		sendT,
+		e.Id)
 }
 
 // EmailUpdateSendResult 修改短信发送结果
 func EmailUpdateSendResult(ctx context.Context, e *meta.DbEmail) (*sqlx.Tx, error) {
-	tx, err := storer.DB.Beginx()
-	if err != nil {
-		return nil, err
-	}
-	stmt, err := tx.PrepareContext(ctx, "UPDATE emails SET try_num=?,status=?,result_status=?,reason=? WHERE id=?")
-	if err != nil {
-		return tx, err
-	}
-	defer stmt.Close()
-	_, err = stmt.ExecContext(ctx, e.TryNum, e.Status, e.ResultStatus, e.Reason, e.Id)
-	return tx, err
+	return update(ctx,
+		"EmailUpdateSendResult",
+		`UPDATE emails SET try_num=?,status=?,result_status=?,reason=? WHERE id=?`,
+		e.TryNum,
+		e.Status,
+		e.ResultStatus,
+		e.Reason,
+		e.Id)
 }

@@ -12,31 +12,35 @@
 package cache
 
 import (
+	"bytes"
 	"context"
-
-	"uuabc.com/sendmsg/storer"
 )
 
 func BaseDetail(ctx context.Context, k string) ([]byte, error) {
-	return storer.Cache.Get(ctx, base+k)
+	return get(ctx, "BaseDetail", base+k)
 }
 
 func BaseTemplate(ctx context.Context, k string) (string, error) {
-	b, err := storer.Cache.Get(ctx, template+k)
-	if err != nil {
-		return "", err
-	}
-	return string(b), nil
+	b, err := get(ctx, "BaseTemplate", template+k)
+	return string(b), err
 }
 
 func LastestDetail(ctx context.Context, k string) ([]byte, error) {
-	return storer.Cache.Get(ctx, lastest+k)
+	return get(ctx, "LastestDetail", lastest+k)
 }
 
 func Detail(ctx context.Context, id string) ([]byte, error) {
-	return storer.Cache.Get(ctx, id)
+	return get(ctx, "Detail", id)
 }
 
-func StoreDetail(ctx context.Context, id string, value []byte, ttl int64) error {
-	return storer.Cache.Put(ctx, id, value, ttl)
+// SendResult 获取发送结果
+func SendResult(ctx context.Context, k string) (bool, error) {
+	res, err := get(ctx, "SendResult", k+"_sent")
+	if err != nil {
+		return false, err
+	}
+	if bytes.Compare(res, success) == 0 {
+		return true, nil
+	}
+	return false, nil
 }

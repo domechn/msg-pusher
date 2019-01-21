@@ -14,15 +14,30 @@ package cache
 import (
 	"context"
 
+	"github.com/opentracing/opentracing-go"
 	"uuabc.com/sendmsg/storer"
 )
 
-func AddLocalTemplate(s string, v string) error {
-	return storer.LocalCache.Put(context.Background(), s, []byte(v), 60)
+func AddLocalTemplate(ctx context.Context, s string, v string) error {
+	if parentSpan := opentracing.SpanFromContext(ctx); parentSpan != nil {
+		parentCtx := parentSpan.Context()
+		span := opentracing.StartSpan("AddLocalTemplate", opentracing.ChildOf(parentCtx))
+		defer span.Finish()
+		ctx = opentracing.ContextWithSpan(ctx, span)
+	}
+
+	return storer.LocalCache.Put(ctx, s, []byte(v), 60)
 }
 
-func LocalTemplate(s string) (string, error) {
-	b, err := storer.LocalCache.Get(context.Background(), s)
+func LocalTemplate(ctx context.Context, s string) (string, error) {
+	if parentSpan := opentracing.SpanFromContext(ctx); parentSpan != nil {
+		parentCtx := parentSpan.Context()
+		span := opentracing.StartSpan("LocalTemplate", opentracing.ChildOf(parentCtx))
+		defer span.Finish()
+		ctx = opentracing.ContextWithSpan(ctx, span)
+	}
+
+	b, err := storer.LocalCache.Get(ctx, s)
 	if err != nil {
 		return "", err
 	}

@@ -50,7 +50,7 @@ func initJaegerConfig(serverURL string) Config {
 	return Config{
 		Provider: jaegerTracing,
 		JaegerTracing: JaegerTracing{
-			ServiceName:         "gateway",
+			ServiceName:         "sendmsg",
 			SamplingServerURL:   serverURL,
 			SamplingParam:       1.0,
 			SamplingType:        "const",

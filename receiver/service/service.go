@@ -38,7 +38,7 @@ type MsgService interface {
 }
 
 // addCache 添加缓存
-func addCache(ctx context.Context, id string, msg Messager) {
+func addCache(ctx context.Context, id string, msg Messager) error {
 	// 统一和数据库中的信息
 	now := time.Now().UTC().Format(timeLayout)
 	msg.SetStatus(int32(meta.Status_Wait))
@@ -48,10 +48,40 @@ func addCache(ctx context.Context, id string, msg Messager) {
 	byt, gErr := msg.Marshal()
 	if gErr != nil {
 		logrus.Errorf("set cache go func() error: %v", gErr)
-		return
+		return gErr
 	}
 	// 插入redis
-	cache.PutBaseCache(ctx, id, byt)
+	return cache.PutBaseCache(ctx, id, byt)
+}
+
+// produce 将消息插入数据库 mq 和缓存
+func produce(ctx context.Context, m Meta, em Messager, dbParamFunc func(context.Context, Messager) (*sqlx.Tx, error), mqParamFunc func(context.Context, []byte, int64) error) error {
+	logrus.Info("开始添加消息...,data: ", em)
+	tx, err := dbParamFunc(ctx, em)
+	id := em.GetId()
+	if err != nil {
+		logrus.Errorf("消息 %s 插入数据库失败，正在回滚。。。，error: %v\n", id, err)
+		db.RollBack(tx)
+		return err
+	}
+	err = mqParamFunc(ctx, []byte(id), m.Delay())
+	if err != nil {
+		db.RollBack(tx)
+		logrus.Errorf("消息 %s 插入消息队列失败，正在回滚。。。，error: %v\n", id, err)
+		return err
+	}
+	if err := addCache(context.Background(), id, em); err != nil {
+		db.RollBack(tx)
+		logrus.Errorf("消息插入缓存时失败,errors: %v", err)
+		return err
+	}
+	err = db.Commit(tx)
+	if err != nil {
+		logrus.Infof("消息 %s 插入数据库失败", id)
+	} else {
+		logrus.Infof("消息添加成功,id: %s", id)
+	}
+	return err
 }
 
 func edit(ctx context.Context, m Meta, em Messager, dbParamFunc func(context.Context, Messager) (*sqlx.Tx, error), mqParamFunc func(context.Context, []byte, int64) error) error {
@@ -101,7 +131,7 @@ func edit(ctx context.Context, m Meta, em Messager, dbParamFunc func(context.Con
 		var templ string
 		var args map[string]string
 		var err error
-		if templ, args, err = checkTemplateAndArguments(em.GetTemplate(), em.GetArguments()); err != nil {
+		if templ, args, err = checkTemplateAndArguments(ctx, em.GetTemplate(), em.GetArguments()); err != nil {
 			return err
 		}
 		content := getContent(args, templ)

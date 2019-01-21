@@ -55,8 +55,8 @@ type CountVec struct {
 func newCountVec() *CountVec {
 	c := new(CountVec)
 	c.Count = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: "gateway",
-		Subsystem: "proxy",
+		Namespace: "sendmsg",
+		Subsystem: "receiver",
 		Name:      "http_request_counts",
 		Help:      "Http Request Counts",
 	}, cst.VarRequestCounts)
@@ -75,8 +75,8 @@ type SummaryVec struct {
 func newSummaryVec() *SummaryVec {
 	s := new(SummaryVec)
 	s.Summary = prometheus.NewSummaryVec(prometheus.SummaryOpts{
-		Namespace: "gateway",
-		Subsystem: "proxy",
+		Namespace: "sendmsg",
+		Subsystem: "receiver",
 		Name:      "http_request_summary",
 		Help:      "Http Request Summary",
 	}, cst.VarRequestSummary)

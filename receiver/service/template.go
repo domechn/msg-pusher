@@ -39,7 +39,7 @@ func (t templateImpl) AddTemplate(ctx context.Context, a *tpl.TemplateAdder) (st
 	err = db.Commit(tx)
 	if err == nil {
 		// 更新本地缓存
-		cache.AddLocalTemplate(a.SimpleID, a.Content)
+		cache.AddLocalTemplate(ctx, a.SimpleID, a.Content)
 	}
 	return uid, nil
 }
