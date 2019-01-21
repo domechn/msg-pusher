@@ -186,7 +186,7 @@ func editCacheMq(ctx context.Context, msg Messager, ttl int64, mqFunc func(conte
 	if err != nil {
 		return err
 	}
-	cache.PutLastestCache(ctx, msg.GetId(), b)
+	cache.PutLatestCache(ctx, msg.GetId(), b)
 	return nil
 }
 
@@ -218,7 +218,7 @@ func updateDetailCache(ctx context.Context, id string, getDbData func(ctx2 conte
 	}
 	defer cache.UnlockId(ctx, id)
 	cache.PutBaseCache(context.Background(), id, dbRes)
-	cache.PutLastestCache(context.Background(), id, dbRes)
+	cache.PutLatestCache(context.Background(), id, dbRes)
 	logrus.WithField("id", id).Errorf("后台通过数据库添加cache成功")
 }
 
@@ -297,7 +297,7 @@ func cancel(ctx context.Context, id string, u updateFunc, m Messager) error {
 		}).Error("在取消发送后更新baseCache时出现错误")
 		return err
 	}
-	if err := cache.PutLastestCache(ctx, id, b); err != nil {
+	if err := cache.PutLatestCache(ctx, id, b); err != nil {
 		// 更新最新状态失败，无需回滚
 		// rollback(tx)
 		logrus.WithFields(logrus.Fields{

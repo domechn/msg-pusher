@@ -109,7 +109,7 @@ func updateDbAndCache(msg Messager, doDB func(Messager) (*sqlx.Tx, error)) error
 	b, _ := msg.Marshal()
 	// 强制更新缓存
 	err = cache.PutBaseCache(context.Background(), msg.GetId(), b)
-	cache.PutLastestCache(context.Background(), msg.GetId(), b)
+	cache.PutLatestCache(context.Background(), msg.GetId(), b)
 	cache.PutSendSuccess(context.Background(), msg.GetId())
 	if err != nil {
 		db.RollBack(tx)

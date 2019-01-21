@@ -33,7 +33,7 @@ var (
 	opts = &Options{
 		host:       "0.0.0.0",
 		port:       8990,
-		configPath: "/app/sendmsg/conf/config.yaml",
+		configPath: "/app/sendmsg/conf/conf.yaml",
 		logPath:    "/app/sendmsg/log/log.log",
 		logLevel:   "info",
 	}

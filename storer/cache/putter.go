@@ -21,8 +21,8 @@ func PutBaseCache(ctx context.Context, k string, v []byte) error {
 	return put(ctx, "PutBaseCache", base+k, v, 0)
 }
 
-// PutLastestCache 最新缓存，保证数据时效性，默认5+n(n<5)秒缓存
-func PutLastestCache(ctx context.Context, k string, v []byte) error {
+// PutLatestCache 最新缓存，保证数据时效性，默认5+n(n<5)秒缓存
+func PutLatestCache(ctx context.Context, k string, v []byte) error {
 	return put(ctx, "PutLastestCache", lastest+k, v, int64(5+rand.Intn(5)))
 }
 

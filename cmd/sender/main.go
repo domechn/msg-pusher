@@ -26,8 +26,6 @@ import (
 )
 
 type Options struct {
-	host       string
-	port       int
 	configPath string
 	logPath    string
 	logLevel   string
@@ -35,9 +33,7 @@ type Options struct {
 
 var (
 	opts = &Options{
-		host:       "0.0.0.0",
-		port:       8991,
-		configPath: "/app/sendmsg/conf/config.yaml",
+		configPath: "/app/sendmsg/conf/conf.yaml",
 		logPath:    "/app/sendmsg/log/log.log",
 		logLevel:   "info",
 	}
@@ -57,8 +53,6 @@ var (
 )
 
 func init() {
-	startCmd.PersistentFlags().StringVarP(&opts.host, "host", "s", opts.host, "host for service startup")
-	startCmd.PersistentFlags().IntVarP(&opts.port, "port", "p", opts.port, "port for service startup")
 	startCmd.PersistentFlags().StringVarP(&opts.configPath, "config-path", "f", opts.configPath, "the path of the config file")
 	startCmd.PersistentFlags().StringVar(&opts.logPath, "log-path", opts.logPath, "the location of the log file output")
 	startCmd.PersistentFlags().StringVar(&opts.logLevel, "log-level", opts.logLevel, "log file output level")
@@ -98,8 +92,6 @@ func start(_ *cobra.Command, _ []string) error {
 }
 
 func printFlags() {
-	logrus.WithField("Host", opts.host).Info()
-	logrus.WithField("Post", opts.port).Info()
 	logrus.WithField("Config-Path", opts.configPath).Info()
 	logrus.WithField("Log-Path", opts.logPath).Info()
 	logrus.WithField("Log-Level", opts.logLevel).Info()
