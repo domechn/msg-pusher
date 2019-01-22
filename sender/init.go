@@ -14,6 +14,7 @@ package sender
 import (
 	"github.com/streadway/amqp"
 	"uuabc.com/sendmsg/config"
+	"uuabc.com/sendmsg/pkg/mq"
 	"uuabc.com/sendmsg/sender/email"
 	"uuabc.com/sendmsg/sender/pub"
 	"uuabc.com/sendmsg/sender/sms"
@@ -30,19 +31,26 @@ func Init() error {
 }
 
 func Start() error {
+	stopC := make(chan struct{})
+	start(wechat.NewReceiver())
+	start(email.NewReceiver())
+	start(sms.NewReceiver())
+	<-stopC
+	return nil
+}
+
+func Close() error {
+	return storer.Close()
+}
+
+func start(r mq.Receiver) error {
 	conn, err := storer.MqCli.RabbitMQ(config.MQConf().ExChangeName, "x-delayed-message", amqp.Table{
 		"x-delayed-type": "direct",
 	})
 	if err != nil {
 		return err
 	}
-	conn.RegisterReceiver(wechat.NewReceiver())
-	conn.RegisterReceiver(email.NewReceiver())
-	conn.RegisterReceiver(sms.NewReceiver())
-	conn.Start(storer.MqCli.Connection())
+	conn.RegisterReceiver(r)
+	go conn.Start(storer.MqCli.Connection())
 	return nil
-}
-
-func Close() error {
-	return storer.Close()
 }

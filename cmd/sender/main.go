@@ -34,7 +34,7 @@ type Options struct {
 var (
 	opts = &Options{
 		configPath: "/app/sendmsg/conf/conf.yaml",
-		logPath:    "/app/sendmsg/log/log.log",
+		logPath:    "/app/sendmsg/log",
 		logLevel:   "info",
 	}
 

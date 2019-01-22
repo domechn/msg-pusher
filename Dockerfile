@@ -7,6 +7,7 @@ ADD ./conf.yaml /app/sendmsg/conf
 ADD ./entrypoint.sh /app/sendmsg
 
 RUN chmod +x /app/sendmsg/entrypoint.sh
+RUN apk add --no-cache tzdata
 
 EXPOSE 8990
 

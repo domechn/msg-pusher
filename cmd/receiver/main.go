@@ -34,7 +34,7 @@ var (
 		host:       "0.0.0.0",
 		port:       8990,
 		configPath: "/app/sendmsg/conf/conf.yaml",
-		logPath:    "/app/sendmsg/log/log.log",
+		logPath:    "/app/sendmsg/log",
 		logLevel:   "info",
 	}
 

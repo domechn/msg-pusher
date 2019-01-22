@@ -42,6 +42,7 @@ func Send(id string, sendFunc RetryFunc) error {
 		if err := sendFunc(count); err != nil {
 			if err == ErrTooManyTimes {
 				logrus.WithField("error", err).Error("发送消息失败")
+				return nil
 			}
 			return err
 		}

@@ -43,7 +43,7 @@ func (r *Receiver) OnError(err error) {
 	logrus.WithFields(logrus.Fields{
 		"Queue": r.queueName,
 		"error": err,
-	}).Error("初始化消费队列失败")
+	}).Fatal("初始化消费队列失败")
 }
 
 func (r *Receiver) OnReceive(data []byte) (res bool) {

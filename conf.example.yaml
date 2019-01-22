@@ -10,6 +10,7 @@ redis:
   addrs: #[127.0.0.1:6379]
   password: #""
 
+# 单独启动receiver不需要设置一下参数
 aliyun:
   accessKeyId: #accessKeyId
   accessSecret: #accessSecret
