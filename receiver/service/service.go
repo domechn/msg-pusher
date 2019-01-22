@@ -30,6 +30,7 @@ const (
 	timeLayout = "2006-01-02T15:04:05Z"
 )
 
+// MsgService 用于消息的增删改查
 type MsgService interface {
 	Produce(ctx context.Context, m Meta) (string, error)
 	Detail(ctx context.Context, id string) (Marshaler, error)

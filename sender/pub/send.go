@@ -51,6 +51,7 @@ func Send(id string, sendFunc RetryFunc) error {
 	return backoff.Retry(doFunc, bk)
 }
 
+// SendRetryFunc 返回一个可以用于重试发送的方法
 func SendRetryFunc(msg Messager, send func(Messager) error, doDB func(Messager) (*sqlx.Tx, error)) RetryFunc {
 	var reason error
 	return func(count int) error {
