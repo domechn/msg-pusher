@@ -16,6 +16,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"uuabc.com/sendmsg/pkg/pb/meta"
+	"uuabc.com/sendmsg/storer/cache"
 	"uuabc.com/sendmsg/storer/db"
 	"uuabc.com/sendmsg/storer/mq"
 )
@@ -58,9 +59,7 @@ func (emailServiceImpl) produce(ctx context.Context, p *meta.EmailProducer, cont
 	return produce(ctx,
 		p,
 		dbEmail,
-		func(i context.Context, messager Messager) (*sqlx.Tx, error) {
-			return db.EmailInsert(i, messager.(*meta.DbEmail))
-		},
+		cache.RPushEmail,
 		mq.EmailProduce)
 }
 

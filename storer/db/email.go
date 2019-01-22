@@ -52,6 +52,7 @@ func EmailInsert(ctx context.Context, e *meta.DbEmail) (*sqlx.Tx, error) {
 		changeSendTime(e.SendTime))
 }
 
+// EmailEdit 修改email发送信息的内容
 func EmailEdit(ctx context.Context, e *meta.DbEmail) (*sqlx.Tx, error) {
 	sendT := changeSendTime(e.SendTime)
 	return update(ctx,

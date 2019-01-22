@@ -63,9 +63,7 @@ func (smsServiceImpl) produce(ctx context.Context, p *meta.SmsProducer, content 
 	return produce(ctx,
 		p,
 		dbSms,
-		func(i context.Context, messager Messager) (*sqlx.Tx, error) {
-			return db.SmsInsert(i, messager.(*meta.DbSms))
-		},
+		cache.RPushSms,
 		mq.SmsProduce)
 }
 

@@ -13,9 +13,10 @@ package redis
 
 import (
 	"context"
-	"github.com/go-redis/redis"
 	"io"
 	"time"
+
+	"github.com/go-redis/redis"
 	"uuabc.com/sendmsg/pkg/cache"
 )
 
@@ -106,6 +107,18 @@ func (c *Client) Incr(ctx context.Context, k string) (int64, error) {
 func (c *Client) Expire(ctx context.Context, k string, ttl int64) error {
 	res := c.c.Expire(k, time.Second*time.Duration(ttl))
 	return res.Err()
+}
+
+func (c *Client) RPush(ctx context.Context, k string, v []byte) error {
+	return c.c.RPush(k, v).Err()
+}
+
+func (c *Client) LLen(ctx context.Context, k string) (int64, error) {
+	return c.c.LLen(k).Result()
+}
+
+func (c *Client) LPop(ctx context.Context, k string) ([]byte, error) {
+	return c.c.LPop(k).Bytes()
 }
 
 func (c *Client) Close() error {

@@ -39,50 +39,43 @@ type MsgService interface {
 }
 
 // addCache 添加缓存
-func addCache(ctx context.Context, id string, msg Messager) error {
+func addCache(ctx context.Context, id string, msg Messager, rpush func([]byte) error) error {
 	// 统一和数据库中的信息
 	now := time.Now().UTC().Format(timeLayout)
 	msg.SetStatus(int32(meta.Status_Wait))
 	msg.SetCreatedAt(now)
 	msg.SetUpdatedAt(now)
+	msg.SetOption(int32(meta.Insert))
 
 	byt, gErr := msg.Marshal()
 	if gErr != nil {
 		logrus.Errorf("set cache go func() error: %v", gErr)
 		return gErr
 	}
+	// 将数据添加到list，用于入库,所有insert的数据均以"$"开头
+	if err := rpush(byt); err != nil {
+		return err
+	}
 	// 插入redis
 	return cache.PutBaseCache(ctx, id, byt)
 }
 
 // produce 将消息插入数据库 mq 和缓存
-func produce(ctx context.Context, m Meta, em Messager, dbParamFunc func(context.Context, Messager) (*sqlx.Tx, error), mqParamFunc func(context.Context, []byte, int64) error) error {
+func produce(ctx context.Context, m Meta, em Messager, rpush func([]byte) error, mqParamFunc func(context.Context, []byte, int64) error) error {
 	logrus.Info("开始添加消息...,data: ", em)
-	tx, err := dbParamFunc(ctx, em)
 	id := em.GetId()
+	err := mqParamFunc(ctx, []byte(id), m.Delay())
 	if err != nil {
-		logrus.Errorf("消息 %s 插入数据库失败，正在回滚。。。，error: %v\n", id, err)
-		db.RollBack(tx)
+		logrus.Errorf("消息 %s 插入消息队列失败: %v\n", id, err)
 		return err
 	}
-	err = mqParamFunc(ctx, []byte(id), m.Delay())
-	if err != nil {
-		db.RollBack(tx)
-		logrus.Errorf("消息 %s 插入消息队列失败，正在回滚。。。，error: %v\n", id, err)
-		return err
-	}
-	if err := addCache(context.Background(), id, em); err != nil {
-		db.RollBack(tx)
+	if err := addCache(context.Background(), id, em, rpush); err != nil {
 		logrus.Errorf("消息插入缓存时失败,errors: %v", err)
 		return err
 	}
-	err = db.Commit(tx)
-	if err != nil {
-		logrus.Infof("消息 %s 插入数据库失败", id)
-	} else {
-		logrus.Infof("消息添加成功,id: %s", id)
-	}
-	return err
+
+	logrus.Infof("消息添加成功,id: %s", id)
+	return nil
 }
 
 func edit(ctx context.Context, m Meta, em Messager, dbParamFunc func(context.Context, Messager) (*sqlx.Tx, error), mqParamFunc func(context.Context, []byte, int64) error) error {

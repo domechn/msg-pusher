@@ -4,3 +4,4 @@ log/
 todo
 .idea/
 conf.yaml
+dist/

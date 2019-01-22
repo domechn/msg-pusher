@@ -154,3 +154,13 @@ func (d *DbSms) SetTryNum(s int32) {
 func (d *DbSms) SetReason(s string) {
 	d.Reason = s
 }
+
+func (d *DbEmail) SetOption(s int32) {
+	d.Option = s
+}
+func (d *DbWeChat) SetOption(s int32) {
+	d.Option = s
+}
+func (d *DbSms) SetOption(s int32) {
+	d.Option = s
+}

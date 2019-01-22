@@ -22,3 +22,8 @@ const (
 var (
 	success = []byte{1}
 )
+
+type Marshaler interface {
+	Marshal() ([]byte, error)
+	Unmarshal([]byte) error
+}

@@ -16,6 +16,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"uuabc.com/sendmsg/pkg/pb/meta"
+	"uuabc.com/sendmsg/storer/cache"
 	"uuabc.com/sendmsg/storer/db"
 	"uuabc.com/sendmsg/storer/mq"
 )
@@ -56,9 +57,7 @@ func (weChatServiceImpl) produce(ctx context.Context, p *meta.WeChatProducer, co
 	return produce(ctx,
 		p,
 		dbWeChat,
-		func(i context.Context, messager Messager) (*sqlx.Tx, error) {
-			return db.WeChatInsert(i, messager.(*meta.DbWeChat))
-		},
+		cache.RPushWeChat,
 		mq.WeChatProduce)
 }
 
