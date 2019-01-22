@@ -40,8 +40,8 @@ var (
 		}, {
 			name:    "CancelSmsByKey",
 			method:  "DELETE",
-			path:    "/sms/key/{key}",
-			handler: handler.URLHandler(handler.SmsKeyCancel),
+			path:    "/sms/plat/{plat}/key/{key}",
+			handler: handler.URLHandler(handler.SmsCancelByPlat),
 		}, {
 			name:    "CancelWeChatByID",
 			method:  "DELETE",
@@ -96,6 +96,11 @@ var (
 			method:  "GET",
 			path:    "/email/{id}",
 			handler: handler.URLHandler(handler.EmailIDDetail),
+		}, {
+			name:    "SmsDetailByPlat",
+			method:  "GET",
+			path:    "/sms/plat/{plat}/key/{key}",
+			handler: handler.URLHandler(handler.SmsDetailByPlat),
 		}, {
 			name:    "SmsDetailByMobileAndPage",
 			method:  "GET",

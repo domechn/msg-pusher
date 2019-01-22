@@ -78,6 +78,10 @@ func (s smsServiceImpl) DetailByPhonePage(ctx context.Context, mobile string, pa
 	return db.SmsDetailByPhoneAndPage(ctx, mobile, page)
 }
 
+func (s smsServiceImpl) DetailByPlat(ctx context.Context, plat int32, key string) ([]*meta.DbSms, error) {
+	return db.SmsDetailByPlat(ctx, plat, key)
+}
+
 func (smsServiceImpl) detail(ctx context.Context, id string) (Marshaler, error) {
 	res := &meta.DbSms{}
 	return res, detail(ctx, id, res, func(ctx2 context.Context, id string) (Marshaler, error) {

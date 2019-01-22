@@ -14,6 +14,7 @@ package handler
 import (
 	"context"
 	"strconv"
+
 	"uuabc.com/sendmsg/pkg/errors"
 	"uuabc.com/sendmsg/pkg/pb/meta"
 	"uuabc.com/sendmsg/pkg/utils"
@@ -91,9 +92,17 @@ func SmsIDDetail(ctx context.Context, d map[string]string) (res []byte, err erro
 	return
 }
 
-// @router(GET,"/sms/key/{key}")
-func SmsKeyDetail(ctx context.Context, body []byte) (res []byte, err error) {
-	return
+// @router(GET,"/sms/plat/{plat}/key/{key}")
+func SmsDetailByPlat(ctx context.Context, d map[string]string) (res []byte, err error) {
+	plat := d["plat"]
+	platform, err := strconv.Atoi(plat)
+	if err != nil {
+		return nil, errors.ErrParam
+	}
+	key := d["key"]
+	m, err := smsService.DetailByPlat(ctx, int32(platform), key)
+	res = model.NewResponseDataKey("detail", m).MustMarshal()
+	return res, err
 }
 
 // @router(GET,"/sms/mobile/{mobile}/page/{p}")
@@ -144,8 +153,8 @@ func SmsCancel(ctx context.Context, d map[string]string) (res []byte, err error)
 	return
 }
 
-// @router(DELETE,"/sms/key/{key}")
-func SmsKeyCancel(ctx context.Context, d map[string]string) (res []byte, err error) {
-	res = successResp
+// @router(DELETE,"/sms/plat/{plat}/key/{key}")
+func SmsCancelByPlat(ctx context.Context, d map[string]string) (res []byte, err error) {
+	err = errors.ErrFunctionNotSupport
 	return
 }
