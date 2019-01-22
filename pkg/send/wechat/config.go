@@ -15,6 +15,10 @@ import (
 	"github.com/json-iterator/go"
 )
 
+const (
+	WeiXinAccessToken = "weixin_access_token"
+)
+
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 type Config struct {

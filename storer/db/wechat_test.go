@@ -3,9 +3,9 @@
 #
 #   Author        : domchan
 #   Email         : 814172254@qq.com
-#   File Name     : wechat_test.go
-#   Created       : 2019/1/14 10:24
-#   Last Modified : 2019/1/14 10:24
+#   File Name     : wechat.go
+#   Created       : 2019/1/11 16:58
+#   Last Modified : 2019/1/11 16:58
 #   Describe      :
 #
 # ====================================================*/
@@ -13,103 +13,264 @@ package db
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
-	"github.com/satori/go.uuid"
-	"uuabc.com/sendmsg/pkg/db"
+	"github.com/jmoiron/sqlx"
 	"uuabc.com/sendmsg/pkg/pb/meta"
 	"uuabc.com/sendmsg/storer"
 )
 
-func init() {
-	storer.DB, _ = db.New(db.Config{
-		URL: "root:root@tcp(localhost:3306)/uuabc?charset=utf8&parseTime=True",
-	})
+var dbw = &meta.DbWeChat{
+	Id:          "test-test-test-wechat",
+	Platform:    1,
+	PlatformKey: "test-platform",
+	Touser:      "to-user-test",
+	Status:      1,
+	Type:        1,
+	Template:    "test-templ",
+	Content:     "test",
+	Arguments:   "test",
+	SendTime:    "2019-09-09 09:09:09",
+	Url:         "test-url",
 }
 
-func TestInsertWechats(t *testing.T) {
-	tx, err := WeChatInsert(
-		context.Background(),
-		&meta.DbWeChat{
-			Id:       uuid.NewV4().String(),
-			Content:  "testcontent",
-			Touser:   "13155555555",
-			Template: "sms-13123123",
-			Url:      "",
-			SendTime: "2019-01-01 01:01:11",
-			Type:     1,
-			Platform: 1,
+func TestWeChatInsert(t *testing.T) {
+	type args struct {
+		ctx    context.Context
+		wechat *meta.DbWeChat
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    *sqlx.Tx
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+		{
+			name: "insert_case_1",
+			args: args{
+				ctx:    context.Background(),
+				wechat: dbw,
+			},
+		}, {
+			name: "insert_case_2",
+			args: args{
+				ctx:    context.Background(),
+				wechat: dbw,
+			},
+			wantErr: true,
 		},
-	)
-	if err != nil {
-		if tx != nil {
-			if err := tx.Rollback(); err != nil {
-				t.Error(err)
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tx, err := WeChatInsert(tt.args.ctx, tt.args.wechat)
+			if err != nil {
+				RollBack(tx)
+			} else {
+				Commit(tx)
 			}
-		}
-		t.Error(err)
-	} else {
-		if err := tx.Commit(); err != nil {
-			t.Error(err)
-		}
+			if (err != nil) != tt.wantErr {
+				t.Errorf("WeChatInsert() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
+	}
+}
+
+func TestWeChatEdit(t *testing.T) {
+	dbw.Content = "test-c"
+	type args struct {
+		ctx context.Context
+		w   *meta.DbWeChat
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    *sqlx.Tx
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+		{
+			name: "edit_case_1",
+			args: args{
+				ctx: context.Background(),
+				w:   dbw,
+			},
+		}, {
+			name: "edit_case_2",
+			args: args{
+				ctx: context.Background(),
+				w:   dbw,
+			},
+			wantErr: true,
+		}, {
+			name: "edit_case_3",
+			args: args{
+				ctx: context.Background(),
+				w: &meta.DbWeChat{
+					Id: "wu",
+				},
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := WeChatEdit(tt.args.ctx, tt.args.w)
+			if err != nil {
+				RollBack(got)
+			} else {
+				Commit(got)
+			}
+			if (err != nil) != tt.wantErr {
+				t.Errorf("WeChatEdit() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
 	}
 }
 
 func TestWeChatDetailByID(t *testing.T) {
-	res, err := WeChatDetailByID(context.Background(), "00a87366-c607-43d8-9673-6f2cd143273c")
-	fmt.Println(res, err)
-}
-
-func TestWeChatEdit(t *testing.T) {
-	tx, err := WeChatEdit(context.Background(), &meta.DbWeChat{
-		Id:        "db84e690-fbf6-4e4e-b113-44275282c6fd",
-		Arguments: "{\"code\":800}",
-		SendTime:  "2018-08-08 08:08:08",
-	})
-	if err != nil {
-		if tx != nil {
-			tx.Rollback()
-		}
-		t.Error(err)
-	} else {
-		tx.Commit()
+	type args struct {
+		ctx context.Context
+		id  string
 	}
-}
-
-func TestWeChatEditToUser(t *testing.T) {
-	tx, err := WeChatEdit(context.Background(), &meta.DbWeChat{
-		Id:        "db84e690-fbf6-4e4e-b113-44275282c6fd",
-		Arguments: "{\"code\":800}",
-		SendTime:  "2018-08-08 08:08:08",
-		Touser:    "me",
-	})
-	if err != nil {
-		if tx != nil {
-			tx.Rollback()
-		}
-		t.Error(err)
-	} else {
-		tx.Commit()
+	tests := []struct {
+		name    string
+		args    args
+		want    *meta.DbWeChat
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+		{
+			name: "detailD_case_1",
+			args: args{
+				ctx: context.Background(),
+				id:  dbw.Id,
+			},
+		}, {
+			name: "detailD_case_2",
+			args: args{
+				ctx: context.Background(),
+				id:  "wu",
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := WeChatDetailByID(tt.args.ctx, tt.args.id)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("WeChatDetailByID() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
 	}
 }
 
 func TestWeChatUpdateSendResult(t *testing.T) {
-	tx, err := WeChatUpdateSendResult(context.Background(), &meta.DbWeChat{
-		Id:           "8ea57cba-64dd-4477-9389-3a85d7269d38",
-		Status:       3,
-		ResultStatus: 1,
-		TryNum:       2,
-	})
-	if err != nil {
-		if tx != nil {
-			if err := tx.Rollback(); err != nil {
-				t.Error(err)
+	dbw.Status = 2
+	type args struct {
+		ctx context.Context
+		w   *meta.DbWeChat
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    *sqlx.Tx
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+		{
+			name: "update_case_1",
+			args: args{
+				ctx: context.Background(),
+				w:   dbw,
+			},
+		}, {
+			name: "update_case_2",
+			args: args{
+				ctx: context.Background(),
+				w:   dbw,
+			},
+			wantErr: true,
+		}, {
+			name: "update_case_3",
+			args: args{
+				ctx: context.Background(),
+				w: &meta.DbWeChat{
+					Id: "wu",
+				},
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := WeChatUpdateSendResult(tt.args.ctx, tt.args.w)
+			if err != nil {
+				RollBack(got)
+			} else {
+				Commit(got)
 			}
-		}
-		t.Error(err)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("WeChatUpdateSendResult() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
 	}
-	if err := tx.Commit(); err != nil {
-		t.Error(err)
+}
+
+func TestWeChatCancelMsgByID(t *testing.T) {
+	type args struct {
+		ctx context.Context
+		id  string
 	}
+	tests := []struct {
+		name    string
+		args    args
+		want    *sqlx.Tx
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+		{
+			name: "cancel_case_1",
+			args: args{
+				ctx: context.Background(),
+				id:  dbw.Id,
+			},
+		}, {
+			name: "cancel_case_2",
+			args: args{
+				ctx: context.Background(),
+				id:  "wu",
+			},
+			wantErr: true,
+		}, {
+			name: "cancel_casse_3",
+			args: args{
+				ctx: context.Background(),
+				id:  dbw.Id,
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := WeChatCancelMsgByID(tt.args.ctx, tt.args.id)
+			if err != nil {
+				RollBack(got)
+			} else {
+				Commit(got)
+			}
+			if (err != nil) != tt.wantErr {
+				t.Errorf("WeChatCancelMsgByID() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
+	}
+}
+
+func TestDeleteW(t *testing.T) {
+	storer.DB.Exec("DELETE FROM wechats WHERE id= ?", dbw.Id)
 }

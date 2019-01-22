@@ -168,6 +168,9 @@ func (m *WeChatProducer) Validated() error {
 	if err := checkPlatform(m.Platform); err != nil {
 		return err
 	}
+	if err := checkPlatformKey(m.PlatformKey); err != nil {
+		return err
+	}
 	if err := checkToUser(m.Touser); err != nil {
 		return err
 	}

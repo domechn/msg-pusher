@@ -4,26 +4,23 @@
 #   Author        : domchan
 #   Email         : 814172254@qq.com
 #   File Name     : send.go
-#   Created       : 2019/1/7 14:34
-#   Last Modified : 2019/1/7 14:34
+#   Created       : 2019/1/7 14:33
+#   Last Modified : 2019/1/7 14:33
 #   Describe      :
 #
 # ====================================================*/
-package wechat
+package sms
 
 import (
 	"net/http"
 	"testing"
 
 	"uuabc.com/sendmsg/config"
-	"uuabc.com/sendmsg/pkg/cache"
-	"uuabc.com/sendmsg/pkg/cache/redis"
 	"uuabc.com/sendmsg/pkg/send"
 )
 
 var (
-	wc  *config.WeChat
-	rc  *config.Redis
+	ec  *config.Aliyun
 	cli *Client
 )
 
@@ -32,20 +29,18 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	wc = config.WeChatConf()
-	rc = config.RedisConf()
-	rcli, _ := redis.NewClient([]string{"127.0.0.1:6379"}, "")
+	ec = config.AliyunConf()
 	cli = NewClient(Config{
-		APPId:     wc.AppId,
-		APPSecret: wc.AppSecret,
-	}, rcli)
+		AccessKeyId:  ec.AccessKeyId,
+		AccessSecret: ec.AccessSecret,
+		GatewayURL:   ec.GatewayURL,
+	})
 }
 
 func TestClient_Send(t *testing.T) {
 	type fields struct {
-		httpCli *http.Client
-		cached  cache.Cache
-		cfg     Config
+		cfg    Config
+		client *http.Client
 	}
 	type args struct {
 		msg send.Message
@@ -61,12 +56,11 @@ func TestClient_Send(t *testing.T) {
 		{
 			name: "send_case_1",
 			fields: fields{
-				httpCli: cli.httpCli,
-				cached:  cli.cached,
-				cfg:     cli.cfg,
+				cfg:    cli.cfg,
+				client: cli.client,
 			},
 			args: args{
-				msg: NewRequest("abc", "abc", "abc", []byte("abc")),
+				msg: NewRequest("13423234442", "test", "te", "te", "123"),
 			},
 			wantErr: true,
 		},
@@ -74,9 +68,8 @@ func TestClient_Send(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &Client{
-				httpCli: tt.fields.httpCli,
-				cached:  tt.fields.cached,
-				cfg:     tt.fields.cfg,
+				cfg:    tt.fields.cfg,
+				client: tt.fields.client,
 			}
 			if err := c.Send(tt.args.msg, tt.args.do); (err != nil) != tt.wantErr {
 				t.Errorf("Client.Send() error = %v, wantErr %v", err, tt.wantErr)

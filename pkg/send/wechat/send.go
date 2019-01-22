@@ -23,13 +23,12 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"uuabc.com/sendmsg/pkg/cache"
-	"uuabc.com/sendmsg/pkg/cst"
 	"uuabc.com/sendmsg/pkg/send"
 )
 
 const (
 	defaultTimeout = time.Second * 10
-	lockKey        = cst.WeiXinAccessToken + "_lock"
+	lockKey        = WeiXinAccessToken + "_lock"
 	tokenURL       = "https://api.weixin.qq.com/cgi-bin/token"
 	sendURL        = "https://api.weixin.qq.com/cgi-bin/message/template/send?access_token="
 )
@@ -113,7 +112,7 @@ func (c *Client) requestAccessToken() (*Response, error) {
 
 // token 从缓存中获取token
 func (c *Client) token() (string, error) {
-	b, err := c.cached.Get(context.Background(), cst.WeiXinAccessToken)
+	b, err := c.cached.Get(context.Background(), WeiXinAccessToken)
 	if err != nil {
 		return "", err
 	}
@@ -122,11 +121,11 @@ func (c *Client) token() (string, error) {
 
 // storeToken 在缓存中存储token
 func (c *Client) storeToken(v string, e int) error {
-	return c.cached.Put(context.Background(), cst.WeiXinAccessToken, []byte(v), int64(e/60))
+	return c.cached.Put(context.Background(), WeiXinAccessToken, []byte(v), int64(e/60))
 }
 
 func (c *Client) removeToken() {
-	c.cached.Del(context.Background(), cst.WeiXinAccessToken)
+	c.cached.Del(context.Background(), WeiXinAccessToken)
 }
 
 // 分布式锁，防止多进程或协程去同时去获取accesstoken

@@ -3,9 +3,9 @@
 #
 #   Author        : domchan
 #   Email         : 814172254@qq.com
-#   File Name     : email_test.go
-#   Created       : 2019/1/14 10:25
-#   Last Modified : 2019/1/14 10:25
+#   File Name     : putter.go
+#   Created       : 2019/1/11 17:03
+#   Last Modified : 2019/1/11 17:03
 #   Describe      :
 #
 # ====================================================*/
@@ -13,116 +13,243 @@ package db
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
-	"github.com/satori/go.uuid"
-	"uuabc.com/sendmsg/pkg/db"
+	"github.com/jmoiron/sqlx"
 	"uuabc.com/sendmsg/pkg/pb/meta"
 	"uuabc.com/sendmsg/storer"
 )
 
-func init() {
-	storer.DB, _ = db.New(db.Config{
-		URL: "root:root@tcp(localhost:3306)/uuabc?charset=utf8&parseTime=True",
-	})
+var dbe = &meta.DbEmail{
+	Id:          "test-test-test-email",
+	Platform:    1,
+	PlatformKey: "test-platform",
+	Title:       "hello",
+	Content:     "test-content",
+	Destination: "heelo@abc.com",
+	Type:        1,
+	Template:    "1-1",
+	Arguments:   "test",
+	SendTime:    "2018-09-09 09:09:09",
+	Status:      1,
 }
 
-func TestInsertEmails(t *testing.T) {
-	tx, err := EmailInsert(
-		context.Background(),
-		&meta.DbEmail{
-			Id:          uuid.NewV4().String(),
-			PlatformKey: "123",
-			Server:      1,
-			Title:       "test",
-			Content: "<html><head><title>忘记密码验证码</title><style>p " +
-				"{margin:0px;margin-bottom:5px;}</style></head><body>" +
-				"<div style=\"margin-bottom:25px\"><p>亲爱的学生,</p></div>" +
-				"<div style=\"margin-bottom:25px;\"><p>你正在使用找回密码功能.</p>" +
-				"</div><div style=\"margin-bottom:25px;\"><p>验证码是 ${code}</p>" +
-				"</div><div><p>Sincerely,</p><p>UUabc</p></div></body></html>",
-			Template:    "hello",
-			Arguments:   "123test",
-			Destination: "abc@uuabc.com",
-			SendTime:    "2019-01-01 01:01:11",
-			Type:        1,
-			Platform:    1,
-		},
-	)
-	if err != nil {
-		if tx != nil {
-			if err := tx.Rollback(); err != nil {
-				t.Error(err)
-			}
-		}
-		t.Error(err)
+func TestEmailInsert(t *testing.T) {
+	type args struct {
+		ctx context.Context
+		e   *meta.DbEmail
 	}
-	if err := tx.Commit(); err != nil {
-		t.Error(err)
+	tests := []struct {
+		name    string
+		args    args
+		want    *sqlx.Tx
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+		{
+			name: "insert_case_1",
+			args: args{
+				ctx: context.Background(),
+				e:   dbe,
+			},
+		}, {
+			name: "insert_case_2",
+			args: args{
+				ctx: context.Background(),
+				e:   dbe,
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := EmailInsert(tt.args.ctx, tt.args.e)
+			if err != nil {
+				RollBack(got)
+			} else {
+				Commit(got)
+			}
+			if (err != nil) != tt.wantErr {
+				t.Errorf("EmailInsert() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
 	}
 }
 
 func TestEmailDetailByID(t *testing.T) {
-	res, err := EmailDetailByID(context.Background(), "d1b1753f-d2d4-4c0c-b24b-bfdeeb8068bf")
-	fmt.Println(res, err)
+	type args struct {
+		ctx context.Context
+		id  string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    *meta.DbEmail
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+		{
+			name: "detailD_case_1",
+			args: args{
+				ctx: context.Background(),
+				id:  dbe.Id,
+			},
+		}, {
+			name: "detailD_case_2",
+			args: args{
+				ctx: context.Background(),
+				id:  "test",
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := EmailDetailByID(tt.args.ctx, tt.args.id)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("EmailDetailByID() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
+	}
 }
 
 func TestEmailEdit(t *testing.T) {
-	tx, err := EmailEdit(context.Background(), &meta.DbEmail{
-		Id:       "8a9da75d-96ef-40ac-b0be-98a327d5e482",
-		Content:  "hello",
-		SendTime: "2018-08-08 08:08:08",
-	})
-	if err != nil {
-		if tx != nil {
-			if err := tx.Rollback(); err != nil {
-				t.Error(err)
+	dbe.Destination = "hello@aaa.com"
+	type args struct {
+		ctx context.Context
+		e   *meta.DbEmail
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    *sqlx.Tx
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+		{
+			name: "edit_case_1",
+			args: args{
+				ctx: context.Background(),
+				e:   dbe,
+			},
+		}, {
+			name: "edit_case_2",
+			args: args{
+				ctx: context.Background(),
+				e: &meta.DbEmail{
+					Id: "test11",
+				},
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := EmailEdit(tt.args.ctx, tt.args.e)
+			if err != nil {
+				RollBack(got)
+			} else {
+				Commit(got)
 			}
-		}
-		t.Error(err)
-	}
-	if err := tx.Commit(); err != nil {
-		t.Error(err)
-	}
-}
-
-func TestEmailEditDestination(t *testing.T) {
-	tx, err := EmailEdit(context.Background(), &meta.DbEmail{
-		Id:          "8a9da75d-96ef-40ac-b0be-98a327d5e482",
-		Content:     "hello",
-		SendTime:    "2018-08-08 08:08:08",
-		Destination: "test@email.com",
-	})
-	if err != nil {
-		if tx != nil {
-			if err := tx.Rollback(); err != nil {
-				t.Error(err)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("EmailEdit() error = %v, wantErr %v", err, tt.wantErr)
+				return
 			}
-		}
-		t.Error(err)
-	}
-	if err := tx.Commit(); err != nil {
-		t.Error(err)
+		})
 	}
 }
 
 func TestEmailUpdateSendResult(t *testing.T) {
-	tx, err := EmailUpdateSendResult(context.Background(), &meta.DbEmail{
-		Id:           "8a9da75d-96ef-40ac-b0be-98a327d5e482",
-		Status:       3,
-		ResultStatus: 1,
-		TryNum:       2,
-	})
-	if err != nil {
-		if tx != nil {
-			if err := tx.Rollback(); err != nil {
-				t.Error(err)
+	dbe.ResultStatus = 3
+	type args struct {
+		ctx context.Context
+		e   *meta.DbEmail
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    *sqlx.Tx
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+		{
+			name: "update_case_1",
+			args: args{
+				ctx: context.Background(),
+				e:   dbe,
+			},
+		}, {
+			name: "update_case_2",
+			args: args{
+				ctx: context.Background(),
+				e: &meta.DbEmail{
+					Id: "ttt",
+				},
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := EmailUpdateSendResult(tt.args.ctx, tt.args.e)
+			if err != nil {
+				RollBack(got)
+			} else {
+				Commit(got)
 			}
-		}
-		t.Error(err)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("EmailUpdateSendResult() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
 	}
-	if err := tx.Commit(); err != nil {
-		t.Error(err)
+}
+
+func TestEmailCancelMsgByID(t *testing.T) {
+	type args struct {
+		ctx context.Context
+		id  string
 	}
+	tests := []struct {
+		name    string
+		args    args
+		want    *sqlx.Tx
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+		{
+			name: "cancel_case_1",
+			args: args{
+				ctx: context.Background(),
+				id:  dbe.Id,
+			},
+		}, {
+			name: "caccel_case_2",
+			args: args{
+				ctx: context.Background(),
+				id:  "wu",
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := EmailCancelMsgByID(tt.args.ctx, tt.args.id)
+			if err != nil {
+				RollBack(got)
+			} else {
+				Commit(got)
+			}
+			if (err != nil) != tt.wantErr {
+				t.Errorf("EmailCancelMsgByID() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
+	}
+}
+
+func TestEDelete(t *testing.T) {
+	storer.DB.Exec("DELETE FROM emails WHERE id = ? ", dbe.Id)
 }

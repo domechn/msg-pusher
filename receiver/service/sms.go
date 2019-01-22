@@ -91,7 +91,7 @@ func (s smsServiceImpl) Cancel(ctx context.Context, id string) error {
 
 func (smsServiceImpl) cancel(ctx context.Context, id string) error {
 	return cancel(ctx, id, func(i context.Context, s string) (*sqlx.Tx, error) {
-		return db.SmsCancelMsgByID(i, s)
+		return db.SmsCancelByID(i, s)
 	}, &meta.DbSms{})
 }
 

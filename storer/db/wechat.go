@@ -51,7 +51,15 @@ func WeChatInsert(ctx context.Context, wechat *meta.DbWeChat) (*sqlx.Tx, error) 
 func WeChatEdit(ctx context.Context, w *meta.DbWeChat) (*sqlx.Tx, error) {
 	sendT := changeSendTime(w.SendTime)
 
-	return update(ctx, "WeChatEdit", `UPDATE wechats SET arguments=?,send_time=?,touser=?,template=? WHERE id=? AND status=1`, w.Arguments, sendT, w.Touser, w.Template, w.Id)
+	return update(ctx,
+		"WeChatEdit",
+		`UPDATE wechats SET content=?,arguments=?,send_time=?,touser=?,template=? WHERE id=? AND status=1`,
+		w.Content,
+		w.Arguments,
+		sendT,
+		w.Touser,
+		w.Template,
+		w.Id)
 }
 
 // WeChatUpdateSendResult 修改微信发送结果

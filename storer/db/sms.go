@@ -18,18 +18,35 @@ import (
 	"uuabc.com/sendmsg/pkg/pb/meta"
 )
 
-// SmsCancelMsgByID 将sms信息的发送状态设置为取消
-func SmsCancelMsgByID(ctx context.Context, id string) (*sqlx.Tx, error) {
+// SmsCancelByID 将sms信息的发送状态设置为取消
+func SmsCancelByID(ctx context.Context, id string) (*sqlx.Tx, error) {
 	return update(ctx,
 		"SmsCancelMsgByID",
 		`UPDATE smss SET status=2,result_status=2 WHERE id = ?`,
 		id)
 }
 
+// SmsCancelMsgByPlat 通过平台和平台编号取消发送的消息
+func SmsCancelByPlat(ctx context.Context, platform int32, platformKey string) (*sqlx.Tx, error) {
+	return update(ctx,
+		"SmsCancelMsgByPlat",
+		`UPDATE smss SET status=2,result_status=2 WHERE platform=? AND platform_key=?`,
+		platform,
+		platformKey)
+}
+
 // SmsDetailByID 按照id查询sms所有字段信息，如果未找到返回error
 func SmsDetailByID(ctx context.Context, id string) (*meta.DbSms, error) {
 	res := &meta.DbSms{}
 	err := query(ctx, res, "SmsDetailByID", `SELECT * FROM smss WHERE id = ? LIMIT 1`, id)
+	return res, err
+}
+
+// SmsDetailByPlat 根据platform和platformKey查询消息发送记录
+func SmsDetailByPlat(ctx context.Context, platform int32, platformKey string) ([]*meta.DbSms, error) {
+	var res []*meta.DbSms
+
+	err := list(ctx, &res, "SmsDetailbyPlat", `SELECT * FROM smss WHERE platform=? AND platform_key=?`, platform, platformKey)
 	return res, err
 }
 
@@ -63,7 +80,8 @@ func SmsEdit(ctx context.Context, s *meta.DbSms) (*sqlx.Tx, error) {
 
 	return update(ctx,
 		"SmsEdit",
-		`UPDATE smss SET arguments=?,send_time=?,template=?,mobile=? WHERE id=? AND status=1`,
+		`UPDATE smss SET content=?,arguments=?,send_time=?,template=?,mobile=? WHERE id=? AND status=1`,
+		s.Content,
 		s.Arguments,
 		sendT,
 		s.Template,

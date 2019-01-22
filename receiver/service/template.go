@@ -53,7 +53,7 @@ func (templateImpl) add(ctx context.Context, id string, a *tpl.TemplateAdder) (t
 	})
 	if err != nil {
 		if err == db.ErrUniqueKeyExsits {
-			err = errors.ErrTemplateIsExsited
+			err = errors.ErrTemplateIsExisted
 		}
 		return
 	}

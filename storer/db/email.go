@@ -56,7 +56,8 @@ func EmailEdit(ctx context.Context, e *meta.DbEmail) (*sqlx.Tx, error) {
 	sendT := changeSendTime(e.SendTime)
 	return update(ctx,
 		"EmailEdit",
-		`UPDATE emails SET template=?,content=?,arguments=?,send_time=? WHERE id=? AND status=1`,
+		`UPDATE emails SET destination=?,template=?,content=?,arguments=?,send_time=? WHERE id=? AND status=1`,
+		e.Destination,
 		e.Template,
 		e.Content,
 		e.Arguments,

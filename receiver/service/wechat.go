@@ -42,15 +42,16 @@ func (s weChatServiceImpl) Produce(ctx context.Context, m Meta) (string, error) 
 
 func (weChatServiceImpl) produce(ctx context.Context, p *meta.WeChatProducer, content string, ttl int64) error {
 	dbWeChat := &meta.DbWeChat{
-		Id:        p.Id,
-		Platform:  p.Platform,
-		Touser:    p.Touser,
-		Type:      p.Type,
-		Content:   content,
-		Template:  p.Template,
-		Url:       p.Url,
-		Arguments: p.Arguments,
-		SendTime:  p.SendTime,
+		Id:          p.Id,
+		Platform:    p.Platform,
+		PlatformKey: p.PlatformKey,
+		Touser:      p.Touser,
+		Type:        p.Type,
+		Content:     content,
+		Template:    p.Template,
+		Url:         p.Url,
+		Arguments:   p.Arguments,
+		SendTime:    p.SendTime,
 	}
 	return produce(ctx,
 		p,
@@ -66,7 +67,7 @@ func (s weChatServiceImpl) Detail(ctx context.Context, id string) (Marshaler, er
 }
 
 func (s weChatServiceImpl) detail(ctx context.Context, id string) (Marshaler, error) {
-	res := &meta.DbEmail{}
+	res := &meta.DbWeChat{}
 	return res, detail(ctx, id, res, func(ctx2 context.Context, id string) (Marshaler, error) {
 		return db.WeChatDetailByID(ctx2, id)
 	})

@@ -98,18 +98,6 @@ func (c *Client) IsMember(ctx context.Context, k string, v []byte) (bool, error)
 	return res.Result()
 }
 
-// PutBit 修改k中offset的值，val in (0,1)
-func (c *Client) PutBit(ctx context.Context, k string, offset int64, val int) error {
-	return c.c.SetBit(k, offset, val).Err()
-}
-
-// GetBit 从k中获取offset的值（0或1）
-func (c *Client) GetBit(ctx context.Context, k string, offset int64) (int, error) {
-	res := c.c.GetBit(k, offset)
-	r, err := res.Result()
-	return int(r), err
-}
-
 func (c *Client) Incr(ctx context.Context, k string) (int64, error) {
 	res := c.c.Incr(k)
 	return res.Result()

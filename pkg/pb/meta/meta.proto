@@ -168,37 +168,41 @@ message DbEmail {
 message WeChatProducer {
     string id = 1;
     int32 platform = 2;
-    string touser = 3;
-    string template = 4;
-    string url = 5;
-    string arguments = 6;
+    //@inject_tag: json:"platform_key,omitempty" db:"platform_key"
+    string platformKey = 3;
+    string touser = 4;
+    string template = 5;
+    string url = 6;
+    string arguments = 7;
     //@inject_tag: json:"send_time,omitempty"
-    string sendTime = 7;
+    string sendTime = 8;
     //@inject_tag: json:"-"
-    int64 _utcSendStamp = 8;
-    int32 type = 9;
+    int64 _utcSendStamp = 9;
+    int32 type = 10;
 }
 
 
 message DbWeChat {
     string id = 1;
     int32 platform = 2;
-    string touser = 3;
-    int32 type = 4;
-    string template = 5;
-    string url = 6;
-    string content = 7;
-    string arguments = 8;
+    //@inject_tag: json:"platform_key,omitempty" db:"platform_key"
+    string platformKey = 3;
+    string touser = 4;
+    int32 type = 5;
+    string template = 6;
+    string url = 7;
+    string content = 8;
+    string arguments = 9;
     //@inject_tag: json:"send_time,omitempty" db:"send_time"
-    string sendTime = 9;
+    string sendTime = 10;
     //@inject_tag: json:"try_num,omitempty" db:"try_num"
-    int32 tryNum = 10;
-    int32 status = 11;
+    int32 tryNum = 11;
+    int32 status = 12;
     //@inject_tag: json:"result_status,omitempty" db:"result_status"
-    int32 resultStatus = 12;
-    string reason = 13;
+    int32 resultStatus = 13;
+    string reason = 14;
     //@inject_tag: json:"created_at,omitempty" db:"created_at"
-    string createdAt = 14;
+    string createdAt = 15;
     //@inject_tag: json:"updated_at,omitempty" db:"updated_at"
-    string updatedAt = 15;
+    string updatedAt = 16;
 }

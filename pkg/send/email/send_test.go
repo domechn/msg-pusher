@@ -20,7 +20,8 @@ import (
 )
 
 var (
-	ec *config.Email
+	ec  *config.Email
+	cli *Client
 )
 
 func init() {
@@ -29,6 +30,13 @@ func init() {
 		panic(err)
 	}
 	ec = config.EmailConf()
+	cli = NewClient(Config{
+		Username:   ec.Username,
+		Password:   ec.Password,
+		Host:       ec.Host,
+		ServerAddr: ec.ServerAddr,
+		TLS:        ec.TLS,
+	})
 }
 
 func TestClient_Send(t *testing.T) {
@@ -48,38 +56,13 @@ func TestClient_Send(t *testing.T) {
 	}{
 		// TODO: Add test cases.
 		{
-			name: "case1",
+			name: "send_case_1",
 			fields: fields{
-				cfg: Config{
-					ServerAddr: "smtp.qq.com:25",
-					Username:   ec.Username,
-					Password:   ec.Password,
-					Host:       "smtp.qq.com",
-				},
-				auth: smtp.PlainAuth("", ec.Username, ec.Password, ec.Host),
+				cfg:  cli.cfg,
+				auth: cli.auth,
 			},
 			args: args{
-				msg: NewMessage("814172254@qq.com;mengcheng.dou@uuabc.com",
-					"test",
-					"Hello World",
-					false),
-			},
-		}, {
-			name: "caseTls",
-			fields: fields{
-				cfg: Config{
-					ServerAddr: "smtp.qq.com:465",
-					Username:   ec.Username,
-					Password:   ec.Password,
-					Host:       "smtp.qq.com",
-				},
-				auth: smtp.PlainAuth("", ec.Username, ec.Password, ec.Host),
-			},
-			args: args{
-				msg: NewMessage("814172254@qq.com;mengcheng.dou@uuabc.com",
-					"test",
-					"Hello World",
-					true),
+				msg: NewMessage("test@abc.com", "hello", "hello"),
 			},
 		},
 	}

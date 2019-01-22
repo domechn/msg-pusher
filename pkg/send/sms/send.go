@@ -54,7 +54,7 @@ func (c *Client) Send(msg send.Message, do send.DoRes) error {
 	req.AccessKeyId = c.cfg.AccessKeyId
 	sign, err := req.Encode(c.cfg.AccessSecret, c.cfg.GatewayURL)
 	if err != nil {
-		return nil
+		return err
 	}
 	request, _ := http.NewRequest("GET", sign, nil)
 	resp, err := c.client.Do(request)

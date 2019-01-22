@@ -15,8 +15,17 @@ import (
 	"context"
 	"testing"
 
+	"github.com/jmoiron/sqlx"
 	"uuabc.com/sendmsg/pkg/pb/tpl"
+	"uuabc.com/sendmsg/storer"
 )
+
+var dbtm = &tpl.DBTemplate{
+	Id:       "test-template-id",
+	Type:     1,
+	SimpleID: "test-simple-id",
+	Content:  "test-content",
+}
 
 func TestTemplateInsert(t *testing.T) {
 	type args struct {
@@ -26,36 +35,37 @@ func TestTemplateInsert(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
+		want    *sqlx.Tx
 		wantErr bool
 	}{
 		// TODO: Add test cases.
 		{
-			name: "case1",
+			name: "insert_case_1",
 			args: args{
-				ctx: context.Background(),
-				templ: &tpl.DBTemplate{
-					Type:     3,
-					SimpleID: "test-id",
-					Content: "<html><head><title>忘记密码验证码</title><style>p " +
-						"{margin:0px;margin-bottom:5px;}</style></head><body>" +
-						"<div style=\"margin-bottom:25px\"><p>亲爱的学生,</p></div>" +
-						"<div style=\"margin-bottom:25px;\"><p>你正在使用找回密码功能.</p>" +
-						"</div><div style=\"margin-bottom:25px;\"><p>验证码是 ${code}</p>" +
-						"</div><div><p>Sincerely,</p><p>UUabc</p></div></body></html>",
-				},
+				ctx:   context.Background(),
+				templ: dbtm,
 			},
-			wantErr: false,
+		}, {
+			name: "inser_case_2",
+			args: args{
+				ctx:   context.Background(),
+				templ: dbtm,
+			},
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := TemplateInsert(tt.args.ctx, tt.args.templ)
-			if (err != nil) != tt.wantErr {
+			if err != nil {
 				RollBack(got)
+			} else {
+				Commit(got)
+			}
+			if (err != nil) != tt.wantErr {
 				t.Errorf("TemplateInsert() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			Commit(got)
 		})
 	}
 }
@@ -67,13 +77,15 @@ func TestTemplateList(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
+		wantRes []*tpl.DBTemplate
 		wantErr bool
 	}{
 		// TODO: Add test cases.
 		{
-			name:    "case1",
-			args:    args{context.Background()},
-			wantErr: false,
+			name: "list_case_1",
+			args: args{
+				ctx: context.Background(),
+			},
 		},
 	}
 	for _, tt := range tests {
@@ -85,4 +97,8 @@ func TestTemplateList(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestDeleteTemp(t *testing.T) {
+	storer.DB.Exec("DELETE FROM template WHERE id = ?", dbtm.Id)
 }
