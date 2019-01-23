@@ -11,6 +11,10 @@
 # ====================================================*/
 package pub
 
+import (
+	"context"
+)
+
 type Messager interface {
 	GetId() string
 	Marshal() ([]byte, error)
@@ -22,4 +26,10 @@ type Messager interface {
 	SetReason(string)
 	GetSendTime() string
 	SetOption(int32)
+}
+
+type Cache interface {
+	RPushEmail(context.Context, []byte) error
+	RPushWeChat(context.Context, []byte) error
+	RPushSms(context.Context, []byte) error
 }

@@ -17,7 +17,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"uuabc.com/sendmsg/pkg/pb/meta"
 	"uuabc.com/sendmsg/pkg/retry/backoff"
-	"uuabc.com/sendmsg/sender"
 	"uuabc.com/sendmsg/storer/cache"
 )
 
@@ -51,7 +50,7 @@ func Send(id string, sendFunc RetryFunc) error {
 }
 
 // SendRetryFunc 返回一个可以用于重试发送的方法
-func SendRetryFunc(msg Messager, send func(Messager) error, doList func(sender.Cache, []byte) error) RetryFunc {
+func SendRetryFunc(msg Messager, send func(Messager) error, doList func(Cache, []byte) error) RetryFunc {
 	var reason error
 	return func(count int) error {
 		// 发送之前检查状态,如果已发送就直接返回成功
@@ -100,7 +99,7 @@ func SendRetryFunc(msg Messager, send func(Messager) error, doList func(sender.C
 	}
 }
 
-func updateCache(msg Messager, doList func(sender.Cache, []byte) error) error {
+func updateCache(msg Messager, doList func(Cache, []byte) error) error {
 	msg.SetOption(int32(meta.Update))
 	b, _ := msg.Marshal()
 	t := cache.NewTransaction()

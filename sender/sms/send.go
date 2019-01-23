@@ -17,7 +17,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"uuabc.com/sendmsg/pkg/pb/meta"
 	"uuabc.com/sendmsg/pkg/send/sms"
-	"uuabc.com/sendmsg/sender"
 	"uuabc.com/sendmsg/sender/pub"
 )
 
@@ -41,6 +40,6 @@ func (r *Receiver) send(msg pub.Messager) error {
 	), nil)
 }
 
-func (r *Receiver) doList(c sender.Cache, b []byte) error {
+func (r *Receiver) doList(c pub.Cache, b []byte) error {
 	return c.RPushSms(context.Background(), b)
 }
