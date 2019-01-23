@@ -13,18 +13,18 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"strconv"
 	"time"
 
-	"github.com/jmoiron/sqlx"
 	"github.com/sirupsen/logrus"
-	cache2 "uuabc.com/sendmsg/pkg/cache"
 	"uuabc.com/sendmsg/pkg/errors"
 	"uuabc.com/sendmsg/pkg/pb/meta"
 	"uuabc.com/sendmsg/storer/cache"
-	"uuabc.com/sendmsg/storer/db"
 )
 
-type updateFunc func(i context.Context, s string) (*sqlx.Tx, error)
+type RPushFunc func(i context.Context, c Cache, b []byte) error
+type MqFunc func(context.Context, []byte, int64) error
 
 const (
 	timeLayout = "2006-01-02T15:04:05Z"
@@ -38,49 +38,74 @@ type MsgService interface {
 	Edit(ctx context.Context, m Meta) error
 }
 
-// addCache 添加缓存
-func addCache(ctx context.Context, id string, msg Messager, rpush func([]byte) error) error {
-	// 统一和数据库中的信息
-	now := time.Now().UTC().Format(timeLayout)
-	msg.SetStatus(int32(meta.Status_Wait))
-	msg.SetCreatedAt(now)
-	msg.SetUpdatedAt(now)
-	msg.SetOption(int32(meta.Insert))
-
-	byt, gErr := msg.Marshal()
-	if gErr != nil {
-		logrus.Errorf("set cache go func() error: %v", gErr)
-		return gErr
-	}
-	// 将数据添加到list，用于入库,所有insert的数据均以"$"开头
-	if err := rpush(byt); err != nil {
+// detail 根据id查询消息
+func detail(ctx context.Context, id string, msg Messager) error {
+	b, err := cache.BaseDetail(ctx, id)
+	if err != nil {
 		return err
 	}
-	// 插入redis
-	return cache.PutBaseCache(ctx, id, byt)
+	err = msg.Unmarshal(b)
+	if err != nil {
+		fmt.Println(err)
+		return errors.ErrMisMatch
+	}
+	return nil
 }
 
 // produce 将消息插入数据库 mq 和缓存
-func produce(ctx context.Context, m Meta, em Messager, rpush func([]byte) error, mqParamFunc func(context.Context, []byte, int64) error) error {
+func produce(ctx context.Context, m Meta, em Messager, rPush RPushFunc, mqParamFunc MqFunc) error {
 	logrus.Info("开始添加消息...,data: ", em)
 	id := em.GetId()
-	err := mqParamFunc(ctx, []byte(id), m.Delay())
+
+	// 统一和数据库中的信息
+	now := time.Now().Unix()
+	timeStamp := strconv.Itoa(int(now))
+	em.SetStatus(int32(meta.Status_Wait))
+	em.SetCreatedAt(timeStamp)
+	em.SetUpdatedAt(timeStamp)
+	// 修改操作类型
+	em.SetOption(int32(meta.Insert))
+	byt, _ := em.Marshal()
+	// 开启redis事务
+	t := cache.NewTransaction()
+	if err := produceStore(ctx, id, byt, m.Delay(), t, mqParamFunc, rPush); err != nil {
+		t.Rollback()
+		return err
+	}
+	logrus.Infof("消息添加成功,id: %s", id)
+	return t.Commit()
+}
+
+// produceStore 向cache和mq中提交数据
+func produceStore(ctx context.Context,
+	id string,
+	b []byte,
+	ttl int64,
+	t *cache.Transaction,
+	m MqFunc,
+	r RPushFunc) error {
+	// 插入redis
+	err := t.PutBaseCache(ctx, id, b)
+	if err != nil {
+		logrus.Errorf("消息插入缓存时失败,errors: %v", err)
+		return err
+	}
+	// 将数据添加到list，用于入库
+	if err := r(ctx, t, b); err != nil {
+		logrus.Errorf("消息插入入库队列时失败,errors: %v", err)
+		return err
+	}
+	err = m(ctx, []byte(id), ttl)
 	if err != nil {
 		logrus.Errorf("消息 %s 插入消息队列失败: %v\n", id, err)
 		return err
 	}
-	if err := addCache(context.Background(), id, em, rpush); err != nil {
-		logrus.Errorf("消息插入缓存时失败,errors: %v", err)
-		return err
-	}
-
-	logrus.Infof("消息添加成功,id: %s", id)
 	return nil
 }
 
-func edit(ctx context.Context, m Meta, em Messager, dbParamFunc func(context.Context, Messager) (*sqlx.Tx, error), mqParamFunc func(context.Context, []byte, int64) error) error {
+func edit(ctx context.Context, m Meta, em Messager, doListFunc RPushFunc, mqParamFunc MqFunc) error {
 	// 先根据id从缓存中获取数据的具体内容
-	if err := messagerFromCache(m.GetId(), em); err != nil {
+	if err := detail(ctx, m.GetId(), em); err != nil {
 		return err
 	}
 	// 判断消息的发送状态
@@ -136,55 +161,54 @@ func edit(ctx context.Context, m Meta, em Messager, dbParamFunc func(context.Con
 		return errors.ErrMsgBusy
 	}
 	defer cache.UnlockId(ctx, m.GetId())
-	// 修改db中的数据
-	tx, err := dbParamFunc(ctx, em)
-	if err != nil {
-		db.RollBack(tx)
-		logrus.WithField("type", "Email").Errorf("edit修改数据库失败,error: %v", err)
-		return err
-	}
-	var mqFunc func(context.Context, []byte, int64) error
+	var mqFunc MqFunc
 	// 判断sendtime是否改变，如果改变就向mq中重新发送id
 	if reSend {
 		mqFunc = mqParamFunc
 	}
-	// 修改redis中的值
-	err = editCacheMq(ctx, em, ttl, mqFunc)
-	if err != nil {
-		db.RollBack(tx)
-		logrus.WithField("type", "Email").Errorf("edit更新mq失败，正在回滚,error: %v", err)
+	// 修改修改时间
+	changeUpdate(em)
+	// 操作类型设为update
+	em.SetOption(int32(meta.Update))
+	b, _ := em.Marshal()
+	t := cache.NewTransaction()
+
+	// 修改cache和mq中信息
+	if err := editStore(ctx, em.GetId(), b, ttl, t, doListFunc, mqFunc); err != nil {
+		t.Rollback()
+		logrus.WithFields(logrus.Fields{
+			"method": "updateStore",
+			"id":     em.GetId(),
+			"error":  err.Error(),
+		}).Errorf("edit修改list失败,error: %v", err)
 		return err
 	}
-	// 数据库提交事务
-	return db.Commit(tx)
+
+	// 提交事务
+	return t.Commit()
 }
 
-// 内部方法在edit()中被调用
-func editCacheMq(ctx context.Context, msg Messager, ttl int64, mqFunc func(context.Context, []byte, int64) error) error {
-	now := time.Now().UTC().Format(timeLayout)
-	msg.SetUpdatedAt(now)
-	b, err := msg.Marshal()
+func editStore(ctx context.Context, id string, b []byte, ttl int64, t *cache.Transaction, doListFunc RPushFunc, mqf MqFunc) error {
+	// 异步修改db中的数据
+	err := doListFunc(ctx, t, b)
 	if err != nil {
 		return err
 	}
-	// 如果mq发送失败就回滚返回错误，即使redis中更新失败了了，
-	// mq中的数据无法回滚也不会有影响，因为在发送时会去获取缓存中的数据，
-	// 所以只要保证缓存中的数据和数据库中的数据一致并有效就行
-	if mqFunc != nil {
-		err = mqFunc(ctx, []byte(msg.GetId()), ttl)
+	err = t.PutBaseCache(ctx, id, b)
+	if err != nil {
+		return err
+	}
+
+	if mqf != nil {
+		err = mqf(ctx, []byte(id), ttl)
 		if err != nil {
 			return err
 		}
 	}
-	err = cache.PutBaseCache(ctx, msg.GetId(), b)
-	if err != nil {
-		return err
-	}
-	cache.PutLatestCache(ctx, msg.GetId(), b)
 	return nil
 }
 
-// 内部方法，在detail()中被调用
+// 内部方法，在detail()中被调用,不启用
 func updateDetailCache(ctx context.Context, id string, getDbData func(ctx2 context.Context, id string) (Marshaler, error)) {
 	// 5秒内更新一次
 	gErr := cache.LockID5s(context.Background(), id)
@@ -212,49 +236,52 @@ func updateDetailCache(ctx context.Context, id string, getDbData func(ctx2 conte
 	}
 	defer cache.UnlockId(ctx, id)
 	cache.PutBaseCache(context.Background(), id, dbRes)
-	cache.PutLatestCache(context.Background(), id, dbRes)
 	logrus.WithField("id", id).Errorf("后台通过数据库添加cache成功")
 }
 
-func detail(ctx context.Context, id string, res Marshaler, getDbData func(ctx2 context.Context, id string) (Marshaler, error)) error {
-	var data []byte
-	var err error
-	data, e1 := cache.LastestDetail(ctx, id)
-	if e1 == nil {
-		logrus.WithFields(logrus.Fields{
-			"data": string(data),
-			"id":   id,
-		}).Infof("在lastest缓存中找到数据，直接返回结果")
-	} else {
-		data, err = cache.BaseDetail(ctx, id)
-	}
-	// 如果最新缓存不存在，则更新最新缓存和基础缓存
-	if e1 == cache2.ErrCacheMiss {
-		go updateDetailCache(
-			context.Background(),
-			id,
-			getDbData)
-	}
-	if err != nil {
-		return err
-	}
-	err = res.Unmarshal(data)
-	return err
-}
+// func detail(ctx context.Context, id string, res Marshaler, getDbData func(ctx2 context.Context, id string) (Marshaler, error)) error {
+// 	var data []byte
+// 	var err error
+// 	data, e1 := cache.LastestDetail(ctx, id)
+// 	if e1 == nil {
+// 		logrus.WithFields(logrus.Fields{
+// 			"data": string(data),
+// 			"id":   id,
+// 		}).Infof("在lastest缓存中找到数据，直接返回结果")
+// 	} else {
+// 		data, err = cache.BaseDetail(ctx, id)
+// 	}
+// 	// 如果最新缓存不存在，则更新最新缓存和基础缓存
+// 	if e1 == cache2.ErrCacheMiss {
+// 		go updateDetailCache(
+// 			context.Background(),
+// 			id,
+// 			getDbData)
+// 	}
+// 	if err != nil {
+// 		return err
+// 	}
+// 	err = res.Unmarshal(data)
+// 	return err
+// }
 
-func cancel(ctx context.Context, id string, u updateFunc, m Messager) error {
-	err := messagerFromCache(id, m)
+func cancel(ctx context.Context, id string, u RPushFunc, m Messager) error {
+	err := detail(ctx, id, m)
 	if err != nil {
-		logrus.Errorf("从缓存中获取要取消的数据失败，id: %s,error: %v", id, err)
+		logrus.WithFields(logrus.Fields{
+			"method": "cancel",
+			"id":     id,
+			"error":  err.Error(),
+		}).Errorf("从缓存中获取要取消的数据失败")
 		return err
 	}
-	// 如果已取消
-	if st := m.GetStatus(); st == int32(meta.Status_Cancel) {
-		return errors.ErrMsgHasCancelled
-	}
-	// 如果已发送
-	if st := m.GetStatus(); st == int32(meta.Status_Final) {
-		return errors.ErrMsgCantEdit
+	if err = checkStatus(m); err != nil {
+		logrus.WithFields(logrus.Fields{
+			"method": "cancel",
+			"id":     id,
+			"error":  err.Error(),
+		}).Error("状态检查失败")
+		return err
 	}
 	if err := cache.LockId(ctx, id); err != nil {
 		return errors.ErrMsgBusy
@@ -262,60 +289,36 @@ func cancel(ctx context.Context, id string, u updateFunc, m Messager) error {
 	defer cache.UnlockId(ctx, id)
 	logrus.Debug("缓存中的数据状态为可取消状态")
 
-	// 更新数据库中的status
-	tx, err := u(ctx, id)
-	if err != nil {
-		db.RollBack(tx)
-		// 如果没有行被修改说明有别的线程已经修改了该条数据的状态
-		if err == db.ErrNoRowsEffected {
-			return errors.ErrMsgHasCancelled
-		}
-		return err
-	}
-
 	// 获取数据库中的值，并更新到缓存,必须同步，因为发送的时候需要检查缓存中信息的状态
 	// 如果异步操作失败，会导致已取消的信息发送
-	var b []byte
 	m.SetStatus(int32(meta.Status_Cancel))
 	m.SetResult(int32(meta.Result_Fail))
-	now := time.Now().UTC().Format(timeLayout)
-	m.SetUpdatedAt(now)
-	b, _ = m.Marshal()
+	changeUpdate(m)
+	b, _ := m.Marshal()
 
-	if err := cache.PutBaseCache(ctx, id, b); err != nil {
-		db.RollBack(tx)
+	t := cache.NewTransaction()
+
+	if err = cancelStore(ctx, id, b, u, t); err != nil {
+		t.Rollback()
 		logrus.WithFields(logrus.Fields{
-			"method": "putBaseCache",
+			"method": "cancelStore",
 			"id":     id,
 			"error":  err,
-		}).Error("在取消发送后更新baseCache时出现错误")
-		return err
-	}
-	if err := cache.PutLatestCache(ctx, id, b); err != nil {
-		// 更新最新状态失败，无需回滚
-		// rollback(tx)
-		logrus.WithFields(logrus.Fields{
-			"method": "putLastestCache",
-			"id":     id,
-			"error":  err,
-		}).Error("在取消发送后更新lastestCache时出现错误")
+		}).Error("在取消发送后更新Cache时出现错误")
 		return err
 	}
 
-	return db.Commit(tx)
+	return t.Commit()
+
 }
 
-func messagerFromCache(id string, msg Messager) error {
-	b, err := cache.BaseDetail(context.Background(), id)
-	// ttl := m.Delay()
+func cancelStore(ctx context.Context, id string, b []byte, u RPushFunc, t *cache.Transaction) error {
+	// 更新数据库中的status
+	err := u(ctx, t, b)
 	if err != nil {
 		return err
 	}
-	err = msg.Unmarshal(b)
-	if err != nil {
-		return errors.ErrMisMatch
-	}
-	return nil
+	return t.PutBaseCache(ctx, id, b)
 }
 
 func checkStatus(msg Messager) error {
@@ -327,4 +330,10 @@ func checkStatus(msg Messager) error {
 		return errors.ErrMsgCantEdit
 	}
 	return nil
+}
+
+func changeUpdate(msg Messager) {
+	now := time.Now().Unix()
+	timeStamp := strconv.Itoa(int(now))
+	msg.SetUpdatedAt(timeStamp)
 }

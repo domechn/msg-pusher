@@ -21,4 +21,5 @@ type Messager interface {
 	SetResult(int32)
 	SetReason(string)
 	GetSendTime() string
+	SetOption(int32)
 }

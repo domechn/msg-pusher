@@ -121,6 +121,28 @@ func (c *Client) LPop(ctx context.Context, k string) ([]byte, error) {
 	return c.c.LPop(k).Bytes()
 }
 
+func (c *Client) Pipeline() *Client {
+	return &Client{
+		c: c.c.TxPipeline(),
+	}
+}
+
+func (c *Client) Discard() error {
+	return c.c.(redis.Pipeliner).Discard()
+}
+
+func (c *Client) Exec() ([]interface{}, error) {
+	ss, err := c.c.(redis.Pipeliner).Exec()
+	if err != nil {
+		return nil, err
+	}
+	var res []interface{}
+	for _, v := range ss {
+		res = append(res, v.Args()...)
+	}
+	return res, nil
+}
+
 func (c *Client) Close() error {
 	if c.c != nil {
 		if v, ok := c.c.(io.Closer); ok {

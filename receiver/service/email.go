@@ -14,10 +14,7 @@ package service
 import (
 	"context"
 
-	"github.com/jmoiron/sqlx"
 	"uuabc.com/sendmsg/pkg/pb/meta"
-	"uuabc.com/sendmsg/storer/cache"
-	"uuabc.com/sendmsg/storer/db"
 	"uuabc.com/sendmsg/storer/mq"
 )
 
@@ -37,12 +34,11 @@ func (s emailServiceImpl) Produce(ctx context.Context, m Meta) (string, error) {
 		return "", err
 	}
 	content := getContent(args, templ)
-	ttl := m.Delay()
-	err = s.produce(ctx, m.(*meta.EmailProducer), content, ttl)
+	err = s.produce(ctx, m.(*meta.EmailProducer), content)
 	return m.GetId(), err
 }
 
-func (emailServiceImpl) produce(ctx context.Context, p *meta.EmailProducer, content string, ttl int64) error {
+func (e emailServiceImpl) produce(ctx context.Context, p *meta.EmailProducer, content string) error {
 	dbEmail := &meta.DbEmail{
 		Id:          p.Id,
 		Platform:    p.Platform,
@@ -59,8 +55,12 @@ func (emailServiceImpl) produce(ctx context.Context, p *meta.EmailProducer, cont
 	return produce(ctx,
 		p,
 		dbEmail,
-		cache.RPushEmail,
+		e.rPush,
 		mq.EmailProduce)
+}
+
+func (emailServiceImpl) rPush(ctx context.Context, c Cache, b []byte) error {
+	return c.RPushEmail(ctx, b)
 }
 
 // Detail 返回要发送的email的具体信息
@@ -70,19 +70,18 @@ func (s emailServiceImpl) Detail(ctx context.Context, id string) (Marshaler, err
 
 func (s emailServiceImpl) detail(ctx context.Context, id string) (Marshaler, error) {
 	res := &meta.DbEmail{}
-	return res, detail(ctx, id, res, func(ctx2 context.Context, id string) (Marshaler, error) {
-		return db.EmailDetailByID(ctx2, id)
-	})
+	return res, detail(ctx, id, res)
 }
 
 func (s emailServiceImpl) Cancel(ctx context.Context, id string) error {
 	return s.cancel(ctx, id)
 }
 
-func (emailServiceImpl) cancel(ctx context.Context, id string) error {
-	return cancel(ctx, id, func(i context.Context, s string) (*sqlx.Tx, error) {
-		return db.EmailCancelMsgByID(i, s)
-	}, &meta.DbSms{})
+func (e emailServiceImpl) cancel(ctx context.Context, id string) error {
+	return cancel(ctx,
+		id,
+		e.rPush,
+		&meta.DbEmail{})
 }
 
 // 修改信息
@@ -91,9 +90,7 @@ func (s emailServiceImpl) Edit(ctx context.Context, m Meta) error {
 	return edit(ctx,
 		m,
 		dbParam,
-		func(i context.Context, messager Messager) (*sqlx.Tx, error) {
-			return db.EmailEdit(i, messager.(*meta.DbEmail))
-		},
+		s.rPush,
 		mq.EmailProduce,
 	)
 }

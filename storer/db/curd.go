@@ -70,7 +70,7 @@ func update(ctx context.Context, typeN, sqlStr string, args ...interface{}) (*sq
 	if err != nil {
 		return nil, err
 	}
-	stmt, err := tx.PrepareContext(ctx, sqlStr)
+	stmt, err := tx.PreparexContext(ctx, sqlStr)
 	if err != nil {
 		return tx, err
 	}
@@ -102,7 +102,7 @@ func insert(ctx context.Context, typeN, sqlStr string, args ...interface{}) (tx 
 	if err != nil {
 		return nil, err
 	}
-	stmt, err := tx.PrepareContext(ctx, sqlStr)
+	stmt, err := tx.PreparexContext(ctx, sqlStr)
 	if err != nil {
 		return tx, err
 	}

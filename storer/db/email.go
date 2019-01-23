@@ -13,9 +13,12 @@ package db
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/jmoiron/sqlx"
 	"uuabc.com/sendmsg/pkg/pb/meta"
+	"uuabc.com/sendmsg/storer"
 )
 
 // EmailCancelMsgByID 将email信息的发送状态设置为取消
@@ -76,4 +79,47 @@ func EmailUpdateSendResult(ctx context.Context, e *meta.DbEmail) (*sqlx.Tx, erro
 		e.ResultStatus,
 		e.Reason,
 		e.Id)
+}
+
+// EmailUpdateBatch 批量执行修改,如果不存在就插入
+func EmailUpdateAndInsertBatch(ctx context.Context, es []*meta.DbEmail) error {
+	var realSqlBuilder strings.Builder
+	var sqlBuilder []string
+	var args []interface{}
+	sql := `INSERT INTO emails (id,platform,platform_key,title,content,destination,type,template,arguments,server,send_time,try_num,status,result_status,created_at,updated_at,reason) VALUES `
+	for _, e := range es {
+		sql := `(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+		sqlBuilder = append(sqlBuilder, sql)
+		args = append(args,
+			e.Id,
+			e.Platform,
+			e.PlatformKey,
+			e.Title,
+			e.Content,
+			e.Destination,
+			e.Type,
+			e.Template,
+			e.Arguments,
+			e.Server,
+			e.SendTime,
+			e.TryNum,
+			e.Status,
+			e.ResultStatus,
+			e.CreatedAt,
+			e.UpdatedAt,
+			e.Reason)
+	}
+	sb := strings.Join(sqlBuilder, ",")
+	lastSql := " ON DUPLICATE KEY UPDATE platform=VALUES(platform),platform_key=VALUES(platform_key),title=VALUES(title),content=VALUES(content),destination=VALUES(destination),type=VALUES(type),template=VALUES(template),arguments=VALUES(arguments),server=VALUES(server),send_time=VALUES(send_time),try_num=VALUES(try_num),status=VALUES(status),result_status=VALUES(result_status),created_at=VALUES(created_at),updated_at=VALUES(updated_at),reason=VALUES(reason)"
+
+	realSqlBuilder.WriteString(sql)
+	realSqlBuilder.WriteString(sb)
+	realSqlBuilder.WriteString(lastSql)
+	fmt.Println(realSqlBuilder.String())
+	stmt, err := storer.DB.Preparex(realSqlBuilder.String())
+	if err != nil {
+		return err
+	}
+	_, err = stmt.Exec(args...)
+	return err
 }

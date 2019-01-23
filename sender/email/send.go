@@ -14,12 +14,11 @@ package email
 import (
 	"context"
 
-	"github.com/jmoiron/sqlx"
 	"github.com/sirupsen/logrus"
 	"uuabc.com/sendmsg/pkg/pb/meta"
 	"uuabc.com/sendmsg/pkg/send/email"
+	"uuabc.com/sendmsg/sender"
 	"uuabc.com/sendmsg/sender/pub"
-	"uuabc.com/sendmsg/storer/db"
 )
 
 // check 验证data是否符合要求，如果符合要求会返回nil，并且按照data转化的id将数据赋值给msg
@@ -40,6 +39,6 @@ func (r *Receiver) send(msg pub.Messager) error {
 	), nil)
 }
 
-func (r *Receiver) doDB(msg pub.Messager) (*sqlx.Tx, error) {
-	return db.EmailUpdateSendResult(context.Background(), msg.(*meta.DbEmail))
+func (r *Receiver) doList(c sender.Cache, b []byte) error {
+	return c.RPushEmail(context.Background(), b)
 }

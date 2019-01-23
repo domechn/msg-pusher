@@ -14,6 +14,7 @@ package db
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	"uuabc.com/sendmsg/pkg/pb/meta"
@@ -245,6 +246,41 @@ func TestEmailCancelMsgByID(t *testing.T) {
 			if (err != nil) != tt.wantErr {
 				t.Errorf("EmailCancelMsgByID() error = %v, wantErr %v", err, tt.wantErr)
 				return
+			}
+		})
+	}
+}
+
+func TestEmailUpdateBatch(t *testing.T) {
+	s := time.Now().Format("2006-01-02 13:04:05")
+	dbe.CreatedAt = s
+	dbe.UpdatedAt = s
+	dbe.Type = 7
+
+	type args struct {
+		ctx context.Context
+		es  []*meta.DbEmail
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+		{
+			name: "batch_update_case_1",
+			args: args{
+				ctx: context.Background(),
+				es: []*meta.DbEmail{
+					dbe,
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := EmailUpdateAndInsertBatch(tt.args.ctx, tt.args.es); (err != nil) != tt.wantErr {
+				t.Errorf("EmailUpdateBatch() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

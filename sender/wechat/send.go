@@ -14,12 +14,11 @@ package wechat
 import (
 	"context"
 
-	"github.com/jmoiron/sqlx"
 	"github.com/sirupsen/logrus"
 	"uuabc.com/sendmsg/pkg/pb/meta"
 	"uuabc.com/sendmsg/pkg/send/wechat"
+	"uuabc.com/sendmsg/sender"
 	"uuabc.com/sendmsg/sender/pub"
-	"uuabc.com/sendmsg/storer/db"
 )
 
 func (r *Receiver) check(data []byte, msg pub.Messager) (err error) {
@@ -40,6 +39,6 @@ func (r *Receiver) send(msg pub.Messager) error {
 	), nil)
 }
 
-func (r *Receiver) doDB(msg pub.Messager) (*sqlx.Tx, error) {
-	return db.WeChatUpdateSendResult(context.Background(), msg.(*meta.DbWeChat))
+func (r *Receiver) doList(c sender.Cache, b []byte) error {
+	return c.RPushWeChat(context.Background(), b)
 }

@@ -14,12 +14,11 @@ package pub
 import (
 	"context"
 
-	"github.com/jmoiron/sqlx"
 	"github.com/sirupsen/logrus"
 	"uuabc.com/sendmsg/pkg/pb/meta"
 	"uuabc.com/sendmsg/pkg/retry/backoff"
+	"uuabc.com/sendmsg/sender"
 	"uuabc.com/sendmsg/storer/cache"
-	"uuabc.com/sendmsg/storer/db"
 )
 
 type RetryFunc func(count int) error
@@ -52,7 +51,7 @@ func Send(id string, sendFunc RetryFunc) error {
 }
 
 // SendRetryFunc 返回一个可以用于重试发送的方法
-func SendRetryFunc(msg Messager, send func(Messager) error, doDB func(Messager) (*sqlx.Tx, error)) RetryFunc {
+func SendRetryFunc(msg Messager, send func(Messager) error, doList func(sender.Cache, []byte) error) RetryFunc {
 	var reason error
 	return func(count int) error {
 		// 发送之前检查状态,如果已发送就直接返回成功
@@ -70,7 +69,7 @@ func SendRetryFunc(msg Messager, send func(Messager) error, doDB func(Messager) 
 			if reason != nil {
 				msg.SetReason(reason.Error())
 			}
-			updateDbAndCache(msg, doDB)
+			updateCache(msg, doList)
 			return ErrTooManyTimes
 		}
 		err := send(msg)
@@ -87,7 +86,7 @@ func SendRetryFunc(msg Messager, send func(Messager) error, doDB func(Messager) 
 		msg.SetResult(int32(meta.Result_Success))
 		msg.SetTryNum(int32(count))
 		// 更新数据库和缓存，如果出错打印日志，不做错误处理
-		err = updateDbAndCache(msg, doDB)
+		err = updateCache(msg, doList)
 		if err != nil {
 			logrus.WithFields(logrus.Fields{
 				"id":    msg.GetId(),
@@ -101,22 +100,13 @@ func SendRetryFunc(msg Messager, send func(Messager) error, doDB func(Messager) 
 	}
 }
 
-func updateDbAndCache(msg Messager, doDB func(Messager) (*sqlx.Tx, error)) error {
-	var err error
-	tx, err := doDB(msg)
-	if err != nil {
-		db.RollBack(tx)
-		return err
-	}
+func updateCache(msg Messager, doList func(sender.Cache, []byte) error) error {
+	msg.SetOption(int32(meta.Update))
 	b, _ := msg.Marshal()
+	t := cache.NewTransaction()
+	doList(t, b)
 	// 强制更新缓存
-	err = cache.PutBaseCache(context.Background(), msg.GetId(), b)
-	cache.PutLatestCache(context.Background(), msg.GetId(), b)
-	cache.PutSendSuccess(context.Background(), msg.GetId())
-	if err != nil {
-		db.RollBack(tx)
-		return err
-	}
-
-	return db.Commit(tx)
+	t.PutBaseCache(context.Background(), msg.GetId(), b)
+	t.PutSendSuccess(context.Background(), msg.GetId())
+	return t.Commit()
 }

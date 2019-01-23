@@ -14,7 +14,6 @@ package service
 import (
 	"context"
 
-	"github.com/jmoiron/sqlx"
 	"uuabc.com/sendmsg/pkg/errors"
 	"uuabc.com/sendmsg/pkg/pb/meta"
 	"uuabc.com/sendmsg/storer/cache"
@@ -42,12 +41,11 @@ func (s smsServiceImpl) Produce(ctx context.Context, m Meta) (string, error) {
 		return "", err
 	}
 	content := getContent(args, templ)
-	ttl := m.Delay()
-	err = s.produce(ctx, m.(*meta.SmsProducer), content, ttl)
+	err = s.produce(ctx, m.(*meta.SmsProducer), content)
 	return m.GetId(), err
 }
 
-func (smsServiceImpl) produce(ctx context.Context, p *meta.SmsProducer, content string, ttl int64) error {
+func (s smsServiceImpl) produce(ctx context.Context, p *meta.SmsProducer, content string) error {
 	dbSms := &meta.DbSms{
 		Id:          p.Id,
 		Platform:    p.Platform,
@@ -63,8 +61,12 @@ func (smsServiceImpl) produce(ctx context.Context, p *meta.SmsProducer, content 
 	return produce(ctx,
 		p,
 		dbSms,
-		cache.RPushSms,
+		s.rPush,
 		mq.SmsProduce)
+}
+
+func (smsServiceImpl) rPush(ctx context.Context, c Cache, b []byte) error {
+	return c.RPushSms(ctx, b)
 }
 
 func (s smsServiceImpl) Detail(ctx context.Context, id string) (Marshaler, error) {
@@ -82,19 +84,18 @@ func (s smsServiceImpl) DetailByPlat(ctx context.Context, plat int32, key string
 
 func (smsServiceImpl) detail(ctx context.Context, id string) (Marshaler, error) {
 	res := &meta.DbSms{}
-	return res, detail(ctx, id, res, func(ctx2 context.Context, id string) (Marshaler, error) {
-		return db.SmsDetailByID(ctx2, id)
-	})
+	return res, detail(ctx, id, res)
 }
 
 func (s smsServiceImpl) Cancel(ctx context.Context, id string) error {
 	return s.cancel(ctx, id)
 }
 
-func (smsServiceImpl) cancel(ctx context.Context, id string) error {
-	return cancel(ctx, id, func(i context.Context, s string) (*sqlx.Tx, error) {
-		return db.SmsCancelByID(i, s)
-	}, &meta.DbSms{})
+func (s smsServiceImpl) cancel(ctx context.Context, id string) error {
+	return cancel(ctx,
+		id,
+		s.rPush,
+		&meta.DbSms{})
 }
 
 func (s smsServiceImpl) Edit(ctx context.Context, m Meta) error {
@@ -102,9 +103,7 @@ func (s smsServiceImpl) Edit(ctx context.Context, m Meta) error {
 	return edit(ctx,
 		m,
 		dbParam,
-		func(i context.Context, messager Messager) (*sqlx.Tx, error) {
-			return db.SmsEdit(i, messager.(*meta.DbSms))
-		},
+		s.rPush,
 		mq.SmsProduce,
 	)
 }

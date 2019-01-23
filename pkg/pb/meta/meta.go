@@ -24,10 +24,6 @@ import (
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
-const (
-	layout = "2006-01-02T15:04:05Z"
-)
-
 // email begin...........
 // Delay 返回延迟发送的时间 毫秒 单位
 func (m *EmailProducer) Delay() int64 {
@@ -77,7 +73,6 @@ func (m *EmailProducer) Transfer(setID bool) {
 		m.Id = uuid.NewV4().String()
 	}
 	st := gbfToUTC(m.SendTime)
-	m.SendTime = st.Format(layout)
 	m.XUtcSendStamp = st.Unix()
 }
 
@@ -95,7 +90,6 @@ func (m *SmsProducer) Transfer(setID bool) {
 		m.Id = uuid.NewV4().String()
 	}
 	st := gbfToUTC(m.SendTime)
-	m.SendTime = st.Format(layout)
 	m.XUtcSendStamp = st.Unix()
 }
 
@@ -203,7 +197,6 @@ func (m *WeChatProducer) Transfer(setID bool) {
 		m.Id = uuid.NewV4().String()
 	}
 	sendTime := gbfToUTC(m.SendTime)
-	m.SendTime = sendTime.Format("2006-01-02T15:04:05")
 	m.XUtcSendStamp = sendTime.Unix()
 }
 

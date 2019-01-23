@@ -54,7 +54,7 @@ func (r *Receiver) OnReceive(data []byte) (res bool) {
 	if err := r.check(data, dw); err != nil {
 		return
 	}
-	if err := pub.Send(dw.Id, pub.SendRetryFunc(dw, r.send, r.doDB)); err != nil {
+	if err := pub.Send(dw.Id, pub.SendRetryFunc(dw, r.send, r.doList)); err != nil {
 		logrus.WithFields(logrus.Fields{
 			"type":  r.queueName,
 			"id":    dw.Id,

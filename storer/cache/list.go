@@ -18,24 +18,46 @@ import (
 )
 
 // RPushWeChat lpush到redis，用来代替存入数据库，提高并发能力
-func RPushWeChat(b []byte) error {
-	return storer.Cache.RPush(context.Background(), "", b)
+func RPushWeChat(ctx context.Context, b []byte) error {
+	return rPush(ctx, "RPushWeChat", weChatDB, b, storer.Cache)
 }
 
-func RPushEmail(b []byte) error {
-	return storer.Cache.RPush(context.Background(), "", b)
+// RPushEmail lpush到email队列
+func RPushEmail(ctx context.Context, b []byte) error {
+	return rPush(ctx, "RPushEmail", emailDB, b, storer.Cache)
 }
 
-func RPushSms(b []byte) error {
-	return storer.Cache.RPush(context.Background(), "", b)
+// RPushSms lpush到sms队列
+func RPushSms(ctx context.Context, b []byte) error {
+	return rPush(ctx, "RPushSms", smsDB, b, storer.Cache)
 }
 
-// LLenFromList 查看list中的数据量
-func LLenFromList() (int64, error) {
-	return storer.Cache.LLen(context.Background(), "")
+// LLenWeChat 查看wechat入库队列的长度
+func LLenWeChat() (int64, error) {
+	return storer.Cache.LLen(context.Background(), weChatDB)
 }
 
-// LPopFromList 从list中取出数据
-func LPopFromList() ([]byte, error) {
-	return storer.Cache.LPop(context.Background(), "")
+// LLenEmail 查看email入库队列的长度
+func LLenEmail() (int64, error) {
+	return storer.Cache.LLen(context.Background(), emailDB)
+}
+
+// LLenSms 查看sms入库队列的长度
+func LLenSms() (int64, error) {
+	return storer.Cache.LLen(context.Background(), smsDB)
+}
+
+// LPopWeChat 从wechat队列中取一条数据
+func LPopWeChat() ([]byte, error) {
+	return lPop(context.Background(), weChatDB, storer.Cache)
+}
+
+// LPopEmail 从email队列中取一条数据
+func LPopEmail() ([]byte, error) {
+	return lPop(context.Background(), emailDB, storer.Cache)
+}
+
+// LPopSms 从sms队列中取一条数据
+func LPopSms() ([]byte, error) {
+	return lPop(context.Background(), smsDB, storer.Cache)
 }
