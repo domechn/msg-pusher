@@ -41,14 +41,18 @@ const (
 	TryNum = 3
 )
 
+// Check 检查数据是否有效
 func Check(id string, msg Messager) error {
 	if err := checkId(id); err != nil {
 		return err
 	}
-	if err := checkStatus(id, msg); err != nil {
+	if err := msgFromCache(id, msg); err != nil {
 		return err
 	}
 	if err := checkStatus(id, msg); err != nil {
+		return err
+	}
+	if err := checkSendTime(msg); err != nil {
 		return err
 	}
 	return nil
@@ -68,7 +72,7 @@ func checkId(id string) error {
 // 如果当前时间超过发送时间15分钟返回ErrMsgIsExpiration（消息过期）
 func checkSendTime(msg Messager) error {
 	now := time.Now().UTC()
-	sendT, err := time.Parse("2006-01-02T15:04:05Z", msg.GetSendTime())
+	sendT, err := time.Parse("2006-01-02T15:04:05Z07:00", msg.GetSendTime())
 	if err != nil {
 		return err
 	}
@@ -89,7 +93,7 @@ func checkSendTime(msg Messager) error {
 	return nil
 }
 
-func checkStatus(id string, msg Messager) error {
+func msgFromCache(id string, msg Messager) error {
 	b, err := cache.BaseDetail(context.Background(), id)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
@@ -105,12 +109,15 @@ func checkStatus(id string, msg Messager) error {
 		}).Error("数据转码异常")
 		return err
 	}
+	return nil
+}
+
+func checkStatus(id string, msg Messager) error {
 	status := msg.GetStatus()
 	if status != int32(meta.Status_Wait) {
 		logrus.WithFields(logrus.Fields{
-			"data":   string(b),
+			"data":   id,
 			"status": meta.Status_name[status],
-			"error":  err,
 		}).Error("数据状态不是待发送状态，可能已被处理")
 		return ErrMsgHasDealed
 	}

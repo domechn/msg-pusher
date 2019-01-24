@@ -86,3 +86,7 @@ func (t *Transaction) CommitParam() ([]interface{}, error) {
 func (t *Transaction) Rollback() error {
 	return t.C.Discard()
 }
+
+func (t *Transaction) Close() error {
+	return t.C.Close()
+}

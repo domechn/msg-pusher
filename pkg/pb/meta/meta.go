@@ -12,7 +12,6 @@
 # ====================================================*/
 package meta
 
-// TODO snedtime geshibudui
 import (
 	"time"
 
@@ -23,6 +22,10 @@ import (
 )
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
+
+const (
+	ISO8601Layout = "2006-01-02T15:04:05Z07:00"
+)
 
 // email begin...........
 // Delay 返回延迟发送的时间 毫秒 单位
@@ -72,7 +75,8 @@ func (m *EmailProducer) Transfer(setID bool) {
 	if setID {
 		m.Id = uuid.NewV4().String()
 	}
-	st := gbfToUTC(m.SendTime)
+	var st time.Time
+	st, m.SendTime = gbfToUTC(m.SendTime)
 	m.XUtcSendStamp = st.Unix()
 }
 
@@ -89,7 +93,8 @@ func (m *SmsProducer) Transfer(setID bool) {
 	if setID {
 		m.Id = uuid.NewV4().String()
 	}
-	st := gbfToUTC(m.SendTime)
+	var st time.Time
+	st, m.SendTime = gbfToUTC(m.SendTime)
 	m.XUtcSendStamp = st.Unix()
 }
 
@@ -98,25 +103,6 @@ func (m *SmsProducer) Validated() error {
 	if err := checkPlatform(m.Platform); err != nil {
 		return err
 	}
-	if err := checkPlatformKey(m.PlatformKey); err != nil {
-		return err
-	}
-	if err := checkMobile(m.Mobile); err != nil {
-		return err
-	}
-	if err := checkSendTime(m.SendTime); err != nil {
-		return err
-	}
-	if err := checkSmsServer(m.Server); err != nil {
-		return err
-	}
-	if err := checkType(m.Type); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (m *SmsProducer) ValidateBatch() error {
 	if err := checkPlatformKey(m.PlatformKey); err != nil {
 		return err
 	}
@@ -196,8 +182,9 @@ func (m *WeChatProducer) Transfer(setID bool) {
 	if setID {
 		m.Id = uuid.NewV4().String()
 	}
-	sendTime := gbfToUTC(m.SendTime)
-	m.XUtcSendStamp = sendTime.Unix()
+	var st time.Time
+	st, m.SendTime = gbfToUTC(m.SendTime)
+	m.XUtcSendStamp = st.Unix()
 }
 
 // wechat end........
@@ -241,7 +228,7 @@ func checkSendTime(s string) error {
 	if s == "0" {
 		return nil
 	}
-	t, err := time.Parse("2006-01-02T15:04:05Z07:00", s)
+	t, err := time.Parse(ISO8601Layout, s)
 	if t.Sub(time.Now()) > time.Hour*24*30 {
 		return errors.ErrSendTimeTooLong
 	}
@@ -272,13 +259,14 @@ func checkType(s int32) error {
 	return nil
 }
 
-func gbfToUTC(s string) time.Time {
+func gbfToUTC(s string) (time.Time, string) {
 	if s == "0" {
-		return time.Now().UTC()
+		utc := time.Now().UTC()
+		return utc, utc.Format(ISO8601Layout)
 	}
-	st, _ := time.Parse("2006-01-02T15:04:05Z07:00", s)
+	st, _ := time.Parse(ISO8601Layout, s)
 	sts := st.UTC()
-	return sts
+	return sts, s
 }
 
 func delay(begin int64) int64 {

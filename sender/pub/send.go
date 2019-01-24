@@ -13,6 +13,7 @@ package pub
 
 import (
 	"context"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"uuabc.com/sendmsg/pkg/pb/meta"
@@ -27,16 +28,20 @@ type RetryFunc func(count int) error
 func Send(id string, sendFunc RetryFunc) error {
 	bk := backoff.NewServiceBackOff()
 	var count int
-	lockKey := "send_" + id
-	// 分布式锁，防止资源竞争
-	err := cache.LockID5s(context.Background(), lockKey)
-	if err != nil {
-		logrus.WithField("id", id).Error("获取分布式锁失败，消息可能正在被其他线程在处理")
-		return nil
-	}
-	// 释放分布式锁
-	defer cache.ReleaseLock(context.Background(), lockKey)
+
 	doFunc := func() error {
+		// 分布式锁，防止资源竞争
+		err := cache.LockId(context.Background(), id)
+		if err != nil {
+			logrus.WithField("id", id).Error("获取分布式锁失败，消息可能正在被其他线程在处理")
+			// 等待一段时间，再获取
+			time.Sleep(time.Millisecond * 300)
+			return err
+		}
+		logrus.WithField("id", id).Info("获取分布式锁成功，正在发送消息")
+		// 释放分布式锁
+		defer cache.UnlockId(context.Background(), id)
+
 		count++
 		if err := sendFunc(count); err != nil {
 			if err == ErrTooManyTimes {
@@ -59,8 +64,6 @@ func SendRetryFunc(msg Messager, send func(Messager) error, doList func(Cache, [
 			logrus.Info("消息已处理，无需重复发送")
 			return nil
 		}
-
-		logrus.WithField("id", msg.GetId()).Info("获取分布式锁成功，正在发送消息")
 
 		if count > TryNum {
 			msg.SetStatus(int32(meta.Status_Final))
@@ -108,6 +111,7 @@ func updateCache(msg Messager, doList func(Cache, []byte) error) error {
 	msg.SetUpdatedAt(utils.NowTimeStampStr())
 	b, _ := msg.Marshal()
 	t := cache.NewTransaction()
+	defer t.Close()
 	doList(t, b)
 	// 强制更新缓存
 	t.PutBaseCache(context.Background(), msg.GetId(), b)

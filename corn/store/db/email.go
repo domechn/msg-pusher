@@ -60,6 +60,7 @@ func (e *Email) Write(param [][]byte) error {
 		if err == sql.ErrConnDone {
 			logrus.Errorf("批量插入数据库失败，数据库连接已关闭，正在将数据回滚到redis")
 			t := cache.NewTransaction()
+			defer t.Close()
 			for _, p := range param {
 				t.RPushEmail(context.Background(), p)
 			}

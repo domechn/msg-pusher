@@ -25,10 +25,6 @@ import (
 type RPushFunc func(i context.Context, c Cache, b []byte) error
 type MqFunc func(context.Context, []byte, int64) error
 
-const (
-	timeLayout = "2006-01-02T15:04:05Z"
-)
-
 // MsgService 用于消息的增删改查
 type MsgService interface {
 	Produce(ctx context.Context, m Meta) (string, error)
@@ -61,6 +57,7 @@ func produce(ctx context.Context, m Meta, em Messager, rPush RPushFunc, mqParamF
 	byt, _ := em.Marshal()
 	// 开启redis事务
 	t := cache.NewTransaction()
+	defer t.Close()
 	if err := produceStore(ctx, id, byt, m.Delay(), t, mqParamFunc, rPush); err != nil {
 		t.Rollback()
 		return err
@@ -159,8 +156,10 @@ func edit(ctx context.Context, m Meta, em Messager, doListFunc RPushFunc, mqPara
 	}
 	// redis中设置分布式锁
 	if err := cache.LockId(ctx, m.GetId()); err != nil {
+		logrus.WithField("id", m.GetId()).Error("获取分布式锁失败，消息可能正在被其他线程在处理")
 		return errors.ErrMsgBusy
 	}
+	logrus.WithField("id", m.GetId()).Info("获取分布式锁成功，正在修改消息")
 	defer cache.UnlockId(ctx, m.GetId())
 	var mqFunc MqFunc
 	// 判断sendtime是否改变，如果改变就向mq中重新发送id
@@ -171,6 +170,7 @@ func edit(ctx context.Context, m Meta, em Messager, doListFunc RPushFunc, mqPara
 	changeUpdateAndVersion(em)
 	b, _ := em.Marshal()
 	t := cache.NewTransaction()
+	defer t.Close()
 
 	// 修改cache和mq中信息
 	if err := editStore(ctx, em.GetId(), b, ttl, t, doListFunc, mqFunc); err != nil {
@@ -283,8 +283,10 @@ func cancel(ctx context.Context, id string, u RPushFunc, m Messager) error {
 		return err
 	}
 	if err := cache.LockId(ctx, id); err != nil {
+		logrus.WithField("id", id).Error("获取分布式锁失败，消息可能正在被其他线程在处理")
 		return errors.ErrMsgBusy
 	}
+	logrus.WithField("id", id).Info("获取分布式锁成功，正在取消消息")
 	defer cache.UnlockId(ctx, id)
 	logrus.Debug("缓存中的数据状态为可取消状态")
 
@@ -296,6 +298,7 @@ func cancel(ctx context.Context, id string, u RPushFunc, m Messager) error {
 	b, _ := m.Marshal()
 
 	t := cache.NewTransaction()
+	defer t.Close()
 
 	if err = cancelStore(ctx, id, b, u, t); err != nil {
 		t.Rollback()

@@ -14,6 +14,7 @@ package service
 import (
 	"context"
 
+	"github.com/sirupsen/logrus"
 	"uuabc.com/sendmsg/pkg/errors"
 	"uuabc.com/sendmsg/pkg/pb/meta"
 	"uuabc.com/sendmsg/storer/cache"
@@ -65,6 +66,65 @@ func (s smsServiceImpl) produce(ctx context.Context, p *meta.SmsProducer, conten
 		mq.SmsProduce)
 }
 
+func (s smsServiceImpl) ProduceBatch(ctx context.Context, ms []*meta.SmsProducer) ([]string, error) {
+	var res []string
+	var byts [][]byte
+	var metas []*meta.DbSms
+	for _, m := range ms {
+		var templ string
+		var args map[string]string
+		var err error
+		mobile := m.GetSendTo()
+		if err := s.checkSendRate(ctx, mobile); err != nil {
+			return nil, err
+		}
+		if templ, args, err = checkTemplateAndArguments(ctx, m.GetTemplate(), m.GetArguments()); err != nil {
+			return nil, err
+		}
+		dbSms := &meta.DbSms{
+			Id:          m.Id,
+			Platform:    m.Platform,
+			PlatformKey: m.PlatformKey,
+			Content:     getContent(args, templ),
+			Mobile:      m.Mobile,
+			Template:    m.Template,
+			Arguments:   m.Arguments,
+			SendTime:    m.SendTime,
+			Server:      m.Server,
+			Status:      int32(meta.Status_Wait),
+			Type:        m.Type,
+		}
+		res = append(res, m.Id)
+		initMsg(dbSms)
+		b, _ := dbSms.Marshal()
+		byts = append(byts, b)
+		metas = append(metas, dbSms)
+	}
+	return res, s.produceBatch(ctx, byts, metas, ms)
+}
+
+func (s smsServiceImpl) produceBatch(ctx context.Context, byts [][]byte, metas []*meta.DbSms, ms []*meta.SmsProducer) error {
+	// 开启redis事务
+	t := cache.NewTransaction()
+	defer t.Close()
+
+	if len(byts) != len(metas) || len(byts) != len(ms) {
+		return errors.NewError(10000000, "未知错误")
+	}
+
+	for idx, byt := range byts {
+		if err := produceStore(ctx, metas[idx].Id, byt, ms[idx].Delay(), t, mq.SmsProduce, s.rPush); err != nil {
+			logrus.WithFields(logrus.Fields{
+				"method": "produceSmsBatch",
+				"error":  err.Error(),
+			}).Error("批量发送短信失败")
+			t.Rollback()
+			return err
+		}
+	}
+	return t.Commit()
+}
+
 func (smsServiceImpl) rPush(ctx context.Context, c Cache, b []byte) error {
 	return c.RPushSms(ctx, b)
 }
@@ -109,7 +169,6 @@ func (s smsServiceImpl) Edit(ctx context.Context, m Meta) error {
 }
 
 func (s smsServiceImpl) checkSendRate(ctx context.Context, mobile string) error {
-	return nil
 	m1, err := cache.MobileCache1Min(ctx, mobile)
 	if err != nil {
 		return err

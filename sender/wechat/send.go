@@ -23,8 +23,8 @@ import (
 func (r *Receiver) check(data []byte, msg pub.Messager) (err error) {
 	id := string(data)
 	logrus.WithField("type", r.queueName).Info("开始验证消息的有效性")
-	defer logrus.WithField("type", r.queueName).Infof("消息验证结束,err: %v", err)
 	err = pub.Check(id, msg)
+	logrus.WithField("type", r.queueName).Infof("消息验证结束,err: %v", err)
 	return
 }
 

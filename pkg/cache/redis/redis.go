@@ -13,7 +13,6 @@ package redis
 
 import (
 	"context"
-	"io"
 	"time"
 
 	"github.com/go-redis/redis"
@@ -145,7 +144,7 @@ func (c *Client) Exec() ([]interface{}, error) {
 
 func (c *Client) Close() error {
 	if c.c != nil {
-		if v, ok := c.c.(io.Closer); ok {
+		if v, ok := c.c.(redis.Pipeliner); ok {
 			return v.Close()
 		}
 	}
