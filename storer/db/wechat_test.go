@@ -274,3 +274,35 @@ func TestWeChatCancelMsgByID(t *testing.T) {
 func TestDeleteW(t *testing.T) {
 	storer.DB.Exec("DELETE FROM wechats WHERE id= ?", dbw.Id)
 }
+
+func TestWeChatUpdateAndInsertBatch(t *testing.T) {
+	type args struct {
+		ctx context.Context
+		dw  []*meta.DbWeChat
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+		{
+			name: "test_batch_case1",
+			args: args{
+				ctx: context.Background(),
+				dw: []*meta.DbWeChat{
+					dbw,
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		dbw.Type = 1
+		dbw.Version = 1
+		t.Run(tt.name, func(t *testing.T) {
+			if err := WeChatUpdateAndInsertBatch(tt.args.ctx, tt.args.dw); (err != nil) != tt.wantErr {
+				t.Errorf("WeChatUpdateAndInsertBatch() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}

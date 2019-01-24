@@ -14,6 +14,8 @@ package db
 import (
 	"context"
 	"database/sql"
+	"fmt"
+	"strings"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
@@ -112,4 +114,48 @@ func insert(ctx context.Context, typeN, sqlStr string, args ...interface{}) (tx 
 		err = ErrUniqueKeyExsits
 	}
 	return tx, err
+}
+
+func batch(ctx context.Context, table string, params []string, args ...interface{}) error {
+	pn := len(params)
+	if pn == 0 {
+		return nil
+	}
+	n := len(args) / pn
+
+	var sb strings.Builder
+	sb.WriteString("INSERT INTO ")
+	sb.WriteString(table)
+	sb.WriteString(" (")
+	sb.WriteString(strings.Join(params, ","))
+	sb.WriteString(") VALUES ")
+	// sql : INSERT INTO sms (l1,l2,l3...) VALUES
+
+	var ws []string
+	var values []string
+	for i := 0; i < pn; i++ {
+		ws = append(ws, "?")
+		values = append(values, params[i]+"=IF(version<=VALUES(version),VALUES("+params[i]+"),"+params[i]+")")
+	}
+	// (?,?,?,?,.....)
+	pl := "(" + strings.Join(ws, ",") + ")"
+	// l1=VALUES(l1),l2=VALUES(l2) ..
+	vs := strings.Join(values, ",")
+
+	for i := 0; i < n; i++ {
+		sb.WriteString(pl)
+		if i != n-1 {
+			sb.WriteString(",")
+		}
+	}
+	sb.WriteString(" ON DUPLICATE KEY UPDATE ")
+	sb.WriteString(vs)
+	sql := sb.String()
+	fmt.Println(sql)
+	_, err := storer.DB.ExecContext(ctx, sql, args...)
+	if err != nil {
+		return err
+	}
+	return err
+
 }

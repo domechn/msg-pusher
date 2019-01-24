@@ -14,12 +14,11 @@ package service
 import (
 	"context"
 	"fmt"
-	"strconv"
-	"time"
 
 	"github.com/sirupsen/logrus"
 	"uuabc.com/sendmsg/pkg/errors"
 	"uuabc.com/sendmsg/pkg/pb/meta"
+	"uuabc.com/sendmsg/pkg/utils"
 	"uuabc.com/sendmsg/storer/cache"
 )
 
@@ -57,14 +56,8 @@ func produce(ctx context.Context, m Meta, em Messager, rPush RPushFunc, mqParamF
 	logrus.Info("开始添加消息...,data: ", em)
 	id := em.GetId()
 
-	// 统一和数据库中的信息
-	now := time.Now().Unix()
-	timeStamp := strconv.Itoa(int(now))
 	em.SetStatus(int32(meta.Status_Wait))
-	em.SetCreatedAt(timeStamp)
-	em.SetUpdatedAt(timeStamp)
-	// 修改操作类型
-	em.SetOption(int32(meta.Insert))
+	initMsg(em)
 	byt, _ := em.Marshal()
 	// 开启redis事务
 	t := cache.NewTransaction()
@@ -74,6 +67,14 @@ func produce(ctx context.Context, m Meta, em Messager, rPush RPushFunc, mqParamF
 	}
 	logrus.Infof("消息添加成功,id: %s", id)
 	return t.Commit()
+}
+
+// 初始化信息，设置信息的创建修改时间和版本号
+func initMsg(em Messager) {
+	timeStamp := utils.NowTimeStampStr()
+	em.SetCreatedAt(timeStamp)
+	em.SetUpdatedAt(timeStamp)
+	em.SetVersion(1)
 }
 
 // produceStore 向cache和mq中提交数据
@@ -167,9 +168,7 @@ func edit(ctx context.Context, m Meta, em Messager, doListFunc RPushFunc, mqPara
 		mqFunc = mqParamFunc
 	}
 	// 修改修改时间
-	changeUpdate(em)
-	// 操作类型设为update
-	em.SetOption(int32(meta.Update))
+	changeUpdateAndVersion(em)
 	b, _ := em.Marshal()
 	t := cache.NewTransaction()
 
@@ -293,7 +292,7 @@ func cancel(ctx context.Context, id string, u RPushFunc, m Messager) error {
 	// 如果异步操作失败，会导致已取消的信息发送
 	m.SetStatus(int32(meta.Status_Cancel))
 	m.SetResult(int32(meta.Result_Fail))
-	changeUpdate(m)
+	changeUpdateAndVersion(m)
 	b, _ := m.Marshal()
 
 	t := cache.NewTransaction()
@@ -332,8 +331,9 @@ func checkStatus(msg Messager) error {
 	return nil
 }
 
-func changeUpdate(msg Messager) {
-	now := time.Now().Unix()
-	timeStamp := strconv.Itoa(int(now))
+func changeUpdateAndVersion(msg Messager) {
+	timeStamp := utils.NowTimeStampStr()
+	newVersion := msg.GetVersion() + 1
+	msg.SetVersion(newVersion)
 	msg.SetUpdatedAt(timeStamp)
 }

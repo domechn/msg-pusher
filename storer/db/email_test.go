@@ -13,6 +13,7 @@ package db
 
 import (
 	"context"
+	"math/rand"
 	"testing"
 	"time"
 
@@ -31,7 +32,7 @@ var dbe = &meta.DbEmail{
 	Type:        1,
 	Template:    "1-1",
 	Arguments:   "test",
-	SendTime:    "2018-09-09 09:09:09",
+	SendTime:    "2019-01-12 13:33:34",
 	Status:      1,
 }
 
@@ -251,12 +252,7 @@ func TestEmailCancelMsgByID(t *testing.T) {
 	}
 }
 
-func TestEmailUpdateBatch(t *testing.T) {
-	s := time.Now().Format("2006-01-02 13:04:05")
-	dbe.CreatedAt = s
-	dbe.UpdatedAt = s
-	dbe.Type = 7
-
+func BenchmarkEmailUpdateAndInsertBatch(b *testing.B) {
 	type args struct {
 		ctx context.Context
 		es  []*meta.DbEmail
@@ -277,8 +273,11 @@ func TestEmailUpdateBatch(t *testing.T) {
 			},
 		},
 	}
+	rand.Seed(time.Now().UnixNano())
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+		dbe.Version = 10
+		b.Run(tt.name, func(t *testing.B) {
+			dbe.Type = int32(rand.Intn(9))
 			if err := EmailUpdateAndInsertBatch(tt.args.ctx, tt.args.es); (err != nil) != tt.wantErr {
 				t.Errorf("EmailUpdateBatch() error = %v, wantErr %v", err, tt.wantErr)
 			}

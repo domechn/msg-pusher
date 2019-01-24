@@ -9,15 +9,14 @@
 #   Describe      :
 #
 # ====================================================*/
-package corn
+package store
 
 type Corn interface {
+	Name() string
 	// 从缓存中读取数据，以切片的方式返回
-	Read(int64) (inserts []Marshaler, updates []Marshaler)
+	Read() ([][]byte, error)
 	// 将数据写入数据库
-	Write(inserts, updates []Marshaler) error
-	// 开始执行定时任务，将redis中的数据定时入库
-	Start()
+	Write([][]byte) error
 }
 
 type Marshaler interface {

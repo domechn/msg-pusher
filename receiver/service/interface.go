@@ -58,8 +58,8 @@ type Messager interface {
 	GetTemplate() string
 	SetSendTime(string)
 	GetSendTime() string
-	SetOption(int32)
-	GetOption() int32
+	GetVersion() int32
+	SetVersion(int32)
 }
 
 type Cache interface {

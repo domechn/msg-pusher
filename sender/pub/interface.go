@@ -25,7 +25,9 @@ type Messager interface {
 	SetResult(int32)
 	SetReason(string)
 	GetSendTime() string
-	SetOption(int32)
+	SetUpdatedAt(string)
+	GetVersion() int32
+	SetVersion(int32)
 }
 
 type Cache interface {

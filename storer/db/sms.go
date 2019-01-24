@@ -100,3 +100,31 @@ func SmsUpdateSendResult(ctx context.Context, s *meta.DbSms) (*sqlx.Tx, error) {
 		s.Reason,
 		s.Id)
 }
+
+// SmsUpdateAndInsertBatch 批量执行修改,如果不存在就插入
+func SmsUpdateAndInsertBatch(ctx context.Context, ds []*meta.DbSms) error {
+	var args []interface{}
+	for _, s := range ds {
+		args = append(args,
+			s.Id,
+			s.Platform,
+			s.PlatformKey,
+			s.Content,
+			s.Mobile,
+			s.Type,
+			s.Template,
+			s.Arguments,
+			s.Server,
+			s.SendTime,
+			s.TryNum,
+			s.Status,
+			s.ResultStatus,
+			s.Reason)
+	}
+	err := batch(ctx,
+		"smss",
+		[]string{"id", "platform", "platform_key", "content", "mobile", "type", "template", "arguments", "server", "send_time", "try_num", "status", "result_status", "reason"},
+		args...,
+	)
+	return err
+}

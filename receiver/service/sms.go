@@ -109,6 +109,7 @@ func (s smsServiceImpl) Edit(ctx context.Context, m Meta) error {
 }
 
 func (s smsServiceImpl) checkSendRate(ctx context.Context, mobile string) error {
+	return nil
 	m1, err := cache.MobileCache1Min(ctx, mobile)
 	if err != nil {
 		return err

@@ -3,18 +3,21 @@
 #
 #   Author        : domchan
 #   Email         : 814172254@qq.com
-#   File Name     : db.go
-#   Created       : 2019/1/22 19:15
-#   Last Modified : 2019/1/22 19:15
+#   File Name     : corn.go
+#   Created       : 2019/1/24 16:49
+#   Last Modified : 2019/1/24 16:49
 #   Describe      :
 #
 # ====================================================*/
 package corn
 
-func lpush() {
-}
+import (
+	"uuabc.com/sendmsg/corn/store"
+	"uuabc.com/sendmsg/corn/store/db"
+)
 
-func Start() error {
+func Start() {
+	db.Register()
 
-	return nil
+	store.Start()
 }

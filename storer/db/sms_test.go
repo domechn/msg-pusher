@@ -394,6 +394,37 @@ func TestSmsCancelByPlat(t *testing.T) {
 	}
 }
 
+func TestSmsUpdateAndInsertBatch(t *testing.T) {
+	type args struct {
+		ctx context.Context
+		ds  []*meta.DbSms
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+		{
+			name: "batch_insert_case1",
+			args: args{
+				ctx: context.Background(),
+				ds: []*meta.DbSms{
+					dbt,
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dbt.Type = 6
+			if err := SmsUpdateAndInsertBatch(tt.args.ctx, tt.args.ds); (err != nil) != tt.wantErr {
+				t.Errorf("SmsUpdateAndInsertBatch() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
 func TestDelete(t *testing.T) {
 	storer.DB.Exec("DELETE FROM smss WHERE id = ?", dbt.Id)
 }

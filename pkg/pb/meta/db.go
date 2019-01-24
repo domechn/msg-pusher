@@ -155,12 +155,14 @@ func (d *DbSms) SetReason(s string) {
 	d.Reason = s
 }
 
-func (d *DbEmail) SetOption(s int32) {
-	d.Option = s
+func (d *DbWeChat) SetVersion(s int32) {
+	d.Version = s
 }
-func (d *DbWeChat) SetOption(s int32) {
-	d.Option = s
+
+func (d *DbEmail) SetVersion(s int32) {
+	d.Version = s
 }
-func (d *DbSms) SetOption(s int32) {
-	d.Option = s
+
+func (d *DbSms) SetVersion(s int32) {
+	d.Version = s
 }

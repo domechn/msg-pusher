@@ -17,6 +17,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"uuabc.com/sendmsg/pkg/pb/meta"
 	"uuabc.com/sendmsg/pkg/retry/backoff"
+	"uuabc.com/sendmsg/pkg/utils"
 	"uuabc.com/sendmsg/storer/cache"
 )
 
@@ -100,7 +101,11 @@ func SendRetryFunc(msg Messager, send func(Messager) error, doList func(Cache, [
 }
 
 func updateCache(msg Messager, doList func(Cache, []byte) error) error {
-	msg.SetOption(int32(meta.Update))
+	// 消息已发送，后续不会再修改，所以这里版本号直接更新一个大数字
+	newVersion := msg.GetVersion() + 99
+	msg.SetVersion(newVersion)
+	// 更新修改时间
+	msg.SetUpdatedAt(utils.NowTimeStampStr())
 	b, _ := msg.Marshal()
 	t := cache.NewTransaction()
 	doList(t, b)
