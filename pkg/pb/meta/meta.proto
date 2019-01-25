@@ -102,6 +102,8 @@ message DbSms {
     string createdAt = 15;
     //@inject_tag: json:"updated_at,omitempty" db:"updated_at"
     string updatedAt = 16;
+    //@inject_tag: json:"-"
+    int32 version=17;
 }
 
 // "platform":3,
@@ -155,6 +157,8 @@ message DbEmail {
     string createdAt = 16;
     //@inject_tag: json:"updated_at,omitempty" db:"updated_at"
     string updatedAt = 17;
+    //@inject_tag: json:"-"
+    int32 version=18;
 }
 
 // "platform":3,
@@ -205,4 +209,6 @@ message DbWeChat {
     string createdAt = 15;
     //@inject_tag: json:"updated_at,omitempty" db:"updated_at"
     string updatedAt = 16;
+    //@inject_tag: json:"-"
+    int32 version=17;
 }

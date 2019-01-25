@@ -14,19 +14,17 @@ package wechat
 import (
 	"context"
 
-	"github.com/jmoiron/sqlx"
 	"github.com/sirupsen/logrus"
 	"uuabc.com/sendmsg/pkg/pb/meta"
 	"uuabc.com/sendmsg/pkg/send/wechat"
 	"uuabc.com/sendmsg/sender/pub"
-	"uuabc.com/sendmsg/storer/db"
 )
 
 func (r *Receiver) check(data []byte, msg pub.Messager) (err error) {
 	id := string(data)
 	logrus.WithField("type", r.queueName).Info("开始验证消息的有效性")
-	defer logrus.WithField("type", r.queueName).Infof("消息验证结束,err: %v", err)
 	err = pub.Check(id, msg)
+	logrus.WithField("type", r.queueName).Infof("消息验证结束,err: %v", err)
 	return
 }
 
@@ -40,6 +38,6 @@ func (r *Receiver) send(msg pub.Messager) error {
 	), nil)
 }
 
-func (r *Receiver) doDB(msg pub.Messager) (*sqlx.Tx, error) {
-	return db.WeChatUpdateSendResult(context.Background(), msg.(*meta.DbWeChat))
+func (r *Receiver) doList(c pub.Cache, b []byte) error {
+	return c.RPushWeChat(context.Background(), b)
 }

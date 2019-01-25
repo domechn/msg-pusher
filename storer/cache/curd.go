@@ -16,6 +16,7 @@ import (
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
+	"uuabc.com/sendmsg/pkg/cache/redis"
 	"uuabc.com/sendmsg/storer"
 )
 
@@ -34,7 +35,7 @@ func get(ctx context.Context, typeN, k string) ([]byte, error) {
 	return storer.Cache.Get(ctx, k)
 }
 
-func put(ctx context.Context, typeN, k string, b []byte, ttl int64) error {
+func put(ctx context.Context, typeN, k string, b []byte, ttl int64, c *redis.Client) error {
 	if parentSpan := opentracing.SpanFromContext(ctx); parentSpan != nil {
 		parentCtx := parentSpan.Context()
 		span := opentracing.StartSpan(typeN, opentracing.ChildOf(parentCtx))
@@ -48,7 +49,7 @@ func put(ctx context.Context, typeN, k string, b []byte, ttl int64) error {
 		ctx = opentracing.ContextWithSpan(ctx, span)
 	}
 
-	return storer.Cache.Put(ctx, k, b, ttl)
+	return c.Put(ctx, k, b, ttl)
 }
 
 func limit(ctx context.Context, typeN, k string, ttl int64) (int64, error) {
@@ -100,4 +101,22 @@ func del(ctx context.Context, typeN, k string) error {
 		ctx = opentracing.ContextWithSpan(ctx, span)
 	}
 	return storer.Cache.Del(ctx, k)
+}
+
+func rPush(ctx context.Context, typeN, k string, v []byte, c *redis.Client) error {
+	if parentSpan := opentracing.SpanFromContext(ctx); parentSpan != nil {
+		parentCtx := parentSpan.Context()
+		span := opentracing.StartSpan(typeN, opentracing.ChildOf(parentCtx))
+		ext.PeerService.Set(span, "redis")
+		ext.SpanKindRPCClient.Set(span)
+		span.SetTag("cache.type", "rPush")
+		span.SetTag("cache.id", k)
+		defer span.Finish()
+		ctx = opentracing.ContextWithSpan(ctx, span)
+	}
+	return c.RPush(ctx, k, v)
+}
+
+func lPop(ctx context.Context, k string, c *redis.Client) ([]byte, error) {
+	return c.LPop(ctx, k)
 }

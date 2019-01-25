@@ -20,6 +20,7 @@ import (
 	"os"
 	"time"
 	"uuabc.com/sendmsg/config"
+	"uuabc.com/sendmsg/corn"
 	"uuabc.com/sendmsg/pkg/log"
 	"uuabc.com/sendmsg/pkg/opentracing"
 	"uuabc.com/sendmsg/receiver"
@@ -103,6 +104,9 @@ func start(_ *cobra.Command, _ []string) error {
 	if err := receiver.Init(r, opts.addrMonitor); err != nil {
 		return err
 	}
+
+	// 启动定时存数据库的任务
+	corn.Start()
 
 	svr := &http.Server{
 		Addr:         fmt.Sprintf("%s:%d", opts.host, opts.port),

@@ -14,9 +14,7 @@ package service
 import (
 	"context"
 
-	"github.com/jmoiron/sqlx"
 	"uuabc.com/sendmsg/pkg/pb/meta"
-	"uuabc.com/sendmsg/storer/db"
 	"uuabc.com/sendmsg/storer/mq"
 )
 
@@ -35,12 +33,11 @@ func (s weChatServiceImpl) Produce(ctx context.Context, m Meta) (string, error) 
 		return "", err
 	}
 	content := getContent(args, templ)
-	ttl := m.Delay()
-	err = s.produce(ctx, m.(*meta.WeChatProducer), content, ttl)
+	err = s.produce(ctx, m.(*meta.WeChatProducer), content)
 	return m.GetId(), err
 }
 
-func (weChatServiceImpl) produce(ctx context.Context, p *meta.WeChatProducer, content string, ttl int64) error {
+func (w weChatServiceImpl) produce(ctx context.Context, p *meta.WeChatProducer, content string) error {
 	dbWeChat := &meta.DbWeChat{
 		Id:          p.Id,
 		Platform:    p.Platform,
@@ -56,10 +53,12 @@ func (weChatServiceImpl) produce(ctx context.Context, p *meta.WeChatProducer, co
 	return produce(ctx,
 		p,
 		dbWeChat,
-		func(i context.Context, messager Messager) (*sqlx.Tx, error) {
-			return db.WeChatInsert(i, messager.(*meta.DbWeChat))
-		},
+		w.rPush,
 		mq.WeChatProduce)
+}
+
+func (weChatServiceImpl) rPush(ctx context.Context, c Cache, b []byte) error {
+	return c.RPushWeChat(ctx, b)
 }
 
 func (s weChatServiceImpl) Detail(ctx context.Context, id string) (Marshaler, error) {
@@ -68,9 +67,7 @@ func (s weChatServiceImpl) Detail(ctx context.Context, id string) (Marshaler, er
 
 func (s weChatServiceImpl) detail(ctx context.Context, id string) (Marshaler, error) {
 	res := &meta.DbWeChat{}
-	return res, detail(ctx, id, res, func(ctx2 context.Context, id string) (Marshaler, error) {
-		return db.WeChatDetailByID(ctx2, id)
-	})
+	return res, detail(ctx, id, res)
 }
 
 // Cancel 取消微信发送
@@ -78,10 +75,11 @@ func (s weChatServiceImpl) Cancel(ctx context.Context, id string) error {
 	return s.cancel(ctx, id)
 }
 
-func (weChatServiceImpl) cancel(ctx context.Context, id string) error {
-	return cancel(ctx, id, func(i context.Context, s string) (*sqlx.Tx, error) {
-		return db.WeChatCancelMsgByID(i, s)
-	}, &meta.DbSms{})
+func (w weChatServiceImpl) cancel(ctx context.Context, id string) error {
+	return cancel(ctx,
+		id,
+		w.rPush,
+		&meta.DbWeChat{})
 }
 
 func (s weChatServiceImpl) Edit(ctx context.Context, m Meta) error {
@@ -89,9 +87,7 @@ func (s weChatServiceImpl) Edit(ctx context.Context, m Meta) error {
 	return edit(ctx,
 		m,
 		dbParam,
-		func(i context.Context, messager Messager) (*sqlx.Tx, error) {
-			return db.WeChatEdit(i, messager.(*meta.DbWeChat))
-		},
+		s.rPush,
 		mq.WeChatProduce,
 	)
 }

@@ -49,30 +49,20 @@ func SmsProducers(ctx context.Context, body []byte) (res []byte, err error) {
 		err = errors.ErrParam
 		return
 	}
-	var ids []string
-	var fails []*meta.SmsProducer
 	// 检验参数
-	for _, producer := range p.Data {
-		producer.Platform = p.Platform
-		if err = producer.ValidateBatch(); err != nil {
+	for _, d := range p.Data {
+		d.Platform = p.Platform
+		if err = d.Validated(); err != nil {
 			return
 		}
+		d.Transfer(true)
 	}
-	// 循环操作，记录成功和失败的数据
-	for _, producer := range p.Data {
-		producer.Transfer(true)
-		id, err := smsService.Produce(ctx, producer)
-		if err != nil {
-			fails = append(fails, producer)
-			continue
-		}
-		ids = append(ids, id)
+	data, sErr := smsService.ProduceBatch(ctx, p.Data)
+	if sErr != nil {
+		err = sErr
+		return
 	}
-	// 成功的返回id，失败的将该条的详细数据返回
-	var resMap = make(map[string]interface{})
-	resMap["success"] = ids
-	resMap["fail"] = fails
-	res = model.NewResponseData(resMap).MustMarshal()
+	res = model.NewResponseData(data).MustMarshal()
 	return
 }
 

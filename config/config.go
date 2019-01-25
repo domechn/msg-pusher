@@ -55,6 +55,11 @@ type Email struct {
 	TLS        bool   `yaml:"tls"`
 }
 
+type Corn struct {
+	Interval int64 `yaml:"interval"`
+	MaxLen   int64 `yaml:"maxLen"`
+}
+
 type Config struct {
 	Mysql     *Mysql     `yaml:"mysql"`
 	Memcached *Memcached `yaml:"memcached"`
@@ -63,6 +68,7 @@ type Config struct {
 	Aliyun    *Aliyun    `yaml:"aliyun"`
 	WeChat    *WeChat    `yaml:"wechat"`
 	Email     *Email     `yaml:"email"`
+	Corn      *Corn      `yaml:"corn"`
 }
 
 var (
@@ -99,4 +105,8 @@ func WeChatConf() *WeChat {
 
 func EmailConf() *Email {
 	return conf.Email
+}
+
+func CornConf() *Corn {
+	return conf.Corn
 }

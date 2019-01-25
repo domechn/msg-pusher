@@ -18,6 +18,8 @@ import (
 	"uuabc.com/sendmsg/storer"
 )
 
+// AddLocalTemplate 将模板添加到本地缓存,
+// 因为当前模板是不可变的所以，默认缓存1小时，如果以后变动频繁，可以适当降低缓存刷新时间。
 func AddLocalTemplate(ctx context.Context, s string, v string) error {
 	if parentSpan := opentracing.SpanFromContext(ctx); parentSpan != nil {
 		parentCtx := parentSpan.Context()
@@ -26,9 +28,10 @@ func AddLocalTemplate(ctx context.Context, s string, v string) error {
 		ctx = opentracing.ContextWithSpan(ctx, span)
 	}
 
-	return storer.LocalCache.Put(ctx, s, []byte(v), 60)
+	return storer.LocalCache.Put(ctx, s, []byte(v), 360)
 }
 
+// LocalTemplate 从本地缓存中取出模板
 func LocalTemplate(ctx context.Context, s string) (string, error) {
 	if parentSpan := opentracing.SpanFromContext(ctx); parentSpan != nil {
 		parentCtx := parentSpan.Context()

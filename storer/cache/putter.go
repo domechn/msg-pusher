@@ -13,27 +13,23 @@ package cache
 
 import (
 	"context"
-	"math/rand"
+
+	"uuabc.com/sendmsg/storer"
 )
 
 // PutBaseCache 底层缓存，跟数据库数据同步，不过期
 func PutBaseCache(ctx context.Context, k string, v []byte) error {
-	return put(ctx, "PutBaseCache", base+k, v, 0)
-}
-
-// PutLatestCache 最新缓存，保证数据时效性，默认5+n(n<5)秒缓存
-func PutLatestCache(ctx context.Context, k string, v []byte) error {
-	return put(ctx, "PutLastestCache", lastest+k, v, int64(5+rand.Intn(5)))
+	return put(ctx, "PutBaseCache", base+k, v, 0, storer.Cache)
 }
 
 // PutBaseTemplate 将添加的模板存入缓存中
 func PutBaseTemplate(ctx context.Context, k string, v []byte) error {
-	return put(ctx, "PutBaseTemplate", template+k, v, 0)
+	return put(ctx, "PutBaseTemplate", template+k, v, 0, storer.Cache)
 }
 
 // PutSendResult 在bitmap中修改发送结果，一般只有发送成功的情况才需要设置
 func PutSendSuccess(ctx context.Context, k string) error {
-	return put(ctx, "PutSendSuccess", k+"_send", success, 0)
+	return put(ctx, "PutSendSuccess", k+"_send", success, 0, storer.Cache)
 }
 
 // MobileCache1Min 一分钟限流器+1，并返回+1后的结果，限制每个号码每分钟发送的频率

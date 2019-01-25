@@ -13,9 +13,9 @@ package redis
 
 import (
 	"context"
-	"github.com/go-redis/redis"
-	"io"
 	"time"
+
+	"github.com/go-redis/redis"
 	"uuabc.com/sendmsg/pkg/cache"
 )
 
@@ -108,9 +108,43 @@ func (c *Client) Expire(ctx context.Context, k string, ttl int64) error {
 	return res.Err()
 }
 
+func (c *Client) RPush(ctx context.Context, k string, v []byte) error {
+	return c.c.RPush(k, v).Err()
+}
+
+func (c *Client) LLen(ctx context.Context, k string) (int64, error) {
+	return c.c.LLen(k).Result()
+}
+
+func (c *Client) LPop(ctx context.Context, k string) ([]byte, error) {
+	return c.c.LPop(k).Bytes()
+}
+
+func (c *Client) Pipeline() *Client {
+	return &Client{
+		c: c.c.TxPipeline(),
+	}
+}
+
+func (c *Client) Discard() error {
+	return c.c.(redis.Pipeliner).Discard()
+}
+
+func (c *Client) Exec() ([]interface{}, error) {
+	ss, err := c.c.(redis.Pipeliner).Exec()
+	if err != nil {
+		return nil, err
+	}
+	var res []interface{}
+	for _, v := range ss {
+		res = append(res, v.Args()...)
+	}
+	return res, nil
+}
+
 func (c *Client) Close() error {
 	if c.c != nil {
-		if v, ok := c.c.(io.Closer); ok {
+		if v, ok := c.c.(redis.Pipeliner); ok {
 			return v.Close()
 		}
 	}

@@ -11,6 +11,10 @@
 # ====================================================*/
 package service
 
+import (
+	"context"
+)
+
 type Meta interface {
 	GetId() string
 	// 验证参数
@@ -54,4 +58,12 @@ type Messager interface {
 	GetTemplate() string
 	SetSendTime(string)
 	GetSendTime() string
+	GetVersion() int32
+	SetVersion(int32)
+}
+
+type Cache interface {
+	RPushEmail(context.Context, []byte) error
+	RPushWeChat(context.Context, []byte) error
+	RPushSms(context.Context, []byte) error
 }

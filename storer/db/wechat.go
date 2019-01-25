@@ -36,9 +36,10 @@ func WeChatInsert(ctx context.Context, wechat *meta.DbWeChat) (*sqlx.Tx, error) 
 
 	return insert(ctx,
 		"WeChatInsert",
-		`INSERT INTO wechats (id,platform,touser,type,template,url,content,arguments,send_time) VALUES (?,?,?,?,?,?,?,?,?)`,
+		`INSERT INTO wechats (id,platform,platform_key,touser,type,template,url,content,arguments,send_time) VALUES (?,?,?,?,?,?,?,?,?,?)`,
 		wechat.Id,
 		wechat.Platform,
+		wechat.PlatformKey,
 		wechat.Touser,
 		wechat.Type,
 		wechat.Template,
@@ -72,4 +73,33 @@ func WeChatUpdateSendResult(ctx context.Context, w *meta.DbWeChat) (*sqlx.Tx, er
 		w.ResultStatus,
 		w.Reason,
 		w.Id)
+}
+
+// WeChatUpdateAndInsertBatch 批量执行修改,如果不存在就插入
+func WeChatUpdateAndInsertBatch(ctx context.Context, dw []*meta.DbWeChat) error {
+	var args []interface{}
+	for _, w := range dw {
+		args = append(args,
+			w.Id,
+			w.Platform,
+			w.PlatformKey,
+			w.Touser,
+			w.Type,
+			w.Template,
+			w.Url,
+			w.Content,
+			w.Arguments,
+			w.SendTime,
+			w.TryNum,
+			w.Status,
+			w.ResultStatus,
+			w.Reason,
+			w.Version)
+	}
+	err := batch(ctx,
+		"wechats",
+		[]string{"id", "platform", "platform_key", "touser", "type", "template", "url", "content", "arguments", "send_time", "try_num", "status", "result_status", "reason", "version"},
+		args...,
+	)
+	return err
 }

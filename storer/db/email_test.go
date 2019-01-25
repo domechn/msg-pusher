@@ -13,7 +13,9 @@ package db
 
 import (
 	"context"
+	"math/rand"
 	"testing"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	"uuabc.com/sendmsg/pkg/pb/meta"
@@ -30,7 +32,7 @@ var dbe = &meta.DbEmail{
 	Type:        1,
 	Template:    "1-1",
 	Arguments:   "test",
-	SendTime:    "2018-09-09 09:09:09",
+	SendTime:    "2019-01-12 13:33:34",
 	Status:      1,
 }
 
@@ -245,6 +247,39 @@ func TestEmailCancelMsgByID(t *testing.T) {
 			if (err != nil) != tt.wantErr {
 				t.Errorf("EmailCancelMsgByID() error = %v, wantErr %v", err, tt.wantErr)
 				return
+			}
+		})
+	}
+}
+
+func BenchmarkEmailUpdateAndInsertBatch(b *testing.B) {
+	type args struct {
+		ctx context.Context
+		es  []*meta.DbEmail
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+		{
+			name: "batch_update_case_1",
+			args: args{
+				ctx: context.Background(),
+				es: []*meta.DbEmail{
+					dbe,
+				},
+			},
+		},
+	}
+	rand.Seed(time.Now().UnixNano())
+	for _, tt := range tests {
+		dbe.Version = 10
+		b.Run(tt.name, func(t *testing.B) {
+			dbe.Type = int32(rand.Intn(9))
+			if err := EmailUpdateAndInsertBatch(tt.args.ctx, tt.args.es); (err != nil) != tt.wantErr {
+				t.Errorf("EmailUpdateBatch() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

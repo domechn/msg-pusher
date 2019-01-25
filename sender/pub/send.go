@@ -13,13 +13,13 @@ package pub
 
 import (
 	"context"
+	"time"
 
-	"github.com/jmoiron/sqlx"
 	"github.com/sirupsen/logrus"
 	"uuabc.com/sendmsg/pkg/pb/meta"
 	"uuabc.com/sendmsg/pkg/retry/backoff"
+	"uuabc.com/sendmsg/pkg/utils"
 	"uuabc.com/sendmsg/storer/cache"
-	"uuabc.com/sendmsg/storer/db"
 )
 
 type RetryFunc func(count int) error
@@ -28,16 +28,20 @@ type RetryFunc func(count int) error
 func Send(id string, sendFunc RetryFunc) error {
 	bk := backoff.NewServiceBackOff()
 	var count int
-	lockKey := "send_" + id
-	// 分布式锁，防止资源竞争
-	err := cache.LockID5s(context.Background(), lockKey)
-	if err != nil {
-		logrus.WithField("id", id).Error("获取分布式锁失败，消息可能正在被其他线程在处理")
-		return nil
-	}
-	// 释放分布式锁
-	defer cache.ReleaseLock(context.Background(), lockKey)
+
 	doFunc := func() error {
+		// 分布式锁，防止资源竞争
+		err := cache.LockId(context.Background(), id)
+		if err != nil {
+			logrus.WithField("id", id).Error("获取分布式锁失败，消息可能正在被其他线程在处理")
+			// 等待一段时间，再获取
+			time.Sleep(time.Millisecond * 300)
+			return err
+		}
+		logrus.WithField("id", id).Info("获取分布式锁成功，正在发送消息")
+		// 释放分布式锁
+		defer cache.UnlockId(context.Background(), id)
+
 		count++
 		if err := sendFunc(count); err != nil {
 			if err == ErrTooManyTimes {
@@ -52,7 +56,7 @@ func Send(id string, sendFunc RetryFunc) error {
 }
 
 // SendRetryFunc 返回一个可以用于重试发送的方法
-func SendRetryFunc(msg Messager, send func(Messager) error, doDB func(Messager) (*sqlx.Tx, error)) RetryFunc {
+func SendRetryFunc(msg Messager, send func(Messager) error, doList func(Cache, []byte) error) RetryFunc {
 	var reason error
 	return func(count int) error {
 		// 发送之前检查状态,如果已发送就直接返回成功
@@ -61,8 +65,6 @@ func SendRetryFunc(msg Messager, send func(Messager) error, doDB func(Messager) 
 			return nil
 		}
 
-		logrus.WithField("id", msg.GetId()).Info("获取分布式锁成功，正在发送消息")
-
 		if count > TryNum {
 			msg.SetStatus(int32(meta.Status_Final))
 			msg.SetResult(int32(meta.Result_Fail))
@@ -70,7 +72,7 @@ func SendRetryFunc(msg Messager, send func(Messager) error, doDB func(Messager) 
 			if reason != nil {
 				msg.SetReason(reason.Error())
 			}
-			updateDbAndCache(msg, doDB)
+			updateCache(msg, doList)
 			return ErrTooManyTimes
 		}
 		err := send(msg)
@@ -87,7 +89,7 @@ func SendRetryFunc(msg Messager, send func(Messager) error, doDB func(Messager) 
 		msg.SetResult(int32(meta.Result_Success))
 		msg.SetTryNum(int32(count))
 		// 更新数据库和缓存，如果出错打印日志，不做错误处理
-		err = updateDbAndCache(msg, doDB)
+		err = updateCache(msg, doList)
 		if err != nil {
 			logrus.WithFields(logrus.Fields{
 				"id":    msg.GetId(),
@@ -101,22 +103,18 @@ func SendRetryFunc(msg Messager, send func(Messager) error, doDB func(Messager) 
 	}
 }
 
-func updateDbAndCache(msg Messager, doDB func(Messager) (*sqlx.Tx, error)) error {
-	var err error
-	tx, err := doDB(msg)
-	if err != nil {
-		db.RollBack(tx)
-		return err
-	}
+func updateCache(msg Messager, doList func(Cache, []byte) error) error {
+	// 消息已发送，后续不会再修改，所以这里版本号直接更新一个大数字
+	newVersion := msg.GetVersion() + 99
+	msg.SetVersion(newVersion)
+	// 更新修改时间
+	msg.SetUpdatedAt(utils.NowTimeStampStr())
 	b, _ := msg.Marshal()
+	t := cache.NewTransaction()
+	defer t.Close()
+	doList(t, b)
 	// 强制更新缓存
-	err = cache.PutBaseCache(context.Background(), msg.GetId(), b)
-	cache.PutLatestCache(context.Background(), msg.GetId(), b)
-	cache.PutSendSuccess(context.Background(), msg.GetId())
-	if err != nil {
-		db.RollBack(tx)
-		return err
-	}
-
-	return db.Commit(tx)
+	t.PutBaseCache(context.Background(), msg.GetId(), b)
+	t.PutSendSuccess(context.Background(), msg.GetId())
+	return t.Commit()
 }
