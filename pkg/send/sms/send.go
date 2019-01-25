@@ -17,7 +17,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/domgoer/msgpusher/pkg/send"
+	"github.com/domgoer/msg-pusher/pkg/send"
 	"github.com/json-iterator/go"
 )
 

@@ -14,8 +14,8 @@ package cache
 import (
 	"context"
 
-	"github.com/domgoer/msgpusher/pkg/cache/redis"
-	"github.com/domgoer/msgpusher/storer"
+	"github.com/domgoer/msg-pusher/pkg/cache/redis"
+	"github.com/domgoer/msg-pusher/storer"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 )
@@ -50,27 +50,6 @@ func put(ctx context.Context, typeN, k string, b []byte, ttl int64, c *redis.Cli
 	}
 
 	return c.Put(ctx, k, b, ttl)
-}
-
-func limit(ctx context.Context, typeN, k string, ttl int64) (int64, error) {
-	if parentSpan := opentracing.SpanFromContext(ctx); parentSpan != nil {
-		parentCtx := parentSpan.Context()
-		span := opentracing.StartSpan(typeN, opentracing.ChildOf(parentCtx))
-		ext.SpanKindRPCClient.Set(span)
-		ext.PeerService.Set(span, "redis")
-		span.SetTag("cache.key", k)
-		span.SetTag("cache.type", "limit")
-		defer span.Finish()
-		ctx = opentracing.ContextWithSpan(ctx, span)
-	}
-	res, err := storer.Cache.Incr(ctx, k)
-	if err != nil {
-		return res, err
-	}
-	if res == 1 {
-		return res, storer.Cache.Expire(ctx, k, ttl)
-	}
-	return res, nil
 }
 
 func add(ctx context.Context, typeN, k string, v []byte, ttl int64) error {

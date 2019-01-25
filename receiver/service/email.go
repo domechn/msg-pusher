@@ -14,8 +14,8 @@ package service
 import (
 	"context"
 
-	"github.com/domgoer/msgpusher/pkg/pb/meta"
-	"github.com/domgoer/msgpusher/storer/mq"
+	"github.com/domgoer/msg-pusher/pkg/pb/meta"
+	"github.com/domgoer/msg-pusher/storer/mq"
 )
 
 type emailServiceImpl struct {

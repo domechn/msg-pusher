@@ -12,11 +12,11 @@
 package pub
 
 import (
-	"github.com/domgoer/msgpusher/config"
-	"github.com/domgoer/msgpusher/pkg/send/email"
-	"github.com/domgoer/msgpusher/pkg/send/sms"
-	"github.com/domgoer/msgpusher/pkg/send/wechat"
-	"github.com/domgoer/msgpusher/storer"
+	"github.com/domgoer/msg-pusher/config"
+	"github.com/domgoer/msg-pusher/pkg/send/email"
+	"github.com/domgoer/msg-pusher/pkg/send/sms"
+	"github.com/domgoer/msg-pusher/pkg/send/wechat"
+	"github.com/domgoer/msg-pusher/storer"
 )
 
 var (

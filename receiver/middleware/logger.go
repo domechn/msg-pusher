@@ -16,7 +16,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/domgoer/msgpusher/pkg/ip"
+	"github.com/domgoer/msg-pusher/pkg/ip"
 )
 
 // LoggingMiddleware 返回日志middleware

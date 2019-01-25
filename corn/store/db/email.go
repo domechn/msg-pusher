@@ -15,12 +15,12 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/domgoer/msgpusher/config"
-	"github.com/domgoer/msgpusher/corn/store"
-	"github.com/domgoer/msgpusher/pkg/pb/meta"
-	"github.com/domgoer/msgpusher/pkg/utils"
-	"github.com/domgoer/msgpusher/storer/cache"
-	"github.com/domgoer/msgpusher/storer/db"
+	"github.com/domgoer/msg-pusher/config"
+	"github.com/domgoer/msg-pusher/corn/store"
+	"github.com/domgoer/msg-pusher/pkg/pb/meta"
+	"github.com/domgoer/msg-pusher/pkg/utils"
+	"github.com/domgoer/msg-pusher/storer/cache"
+	"github.com/domgoer/msg-pusher/storer/db"
 	"github.com/sirupsen/logrus"
 )
 
@@ -36,9 +36,9 @@ func (e *Email) Read() ([][]byte, error) {
 	return read(cache.LLenEmail, cache.LPopEmail, e.len)
 }
 
-func (e *Email) Write(param [][]byte) error {
+func (e *Email) Write(param [][]byte) (err error) {
 	if len(param) == 0 {
-		return nil
+		return
 	}
 	var li []*meta.DbEmail
 	for _, b := range param {
@@ -54,7 +54,6 @@ func (e *Email) Write(param [][]byte) error {
 		dbEmail.SetSendTime(utils.MustISO8601StrToUTCStr(dbEmail.GetSendTime()))
 		li = append(li, dbEmail)
 	}
-	var err error
 	if err = db.EmailUpdateAndInsertBatch(context.Background(), li); err != nil {
 		// 如果是数据库无法连接，就将数据回滚到redis
 		if err == sql.ErrConnDone {
@@ -64,7 +63,7 @@ func (e *Email) Write(param [][]byte) error {
 			for _, p := range param {
 				t.RPushEmail(context.Background(), p)
 			}
-			t.Commit()
+			t.Commit(context.Background())
 		}
 	}
 	return err

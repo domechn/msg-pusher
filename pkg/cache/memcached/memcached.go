@@ -15,7 +15,7 @@ import (
 	"context"
 
 	"github.com/bradfitz/gomemcache/memcache"
-	"github.com/domgoer/msgpusher/pkg/cache"
+	"github.com/domgoer/msg-pusher/pkg/cache"
 )
 
 type Client struct {

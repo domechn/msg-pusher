@@ -21,8 +21,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/domgoer/msgpusher/pkg/cache"
-	"github.com/domgoer/msgpusher/pkg/send"
+	"github.com/domgoer/msg-pusher/pkg/cache"
+	"github.com/domgoer/msg-pusher/pkg/send"
 	"github.com/sirupsen/logrus"
 )
 

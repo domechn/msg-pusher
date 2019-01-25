@@ -13,7 +13,7 @@ package local
 
 import (
 	"context"
-	cache2 "github.com/domgoer/msgpusher/pkg/cache"
+	cache2 "github.com/domgoer/msg-pusher/pkg/cache"
 	"github.com/patrickmn/go-cache"
 	"time"
 )

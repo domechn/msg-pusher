@@ -16,9 +16,9 @@ import (
 	"errors"
 	"time"
 
-	"github.com/domgoer/msgpusher/pkg/pb/meta"
-	"github.com/domgoer/msgpusher/pkg/utils"
-	"github.com/domgoer/msgpusher/storer/cache"
+	"github.com/domgoer/msg-pusher/pkg/pb/meta"
+	"github.com/domgoer/msg-pusher/pkg/utils"
+	"github.com/domgoer/msg-pusher/storer/cache"
 	"github.com/sirupsen/logrus"
 )
 

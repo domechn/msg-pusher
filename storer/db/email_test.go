@@ -17,8 +17,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/domgoer/msgpusher/pkg/pb/meta"
-	"github.com/domgoer/msgpusher/storer"
+	"github.com/domgoer/msg-pusher/pkg/pb/meta"
+	"github.com/domgoer/msg-pusher/storer"
 	"github.com/jmoiron/sqlx"
 )
 

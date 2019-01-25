@@ -15,10 +15,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/domgoer/msgpusher/pkg/pb/meta"
-	"github.com/domgoer/msgpusher/pkg/retry/backoff"
-	"github.com/domgoer/msgpusher/pkg/utils"
-	"github.com/domgoer/msgpusher/storer/cache"
+	"github.com/domgoer/msg-pusher/pkg/pb/meta"
+	"github.com/domgoer/msg-pusher/pkg/retry/backoff"
+	"github.com/domgoer/msg-pusher/pkg/utils"
+	"github.com/domgoer/msg-pusher/storer/cache"
 	"github.com/sirupsen/logrus"
 )
 
@@ -116,5 +116,5 @@ func updateCache(msg Messager, doList func(Cache, []byte) error) error {
 	// 强制更新缓存
 	t.PutBaseCache(context.Background(), msg.GetId(), b)
 	t.PutSendSuccess(context.Background(), msg.GetId())
-	return t.Commit()
+	return t.Commit(context.Background())
 }

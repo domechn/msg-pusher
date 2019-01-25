@@ -14,9 +14,9 @@ package sms
 import (
 	"context"
 
-	"github.com/domgoer/msgpusher/pkg/pb/meta"
-	"github.com/domgoer/msgpusher/pkg/send/sms"
-	"github.com/domgoer/msgpusher/sender/pub"
+	"github.com/domgoer/msg-pusher/pkg/pb/meta"
+	"github.com/domgoer/msg-pusher/pkg/send/sms"
+	"github.com/domgoer/msg-pusher/sender/pub"
 	"github.com/sirupsen/logrus"
 )
 

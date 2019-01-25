@@ -18,11 +18,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/domgoer/msgpusher/config"
-	"github.com/domgoer/msgpusher/pkg/cmd"
-	"github.com/domgoer/msgpusher/pkg/log"
-	"github.com/domgoer/msgpusher/receiver/version"
-	"github.com/domgoer/msgpusher/sender"
+	"github.com/domgoer/msg-pusher/config"
+	"github.com/domgoer/msg-pusher/pkg/cmd"
+	"github.com/domgoer/msg-pusher/pkg/log"
+	"github.com/domgoer/msg-pusher/receiver/version"
+	"github.com/domgoer/msg-pusher/sender"
 )
 
 type Options struct {

@@ -15,8 +15,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/domgoer/msgpusher/config"
-	"github.com/domgoer/msgpusher/pkg/send"
+	"github.com/domgoer/msg-pusher/config"
+	"github.com/domgoer/msg-pusher/pkg/send"
 )
 
 var (

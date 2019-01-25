@@ -12,7 +12,7 @@
 package metrics
 
 import (
-	"github.com/domgoer/msgpusher/pkg/cst"
+	"github.com/domgoer/msg-pusher/pkg/cst"
 	"sync"
 
 	"github.com/prometheus/client_golang/prometheus"

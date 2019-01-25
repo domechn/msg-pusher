@@ -15,8 +15,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/domgoer/msgpusher/pkg/pb/tpl"
-	"github.com/domgoer/msgpusher/storer"
+	"github.com/domgoer/msg-pusher/pkg/pb/tpl"
+	"github.com/domgoer/msg-pusher/storer"
 	"github.com/jmoiron/sqlx"
 )
 

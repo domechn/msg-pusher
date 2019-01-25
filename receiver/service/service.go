@@ -15,10 +15,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/domgoer/msgpusher/pkg/errors"
-	"github.com/domgoer/msgpusher/pkg/pb/meta"
-	"github.com/domgoer/msgpusher/pkg/utils"
-	"github.com/domgoer/msgpusher/storer/cache"
+	"github.com/domgoer/msg-pusher/pkg/errors"
+	"github.com/domgoer/msg-pusher/pkg/pb/meta"
+	"github.com/domgoer/msg-pusher/pkg/utils"
+	"github.com/domgoer/msg-pusher/storer/cache"
 	"github.com/sirupsen/logrus"
 )
 
@@ -59,11 +59,11 @@ func produce(ctx context.Context, m Meta, em Messager, rPush RPushFunc, mqParamF
 	t := cache.NewTransaction()
 	defer t.Close()
 	if err := produceStore(ctx, id, byt, m.Delay(), t, mqParamFunc, rPush); err != nil {
-		t.Rollback()
+		t.Rollback(ctx)
 		return err
 	}
 	logrus.Infof("消息添加成功,id: %s", id)
-	return t.Commit()
+	return t.Commit(ctx)
 }
 
 // 初始化信息，设置信息的创建修改时间和版本号
@@ -174,7 +174,7 @@ func edit(ctx context.Context, m Meta, em Messager, doListFunc RPushFunc, mqPara
 
 	// 修改cache和mq中信息
 	if err := editStore(ctx, em.GetId(), b, ttl, t, doListFunc, mqFunc); err != nil {
-		t.Rollback()
+		t.Rollback(ctx)
 		logrus.WithFields(logrus.Fields{
 			"method": "updateStore",
 			"id":     em.GetId(),
@@ -184,7 +184,7 @@ func edit(ctx context.Context, m Meta, em Messager, doListFunc RPushFunc, mqPara
 	}
 
 	// 提交事务
-	return t.Commit()
+	return t.Commit(ctx)
 }
 
 func editStore(ctx context.Context, id string, b []byte, ttl int64, t *cache.Transaction, doListFunc RPushFunc, mqf MqFunc) error {
@@ -301,7 +301,7 @@ func cancel(ctx context.Context, id string, u RPushFunc, m Messager) error {
 	defer t.Close()
 
 	if err = cancelStore(ctx, id, b, u, t); err != nil {
-		t.Rollback()
+		t.Rollback(ctx)
 		logrus.WithFields(logrus.Fields{
 			"method": "cancelStore",
 			"id":     id,
@@ -310,7 +310,7 @@ func cancel(ctx context.Context, id string, u RPushFunc, m Messager) error {
 		return err
 	}
 
-	return t.Commit()
+	return t.Commit(ctx)
 
 }
 

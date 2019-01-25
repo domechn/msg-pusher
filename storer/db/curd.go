@@ -14,10 +14,9 @@ package db
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"strings"
 
-	"github.com/domgoer/msgpusher/storer"
+	"github.com/domgoer/msg-pusher/storer"
 	"github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	"github.com/opentracing/opentracing-go"
@@ -151,7 +150,6 @@ func batch(ctx context.Context, table string, params []string, args ...interface
 	sb.WriteString(" ON DUPLICATE KEY UPDATE ")
 	sb.WriteString(vs)
 	sql := sb.String()
-	fmt.Println(sql)
 	_, err := storer.DB.ExecContext(ctx, sql, args...)
 	if err != nil {
 		return err

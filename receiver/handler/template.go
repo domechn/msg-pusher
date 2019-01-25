@@ -13,9 +13,9 @@ package handler
 
 import (
 	"context"
-	"github.com/domgoer/msgpusher/pkg/pb/tpl"
-	"github.com/domgoer/msgpusher/receiver/model"
-	"github.com/domgoer/msgpusher/receiver/service"
+	"github.com/domgoer/msg-pusher/pkg/pb/tpl"
+	"github.com/domgoer/msg-pusher/receiver/model"
+	"github.com/domgoer/msg-pusher/receiver/service"
 )
 
 // @router("POST","/version/template")

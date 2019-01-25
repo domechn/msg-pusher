@@ -13,9 +13,11 @@ package cache
 
 import (
 	"context"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/ext"
 
-	"github.com/domgoer/msgpusher/pkg/cache/redis"
-	"github.com/domgoer/msgpusher/storer"
+	"github.com/domgoer/msg-pusher/pkg/cache/redis"
+	"github.com/domgoer/msg-pusher/storer"
 )
 
 type Transaction struct {
@@ -72,18 +74,42 @@ func (t *Transaction) LPopSms() ([]byte, error) {
 }
 
 // Commit 提交事务
-func (t *Transaction) Commit() error {
+func (t *Transaction) Commit(ctx context.Context) error {
+	if parentSpan := opentracing.SpanFromContext(ctx); parentSpan != nil {
+		parentCtx := parentSpan.Context()
+		span := opentracing.StartSpan("tx-Commit", opentracing.ChildOf(parentCtx))
+		ext.SpanKindRPCClient.Set(span)
+		ext.PeerService.Set(span, "redis")
+		defer span.Finish()
+		ctx = opentracing.ContextWithSpan(ctx, span)
+	}
 	_, err := t.C.Exec()
 	return err
 }
 
 // CommitParam 待参数的提交
-func (t *Transaction) CommitParam() ([]interface{}, error) {
+func (t *Transaction) CommitParam(ctx context.Context) ([]interface{}, error) {
+	if parentSpan := opentracing.SpanFromContext(ctx); parentSpan != nil {
+		parentCtx := parentSpan.Context()
+		span := opentracing.StartSpan("tx-Commit", opentracing.ChildOf(parentCtx))
+		ext.SpanKindRPCClient.Set(span)
+		ext.PeerService.Set(span, "redis")
+		defer span.Finish()
+		ctx = opentracing.ContextWithSpan(ctx, span)
+	}
 	return t.C.Exec()
 }
 
 // Rollback 回滚事务
-func (t *Transaction) Rollback() error {
+func (t *Transaction) Rollback(ctx context.Context) error {
+	if parentSpan := opentracing.SpanFromContext(ctx); parentSpan != nil {
+		parentCtx := parentSpan.Context()
+		span := opentracing.StartSpan("tx-Rollback", opentracing.ChildOf(parentCtx))
+		ext.SpanKindRPCClient.Set(span)
+		ext.PeerService.Set(span, "redis")
+		defer span.Finish()
+		ctx = opentracing.ContextWithSpan(ctx, span)
+	}
 	return t.C.Discard()
 }
 

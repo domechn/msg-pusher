@@ -12,11 +12,11 @@
 package storer
 
 import (
-	"github.com/domgoer/msgpusher/config"
-	"github.com/domgoer/msgpusher/pkg/cache/local"
-	"github.com/domgoer/msgpusher/pkg/cache/redis"
-	"github.com/domgoer/msgpusher/pkg/db"
-	"github.com/domgoer/msgpusher/pkg/mq"
+	"github.com/domgoer/msg-pusher/config"
+	"github.com/domgoer/msg-pusher/pkg/cache/local"
+	"github.com/domgoer/msg-pusher/pkg/cache/redis"
+	"github.com/domgoer/msg-pusher/pkg/db"
+	"github.com/domgoer/msg-pusher/pkg/mq"
 	"github.com/jmoiron/sqlx"
 )
 

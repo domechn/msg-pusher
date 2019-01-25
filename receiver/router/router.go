@@ -14,10 +14,10 @@ package router
 import (
 	"net/http"
 
-	"github.com/domgoer/msgpusher/pkg/errors"
-	"github.com/domgoer/msgpusher/receiver/handler"
-	mid "github.com/domgoer/msgpusher/receiver/middleware"
-	"github.com/domgoer/msgpusher/receiver/version"
+	"github.com/domgoer/msg-pusher/pkg/errors"
+	"github.com/domgoer/msg-pusher/receiver/handler"
+	mid "github.com/domgoer/msg-pusher/receiver/middleware"
+	"github.com/domgoer/msg-pusher/receiver/version"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 )
@@ -144,25 +144,6 @@ func Init(route *mux.Router) {
 			Name(v.name).
 			Handler(v.handler)
 	}
-	// postRoute := route.Methods("POST")
-	//
-	// versionRoute := postRoute.PathPrefix("/" + version.Info.Version).Subrouter()
-	// smsRoute := versionRoute.PathPrefix("/smss").Subrouter()
-	// smsRoute.Path("/producer").HandlerFunc(handler.JsonHandler(handler.SmsProducer))
-	// smsRoute.Path("/producers").HandlerFunc(handler.JsonHandler(handler.SmsProducers))
-	// smsRoute.Path("/detail/id").HandlerFunc(handler.JsonHandler(handler.IDDetail))
-	// smsRoute.Path("/detail/mobile").HandlerFunc(handler.JsonHandler(handler.MobileDetail))
-	// smsRoute.Path("/edit").HandlerFunc(handler.JsonHandler(handler.Edit))
-	// smsRoute.Path("/cancel").HandlerFunc(handler.JsonHandler(handler.SmsCancel))
-	// smsRoute.Path("/detail/key").HandlerFunc(handler.JsonHandler(handler.KeyDetail))
-	// smsRoute.Path("/cancel_key").HandlerFunc(handler.JsonHandler(handler.SmsKeyCancel))
-	//
-	//
-	// wechatRoute := versionRoute.PathPrefix("/wechats").Subrouter()
-	// wechatRoute.Path("/producer").HandlerFunc(handler.JsonHandler(handler.WeChatProducer))
-	//
-	// emailRoute := versionRoute.PathPrefix("/emails").Subrouter()
-	// emailRoute.Path("/producer").HandlerFunc(handler.JsonHandler(handler.EmailProducer))
 }
 
 func handlerMiddleware(r *mux.Router) {

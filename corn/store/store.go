@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"github.com/domgoer/gotask"
-	"github.com/domgoer/msgpusher/config"
+	"github.com/domgoer/msg-pusher/config"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )

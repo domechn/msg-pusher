@@ -13,8 +13,8 @@ package middleware
 
 import (
 	"fmt"
-	"github.com/domgoer/msgpusher/pkg/cst"
-	"github.com/domgoer/msgpusher/pkg/metrics"
+	"github.com/domgoer/msg-pusher/pkg/cst"
+	"github.com/domgoer/msg-pusher/pkg/metrics"
 	"net/http"
 	"time"
 

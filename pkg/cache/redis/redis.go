@@ -15,7 +15,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/domgoer/msgpusher/pkg/cache"
+	"github.com/domgoer/msg-pusher/pkg/cache"
 	"github.com/go-redis/redis"
 )
 
@@ -124,6 +124,17 @@ func (c *Client) Pipeline() *Client {
 	return &Client{
 		c: c.c.TxPipeline(),
 	}
+}
+
+func (c *Client) ZAdd(ctx context.Context, k string, score int, v []byte) error {
+	return c.c.ZAdd(k, redis.Z{
+		Score:  float64(score),
+		Member: v,
+	}).Err()
+}
+
+func (c *Client) ZRange(ctx context.Context, k string, start, end int64) ([]string, error) {
+	return c.c.ZRange(k, start, end).Result()
 }
 
 func (c *Client) Discard() error {

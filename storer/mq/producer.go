@@ -13,7 +13,7 @@ package mq
 
 import (
 	"context"
-	"github.com/domgoer/msgpusher/storer"
+	"github.com/domgoer/msg-pusher/storer"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/streadway/amqp"

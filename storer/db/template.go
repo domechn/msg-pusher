@@ -14,7 +14,7 @@ package db
 import (
 	"context"
 
-	"github.com/domgoer/msgpusher/pkg/pb/tpl"
+	"github.com/domgoer/msg-pusher/pkg/pb/tpl"
 	"github.com/jmoiron/sqlx"
 )
 

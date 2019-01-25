@@ -13,12 +13,13 @@ package service
 
 import (
 	"context"
+	"time"
 
-	"github.com/domgoer/msgpusher/pkg/errors"
-	"github.com/domgoer/msgpusher/pkg/pb/meta"
-	"github.com/domgoer/msgpusher/storer/cache"
-	"github.com/domgoer/msgpusher/storer/db"
-	"github.com/domgoer/msgpusher/storer/mq"
+	"github.com/domgoer/msg-pusher/pkg/errors"
+	"github.com/domgoer/msg-pusher/pkg/pb/meta"
+	"github.com/domgoer/msg-pusher/storer/cache"
+	"github.com/domgoer/msg-pusher/storer/db"
+	"github.com/domgoer/msg-pusher/storer/mq"
 	"github.com/sirupsen/logrus"
 )
 
@@ -35,7 +36,15 @@ func (s smsServiceImpl) Produce(ctx context.Context, m Meta) (string, error) {
 	var args map[string]string
 	var err error
 	mobile := m.GetSendTo()
-	if err := s.checkSendRate(ctx, mobile); err != nil {
+	sendTimeStr := m.GetSendTime()
+	ti, err := time.Parse(meta.ISO8601Layout, sendTimeStr)
+	if err != nil {
+		return "", err
+	}
+	if err := s.checkSendRate(ctx, mobile, ti); err != nil {
+		return "", err
+	}
+	if err := s.checkSendRate(ctx, mobile, ti); err != nil {
 		return "", err
 	}
 	if templ, args, err = checkTemplateAndArguments(ctx, m.GetTemplate(), m.GetArguments()); err != nil {
@@ -75,7 +84,12 @@ func (s smsServiceImpl) ProduceBatch(ctx context.Context, ms []*meta.SmsProducer
 		var args map[string]string
 		var err error
 		mobile := m.GetSendTo()
-		if err := s.checkSendRate(ctx, mobile); err != nil {
+		sendTimeStr := m.GetSendTime()
+		ti, err := time.Parse(meta.ISO8601Layout, sendTimeStr)
+		if err != nil {
+			return nil, err
+		}
+		if err := s.checkSendRate(ctx, mobile, ti); err != nil {
 			return nil, err
 		}
 		if templ, args, err = checkTemplateAndArguments(ctx, m.GetTemplate(), m.GetArguments()); err != nil {
@@ -118,11 +132,11 @@ func (s smsServiceImpl) produceBatch(ctx context.Context, byts [][]byte, metas [
 				"method": "produceSmsBatch",
 				"error":  err.Error(),
 			}).Error("批量发送短信失败")
-			t.Rollback()
+			t.Rollback(ctx)
 			return err
 		}
 	}
-	return t.Commit()
+	return t.Commit(ctx)
 }
 
 func (smsServiceImpl) rPush(ctx context.Context, c Cache, b []byte) error {
@@ -168,27 +182,23 @@ func (s smsServiceImpl) Edit(ctx context.Context, m Meta) error {
 	)
 }
 
-func (s smsServiceImpl) checkSendRate(ctx context.Context, mobile string) error {
-	m1, err := cache.MobileCache1Min(ctx, mobile)
-	if err != nil {
-		return err
+// WaitSmsByPlat 按平台号获取待发送的消息
+func (s smsServiceImpl) WaitSmsIdByPlat(ctx context.Context, plat int32, key string) ([]string, error) {
+	return db.WaitSmsIdByPlat(ctx, plat, key)
+}
+
+// CancelBatch 批量取消,return 取消发送失败的消息的id
+func (s smsServiceImpl) CancelBatch(ctx context.Context, ids []string) []string {
+	var fail []string
+	for _, id := range ids {
+		if err := s.cancel(ctx, id); err != nil {
+			fail = append(fail, id)
+		}
 	}
-	if m1 > 1 {
-		return errors.ErrMsg1MinuteLimit
-	}
-	m2, err := cache.MobileCache1Hour(ctx, mobile)
-	if err != nil {
-		return err
-	}
-	if m2 > 5 {
-		return errors.ErrMsg1HourLimit
-	}
-	m3, err := cache.MobileCache1Day(ctx, mobile)
-	if err != nil {
-		return err
-	}
-	if m3 > 10 {
-		return errors.ErrMsg1DayLimit
-	}
-	return nil
+	return fail
+}
+
+// 监测发送速率
+func (s smsServiceImpl) checkSendRate(ctx context.Context, mobile string, sendTime time.Time) error {
+	return cache.RateLimit(ctx, mobile, sendTime)
 }

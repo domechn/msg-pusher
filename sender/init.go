@@ -12,13 +12,13 @@
 package sender
 
 import (
-	"github.com/domgoer/msgpusher/config"
-	"github.com/domgoer/msgpusher/pkg/mq"
-	"github.com/domgoer/msgpusher/sender/email"
-	"github.com/domgoer/msgpusher/sender/pub"
-	"github.com/domgoer/msgpusher/sender/sms"
-	"github.com/domgoer/msgpusher/sender/wechat"
-	"github.com/domgoer/msgpusher/storer"
+	"github.com/domgoer/msg-pusher/config"
+	"github.com/domgoer/msg-pusher/pkg/mq"
+	"github.com/domgoer/msg-pusher/sender/email"
+	"github.com/domgoer/msg-pusher/sender/pub"
+	"github.com/domgoer/msg-pusher/sender/sms"
+	"github.com/domgoer/msg-pusher/sender/wechat"
+	"github.com/domgoer/msg-pusher/storer"
 	"github.com/streadway/amqp"
 )
 

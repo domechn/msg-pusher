@@ -14,7 +14,7 @@ package db
 import (
 	"context"
 
-	"github.com/domgoer/msgpusher/pkg/pb/meta"
+	"github.com/domgoer/msg-pusher/pkg/pb/meta"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -127,4 +127,11 @@ func SmsUpdateAndInsertBatch(ctx context.Context, ds []*meta.DbSms) error {
 		args...,
 	)
 	return err
+}
+
+// WaitSmsIdByPlat 按照platform和platform从数据库中获取待发送的信息
+func WaitSmsIdByPlat(ctx context.Context, platform int32, platformKey string) ([]string, error) {
+	var res []string
+	err := list(ctx, &res, "WaitSmsIdByPlat", `SELECT id FROM smss WHERE platform=? AND platform_key=? AND status=1`, platform, platformKey)
+	return res, err
 }

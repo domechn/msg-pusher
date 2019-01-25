@@ -2,7 +2,7 @@ package main
 
 import (
 	"errors"
-	"github.com/domgoer/msgpusher/pkg/retry/backoff"
+	"github.com/domgoer/msg-pusher/pkg/retry/backoff"
 	"log"
 	"time"
 )

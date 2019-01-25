@@ -13,12 +13,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/domgoer/msgpusher/config"
-	"github.com/domgoer/msgpusher/corn"
-	"github.com/domgoer/msgpusher/pkg/log"
-	"github.com/domgoer/msgpusher/pkg/opentracing"
-	"github.com/domgoer/msgpusher/receiver"
-	"github.com/domgoer/msgpusher/receiver/version"
+	"github.com/domgoer/msg-pusher/config"
+	"github.com/domgoer/msg-pusher/corn"
+	"github.com/domgoer/msg-pusher/pkg/log"
+	"github.com/domgoer/msg-pusher/pkg/opentracing"
+	"github.com/domgoer/msg-pusher/receiver"
+	"github.com/domgoer/msg-pusher/receiver/version"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"math/rand"
@@ -26,7 +26,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/domgoer/msgpusher/pkg/cmd"
+	"github.com/domgoer/msg-pusher/pkg/cmd"
 	"github.com/spf13/cobra"
 )
 

@@ -12,8 +12,8 @@
 package corn
 
 import (
-	"github.com/domgoer/msgpusher/corn/store"
-	"github.com/domgoer/msgpusher/corn/store/db"
+	"github.com/domgoer/msg-pusher/corn/store"
+	"github.com/domgoer/msg-pusher/corn/store/db"
 )
 
 func Start() {

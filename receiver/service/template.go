@@ -14,10 +14,10 @@ package service
 import (
 	"context"
 
-	"github.com/domgoer/msgpusher/pkg/errors"
-	"github.com/domgoer/msgpusher/pkg/pb/tpl"
-	"github.com/domgoer/msgpusher/storer/cache"
-	"github.com/domgoer/msgpusher/storer/db"
+	"github.com/domgoer/msg-pusher/pkg/errors"
+	"github.com/domgoer/msg-pusher/pkg/pb/tpl"
+	"github.com/domgoer/msg-pusher/storer/cache"
+	"github.com/domgoer/msg-pusher/storer/db"
 	"github.com/jmoiron/sqlx"
 	"github.com/satori/go.uuid"
 )

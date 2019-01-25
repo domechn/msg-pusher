@@ -12,9 +12,9 @@
 package handler
 
 import (
-	"github.com/domgoer/msgpusher/pkg/errors"
-	"github.com/domgoer/msgpusher/pkg/utils"
-	"github.com/domgoer/msgpusher/receiver/service"
+	"github.com/domgoer/msg-pusher/pkg/errors"
+	"github.com/domgoer/msg-pusher/pkg/utils"
+	"github.com/domgoer/msg-pusher/receiver/service"
 	"strconv"
 )
 

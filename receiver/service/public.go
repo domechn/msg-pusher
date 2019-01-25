@@ -17,9 +17,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/domgoer/msgpusher/pkg/errors"
-	"github.com/domgoer/msgpusher/pkg/utils"
-	"github.com/domgoer/msgpusher/storer/cache"
+	"github.com/domgoer/msg-pusher/pkg/errors"
+	"github.com/domgoer/msg-pusher/pkg/utils"
+	"github.com/domgoer/msg-pusher/storer/cache"
 )
 
 type ArgParams map[string]string

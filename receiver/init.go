@@ -12,9 +12,9 @@
 package receiver
 
 import (
-	"github.com/domgoer/msgpusher/receiver/monitor"
-	"github.com/domgoer/msgpusher/receiver/router"
-	"github.com/domgoer/msgpusher/storer"
+	"github.com/domgoer/msg-pusher/receiver/monitor"
+	"github.com/domgoer/msg-pusher/receiver/router"
+	"github.com/domgoer/msg-pusher/storer"
 	"github.com/gorilla/mux"
 )
 

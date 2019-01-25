@@ -13,7 +13,7 @@ package monitor
 
 import (
 	"fmt"
-	"github.com/domgoer/msgpusher/pkg/metrics"
+	"github.com/domgoer/msg-pusher/pkg/metrics"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"net"

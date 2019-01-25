@@ -15,11 +15,11 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/domgoer/msgpusher/pkg/errors"
-	"github.com/domgoer/msgpusher/pkg/pb/meta"
-	"github.com/domgoer/msgpusher/pkg/utils"
-	"github.com/domgoer/msgpusher/receiver/model"
-	"github.com/domgoer/msgpusher/receiver/service"
+	"github.com/domgoer/msg-pusher/pkg/errors"
+	"github.com/domgoer/msg-pusher/pkg/pb/meta"
+	"github.com/domgoer/msg-pusher/pkg/utils"
+	"github.com/domgoer/msg-pusher/receiver/model"
+	"github.com/domgoer/msg-pusher/receiver/service"
 )
 
 var smsService = service.NewSmsServiceImpl()
@@ -145,6 +145,21 @@ func SmsCancel(ctx context.Context, d map[string]string) (res []byte, err error)
 
 // @router(DELETE,"/sms/plat/{plat}/key/{key}")
 func SmsCancelByPlat(ctx context.Context, d map[string]string) (res []byte, err error) {
-	err = errors.ErrFunctionNotSupport
+	plat := d["plat"]
+	p, err := strconv.Atoi(plat)
+
+	if err != nil {
+		return nil, errors.ErrParam
+	}
+	ids, err := smsService.WaitSmsIdByPlat(ctx, int32(p), d["key"])
+	if err != nil {
+		return nil, err
+	}
+	fails := smsService.CancelBatch(ctx, ids)
+	if len(fails) == 0 {
+		res = successResp
+	} else {
+		res = model.NewResponseDataKey("fail", fails).MustMarshal()
+	}
 	return
 }
