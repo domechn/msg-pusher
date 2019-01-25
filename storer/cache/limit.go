@@ -25,28 +25,26 @@ import (
 
 // RateLimit 限速器，如果超过流量返回失败，sendDate格式2006-01-02,second为当天0点到该时的秒数
 func RateLimit(ctx context.Context, mobile string, sendTime time.Time) error {
-	year, month, day := sendTime.Date()
-	date := fmt.Sprintf("%d-%s-%d", year, month.String(), day)
-	key := mobile + date
 	if parentSpan := opentracing.SpanFromContext(ctx); parentSpan != nil {
 		parentCtx := parentSpan.Context()
 		span := opentracing.StartSpan("RateLimit", opentracing.ChildOf(parentCtx))
 		ext.SpanKindRPCClient.Set(span)
 		ext.PeerService.Set(span, "redis")
-		span.SetTag("cache.key", key)
+		span.SetTag("cache.key", mobile)
 		span.SetTag("cache.type", "limit")
 		defer span.Finish()
 		ctx = opentracing.ContextWithSpan(ctx, span)
 	}
+
 	sendTime = sendTime.UTC()
 	if sendTime.Before(time.Now()) {
 		return nil
 	}
-
 	zeroStr := sendTime.Format("2006-01-02")
+	key := mobile + zeroStr
 	zero, _ := time.Parse("2006-01-02", zeroStr)
 	second := int(sendTime.Sub(zero).Seconds())
-	ress, err := storer.Cache.ZRange(ctx, key, 0, 86400)
+	ress, err := storer.Cache.SMembers(ctx, key)
 	if err != nil {
 		return err
 	}
@@ -83,7 +81,7 @@ func RateLimit(ctx context.Context, mobile string, sendTime time.Time) error {
 	go func() {
 		t := NewTransaction()
 		defer t.Close()
-		t.C.ZAdd(context.Background(), key, second, []byte(strconv.Itoa(second)))
+		t.C.Append(context.Background(), key, []byte(strconv.Itoa(second)))
 		if expire {
 			ttl := sendTime.Sub(time.Now()).Seconds()
 			fmt.Println(ttl)
