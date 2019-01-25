@@ -13,7 +13,6 @@ package cache
 
 import (
 	"context"
-	"fmt"
 	"github.com/domgoer/msg-pusher/pkg/errors"
 	"github.com/domgoer/msg-pusher/storer"
 	"github.com/opentracing/opentracing-go"
@@ -84,7 +83,6 @@ func RateLimit(ctx context.Context, mobile string, sendTime time.Time) error {
 		t.C.Append(context.Background(), key, []byte(strconv.Itoa(second)))
 		if expire {
 			ttl := sendTime.Sub(time.Now()).Seconds()
-			fmt.Println(ttl)
 			if ttl <= 0 {
 				t.Rollback(context.Background())
 				return
@@ -94,4 +92,29 @@ func RateLimit(ctx context.Context, mobile string, sendTime time.Time) error {
 		t.Commit(context.Background())
 	}()
 	return nil
+}
+
+// RemoveLimit 移除特定时间的限制
+func RemoveLimit(ctx context.Context, mobile string, sendTime time.Time) error {
+	if parentSpan := opentracing.SpanFromContext(ctx); parentSpan != nil {
+		parentCtx := parentSpan.Context()
+		span := opentracing.StartSpan("RemoveLimit", opentracing.ChildOf(parentCtx))
+		ext.SpanKindRPCClient.Set(span)
+		ext.PeerService.Set(span, "redis")
+		span.SetTag("cache.key", mobile)
+		span.SetTag("cache.type", "limit")
+		defer span.Finish()
+		ctx = opentracing.ContextWithSpan(ctx, span)
+	}
+
+	sendTime = sendTime.UTC()
+	if sendTime.Before(time.Now()) {
+		return nil
+	}
+	zeroStr := sendTime.Format("2006-01-02")
+	key := mobile + zeroStr
+	zero, _ := time.Parse("2006-01-02", zeroStr)
+	second := int(sendTime.Sub(zero).Seconds())
+
+	return storer.Cache.SRem(ctx, key, []byte(strconv.Itoa(second)))
 }

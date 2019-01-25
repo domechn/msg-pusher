@@ -102,6 +102,10 @@ func (c *Client) SMembers(ctx context.Context, k string) ([]string, error) {
 	return c.c.SMembers(k).Result()
 }
 
+func (c *Client) SRem(ctx context.Context, k string, v []byte) error {
+	return c.c.SRem(k, v).Err()
+}
+
 func (c *Client) Incr(ctx context.Context, k string) (int64, error) {
 	res := c.c.Incr(k)
 	return res.Result()

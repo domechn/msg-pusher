@@ -41,10 +41,7 @@ func (s smsServiceImpl) Produce(ctx context.Context, m Meta) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if err := s.checkSendRate(ctx, mobile, ti); err != nil {
-		return "", err
-	}
-	if err := s.checkSendRate(ctx, mobile, ti); err != nil {
+	if err := checkSendRate(ctx, mobile, ti); err != nil {
 		return "", err
 	}
 	if templ, args, err = checkTemplateAndArguments(ctx, m.GetTemplate(), m.GetArguments()); err != nil {
@@ -89,7 +86,7 @@ func (s smsServiceImpl) ProduceBatch(ctx context.Context, ms []*meta.SmsProducer
 		if err != nil {
 			return nil, err
 		}
-		if err := s.checkSendRate(ctx, mobile, ti); err != nil {
+		if err := checkSendRate(ctx, mobile, ti); err != nil {
 			return nil, err
 		}
 		if templ, args, err = checkTemplateAndArguments(ctx, m.GetTemplate(), m.GetArguments()); err != nil {
@@ -166,10 +163,23 @@ func (s smsServiceImpl) Cancel(ctx context.Context, id string) error {
 }
 
 func (s smsServiceImpl) cancel(ctx context.Context, id string) error {
-	return cancel(ctx,
+	ds := &meta.DbSms{}
+	if err := cancel(ctx,
 		id,
 		s.rPush,
-		&meta.DbSms{})
+		ds); err != nil {
+		return err
+	}
+	go func() {
+		sendTimeStr := ds.GetSendTime()
+		ti, err := time.Parse(meta.ISO8601Layout, sendTimeStr)
+		if err != nil {
+			return
+		}
+		// 删除限速的限制
+		cache.RemoveLimit(context.Background(), ds.Mobile, ti)
+	}()
+	return nil
 }
 
 func (s smsServiceImpl) Edit(ctx context.Context, m Meta) error {
@@ -199,6 +209,6 @@ func (s smsServiceImpl) CancelBatch(ctx context.Context, ids []string) []string 
 }
 
 // 监测发送速率
-func (s smsServiceImpl) checkSendRate(ctx context.Context, mobile string, sendTime time.Time) error {
+func checkSendRate(ctx context.Context, mobile string, sendTime time.Time) error {
 	return cache.RateLimit(ctx, mobile, sendTime)
 }

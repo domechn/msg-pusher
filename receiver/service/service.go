@@ -14,7 +14,6 @@ package service
 import (
 	"context"
 	"fmt"
-
 	"github.com/domgoer/msg-pusher/pkg/errors"
 	"github.com/domgoer/msg-pusher/pkg/pb/meta"
 	"github.com/domgoer/msg-pusher/pkg/utils"
@@ -101,6 +100,7 @@ func produceStore(ctx context.Context,
 	return nil
 }
 
+// todo 限速
 func edit(ctx context.Context, m Meta, em Messager, doListFunc RPushFunc, mqParamFunc MqFunc) error {
 	// 先根据id从缓存中获取数据的具体内容
 	if err := detail(ctx, m.GetId(), em); err != nil {
@@ -184,7 +184,11 @@ func edit(ctx context.Context, m Meta, em Messager, doListFunc RPushFunc, mqPara
 	}
 
 	// 提交事务
-	return t.Commit(ctx)
+	err := t.Commit(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func editStore(ctx context.Context, id string, b []byte, ttl int64, t *cache.Transaction, doListFunc RPushFunc, mqf MqFunc) error {
