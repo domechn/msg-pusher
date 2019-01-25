@@ -15,6 +15,22 @@
 
 ### 调用关系
 
+![image](image/relationship.jpg)
+
+### 核心模块
+
+1. receiver
+
+        用于接收需要推送的消息，并将消息存入缓存和消息队列
+        
+2. sender
+
+        绑定消息队列，将得到数据推送到对应的服务商
+        
+3. corn
+
+        定时将缓存中的数据持久化到数据库
+
 ### 服务集成
 
 服务集成了 [prometheus](https://github.com/prometheus/prometheus)、[jaeger](https://github.com/jaegertracing/jaeger) ,你可以通过这些插件来观察msg-pusher的响应情况和性能状况
