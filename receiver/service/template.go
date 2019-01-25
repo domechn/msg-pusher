@@ -14,12 +14,12 @@ package service
 import (
 	"context"
 
+	"github.com/domgoer/msgpusher/pkg/errors"
+	"github.com/domgoer/msgpusher/pkg/pb/tpl"
+	"github.com/domgoer/msgpusher/storer/cache"
+	"github.com/domgoer/msgpusher/storer/db"
 	"github.com/jmoiron/sqlx"
 	"github.com/satori/go.uuid"
-	"uuabc.com/sendmsg/pkg/errors"
-	"uuabc.com/sendmsg/pkg/pb/tpl"
-	"uuabc.com/sendmsg/storer/cache"
-	"uuabc.com/sendmsg/storer/db"
 )
 
 var TemplateImpl templateImpl

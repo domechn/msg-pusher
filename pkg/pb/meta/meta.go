@@ -15,10 +15,10 @@ package meta
 import (
 	"time"
 
+	"github.com/domgoer/msgpusher/pkg/errors"
+	"github.com/domgoer/msgpusher/pkg/utils"
 	"github.com/json-iterator/go"
 	"github.com/satori/go.uuid"
-	"uuabc.com/sendmsg/pkg/errors"
-	"uuabc.com/sendmsg/pkg/utils"
 )
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary

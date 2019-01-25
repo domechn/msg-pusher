@@ -13,9 +13,9 @@ package local
 
 import (
 	"context"
+	cache2 "github.com/domgoer/msgpusher/pkg/cache"
 	"github.com/patrickmn/go-cache"
 	"time"
-	cache2 "uuabc.com/sendmsg/pkg/cache"
 )
 
 type Client struct {

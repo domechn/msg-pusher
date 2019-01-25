@@ -17,7 +17,7 @@ import (
 	"net/smtp"
 	"strings"
 
-	"uuabc.com/sendmsg/pkg/send"
+	"github.com/domgoer/msgpusher/pkg/send"
 )
 
 type Client struct {

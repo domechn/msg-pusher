@@ -12,7 +12,7 @@
 package tpl
 
 import (
-	"uuabc.com/sendmsg/pkg/errors"
+	"github.com/domgoer/msgpusher/pkg/errors"
 )
 
 func (m *TemplateAdder) Validate() error {

@@ -15,9 +15,9 @@ import (
 	"time"
 
 	"github.com/domgoer/gotask"
+	"github.com/domgoer/msgpusher/config"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"uuabc.com/sendmsg/config"
 )
 
 var (

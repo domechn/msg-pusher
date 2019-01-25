@@ -14,8 +14,8 @@ package db
 import (
 	"context"
 
+	"github.com/domgoer/msgpusher/pkg/pb/tpl"
 	"github.com/jmoiron/sqlx"
-	"uuabc.com/sendmsg/pkg/pb/tpl"
 )
 
 // TemplateInsert 插入消息模板到数据库，如果唯一键重复返回键已存在错误

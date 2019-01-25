@@ -13,12 +13,12 @@ package handler
 
 import (
 	"context"
+	"github.com/domgoer/msgpusher/pkg/cache"
+	"github.com/domgoer/msgpusher/pkg/errors"
+	"github.com/domgoer/msgpusher/storer/db"
 	"github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
-	"uuabc.com/sendmsg/pkg/cache"
-	"uuabc.com/sendmsg/pkg/errors"
-	"uuabc.com/sendmsg/storer/db"
 )
 
 var (

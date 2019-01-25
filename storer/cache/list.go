@@ -14,7 +14,7 @@ package cache
 import (
 	"context"
 
-	"uuabc.com/sendmsg/storer"
+	"github.com/domgoer/msgpusher/storer"
 )
 
 // RPushWeChat lpush到redis，用来代替存入数据库，提高并发能力

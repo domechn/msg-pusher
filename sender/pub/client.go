@@ -12,11 +12,11 @@
 package pub
 
 import (
-	"uuabc.com/sendmsg/config"
-	"uuabc.com/sendmsg/pkg/send/email"
-	"uuabc.com/sendmsg/pkg/send/sms"
-	"uuabc.com/sendmsg/pkg/send/wechat"
-	"uuabc.com/sendmsg/storer"
+	"github.com/domgoer/msgpusher/config"
+	"github.com/domgoer/msgpusher/pkg/send/email"
+	"github.com/domgoer/msgpusher/pkg/send/sms"
+	"github.com/domgoer/msgpusher/pkg/send/wechat"
+	"github.com/domgoer/msgpusher/storer"
 )
 
 var (

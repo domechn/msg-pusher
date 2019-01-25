@@ -15,8 +15,8 @@ import (
 	"net/http"
 	"testing"
 
-	"uuabc.com/sendmsg/config"
-	"uuabc.com/sendmsg/pkg/send"
+	"github.com/domgoer/msgpusher/config"
+	"github.com/domgoer/msgpusher/pkg/send"
 )
 
 var (

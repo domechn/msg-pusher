@@ -15,8 +15,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/domgoer/msgpusher/pkg/cache"
 	"github.com/go-redis/redis"
-	"uuabc.com/sendmsg/pkg/cache"
 )
 
 type Client struct {

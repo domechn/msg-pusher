@@ -12,14 +12,14 @@
 package sender
 
 import (
+	"github.com/domgoer/msgpusher/config"
+	"github.com/domgoer/msgpusher/pkg/mq"
+	"github.com/domgoer/msgpusher/sender/email"
+	"github.com/domgoer/msgpusher/sender/pub"
+	"github.com/domgoer/msgpusher/sender/sms"
+	"github.com/domgoer/msgpusher/sender/wechat"
+	"github.com/domgoer/msgpusher/storer"
 	"github.com/streadway/amqp"
-	"uuabc.com/sendmsg/config"
-	"uuabc.com/sendmsg/pkg/mq"
-	"uuabc.com/sendmsg/sender/email"
-	"uuabc.com/sendmsg/sender/pub"
-	"uuabc.com/sendmsg/sender/sms"
-	"uuabc.com/sendmsg/sender/wechat"
-	"uuabc.com/sendmsg/storer"
 )
 
 func Init() error {

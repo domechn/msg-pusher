@@ -16,7 +16,7 @@ import (
 	"net/http"
 	"time"
 
-	"uuabc.com/sendmsg/pkg/ip"
+	"github.com/domgoer/msgpusher/pkg/ip"
 )
 
 // LoggingMiddleware 返回日志middleware

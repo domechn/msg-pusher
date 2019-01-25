@@ -14,9 +14,9 @@ package db
 import (
 	"context"
 
+	"github.com/domgoer/msgpusher/pkg/pb/meta"
+	"github.com/domgoer/msgpusher/storer"
 	"github.com/jmoiron/sqlx"
-	"uuabc.com/sendmsg/pkg/pb/meta"
-	"uuabc.com/sendmsg/storer"
 )
 
 // EmailCancelMsgByID 将email信息的发送状态设置为取消

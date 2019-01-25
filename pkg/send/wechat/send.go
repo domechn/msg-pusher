@@ -21,9 +21,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/domgoer/msgpusher/pkg/cache"
+	"github.com/domgoer/msgpusher/pkg/send"
 	"github.com/sirupsen/logrus"
-	"uuabc.com/sendmsg/pkg/cache"
-	"uuabc.com/sendmsg/pkg/send"
 )
 
 const (

@@ -13,9 +13,9 @@ package handler
 
 import (
 	"context"
-	"uuabc.com/sendmsg/pkg/pb/tpl"
-	"uuabc.com/sendmsg/receiver/model"
-	"uuabc.com/sendmsg/receiver/service"
+	"github.com/domgoer/msgpusher/pkg/pb/tpl"
+	"github.com/domgoer/msgpusher/receiver/model"
+	"github.com/domgoer/msgpusher/receiver/service"
 )
 
 // @router("POST","/version/template")

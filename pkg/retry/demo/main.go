@@ -2,9 +2,9 @@ package main
 
 import (
 	"errors"
+	"github.com/domgoer/msgpusher/pkg/retry/backoff"
 	"log"
 	"time"
-	"uuabc.com/sendmsg/pkg/retry/backoff"
 )
 
 func main() {

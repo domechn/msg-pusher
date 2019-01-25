@@ -12,8 +12,8 @@
 package metrics
 
 import (
+	"github.com/domgoer/msgpusher/pkg/cst"
 	"sync"
-	"uuabc.com/sendmsg/pkg/cst"
 
 	"github.com/prometheus/client_golang/prometheus"
 )

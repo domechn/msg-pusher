@@ -14,8 +14,8 @@ package db
 import (
 	"context"
 
+	"github.com/domgoer/msgpusher/pkg/pb/meta"
 	"github.com/jmoiron/sqlx"
-	"uuabc.com/sendmsg/pkg/pb/meta"
 )
 
 // SmsCancelByID 将sms信息的发送状态设置为取消

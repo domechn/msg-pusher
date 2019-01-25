@@ -14,7 +14,7 @@ package cache
 import (
 	"context"
 
-	"uuabc.com/sendmsg/storer"
+	"github.com/domgoer/msgpusher/storer"
 )
 
 // PutBaseCache 底层缓存，跟数据库数据同步，不过期

@@ -13,21 +13,21 @@ package main
 
 import (
 	"fmt"
+	"github.com/domgoer/msgpusher/config"
+	"github.com/domgoer/msgpusher/corn"
+	"github.com/domgoer/msgpusher/pkg/log"
+	"github.com/domgoer/msgpusher/pkg/opentracing"
+	"github.com/domgoer/msgpusher/receiver"
+	"github.com/domgoer/msgpusher/receiver/version"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"math/rand"
 	"net/http"
 	"os"
 	"time"
-	"uuabc.com/sendmsg/config"
-	"uuabc.com/sendmsg/corn"
-	"uuabc.com/sendmsg/pkg/log"
-	"uuabc.com/sendmsg/pkg/opentracing"
-	"uuabc.com/sendmsg/receiver"
-	"uuabc.com/sendmsg/receiver/version"
 
+	"github.com/domgoer/msgpusher/pkg/cmd"
 	"github.com/spf13/cobra"
-	"uuabc.com/sendmsg/pkg/cmd"
 )
 
 var (

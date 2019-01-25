@@ -14,8 +14,8 @@ package cache
 import (
 	"context"
 
+	"github.com/domgoer/msgpusher/storer"
 	"github.com/opentracing/opentracing-go"
-	"uuabc.com/sendmsg/storer"
 )
 
 // AddLocalTemplate 将模板添加到本地缓存,

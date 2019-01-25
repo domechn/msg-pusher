@@ -14,12 +14,12 @@ package service
 import (
 	"context"
 
+	"github.com/domgoer/msgpusher/pkg/errors"
+	"github.com/domgoer/msgpusher/pkg/pb/meta"
+	"github.com/domgoer/msgpusher/storer/cache"
+	"github.com/domgoer/msgpusher/storer/db"
+	"github.com/domgoer/msgpusher/storer/mq"
 	"github.com/sirupsen/logrus"
-	"uuabc.com/sendmsg/pkg/errors"
-	"uuabc.com/sendmsg/pkg/pb/meta"
-	"uuabc.com/sendmsg/storer/cache"
-	"uuabc.com/sendmsg/storer/db"
-	"uuabc.com/sendmsg/storer/mq"
 )
 
 type smsServiceImpl struct {

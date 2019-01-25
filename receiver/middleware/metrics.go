@@ -13,10 +13,10 @@ package middleware
 
 import (
 	"fmt"
+	"github.com/domgoer/msgpusher/pkg/cst"
+	"github.com/domgoer/msgpusher/pkg/metrics"
 	"net/http"
 	"time"
-	"uuabc.com/sendmsg/pkg/cst"
-	"uuabc.com/sendmsg/pkg/metrics"
 
 	"github.com/prometheus/client_golang/prometheus"
 )

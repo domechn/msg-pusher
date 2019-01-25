@@ -14,8 +14,8 @@ package cache
 import (
 	"context"
 
-	"uuabc.com/sendmsg/pkg/cache/redis"
-	"uuabc.com/sendmsg/storer"
+	"github.com/domgoer/msgpusher/pkg/cache/redis"
+	"github.com/domgoer/msgpusher/storer"
 )
 
 type Transaction struct {

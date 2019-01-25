@@ -12,8 +12,8 @@
 package corn
 
 import (
-	"uuabc.com/sendmsg/corn/store"
-	"uuabc.com/sendmsg/corn/store/db"
+	"github.com/domgoer/msgpusher/corn/store"
+	"github.com/domgoer/msgpusher/corn/store/db"
 )
 
 func Start() {

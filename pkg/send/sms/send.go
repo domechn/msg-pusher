@@ -17,8 +17,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/domgoer/msgpusher/pkg/send"
 	"github.com/json-iterator/go"
-	"uuabc.com/sendmsg/pkg/send"
 )
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary

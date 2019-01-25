@@ -13,7 +13,7 @@ package handler
 
 import (
 	"context"
-	"uuabc.com/sendmsg/receiver/service"
+	"github.com/domgoer/msgpusher/receiver/service"
 )
 
 func processData(ctx context.Context, svr service.MsgService, p service.Meta) (id string, err error) {

@@ -13,11 +13,11 @@ package monitor
 
 import (
 	"fmt"
+	"github.com/domgoer/msgpusher/pkg/metrics"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"net"
 	"net/http"
-	"uuabc.com/sendmsg/pkg/metrics"
 )
 
 // StartMetrics prometheus

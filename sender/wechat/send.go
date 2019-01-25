@@ -14,10 +14,10 @@ package wechat
 import (
 	"context"
 
+	"github.com/domgoer/msgpusher/pkg/pb/meta"
+	"github.com/domgoer/msgpusher/pkg/send/wechat"
+	"github.com/domgoer/msgpusher/sender/pub"
 	"github.com/sirupsen/logrus"
-	"uuabc.com/sendmsg/pkg/pb/meta"
-	"uuabc.com/sendmsg/pkg/send/wechat"
-	"uuabc.com/sendmsg/sender/pub"
 )
 
 func (r *Receiver) check(data []byte, msg pub.Messager) (err error) {

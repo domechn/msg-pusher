@@ -14,12 +14,12 @@ package router
 import (
 	"net/http"
 
+	"github.com/domgoer/msgpusher/pkg/errors"
+	"github.com/domgoer/msgpusher/receiver/handler"
+	mid "github.com/domgoer/msgpusher/receiver/middleware"
+	"github.com/domgoer/msgpusher/receiver/version"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
-	"uuabc.com/sendmsg/pkg/errors"
-	"uuabc.com/sendmsg/receiver/handler"
-	mid "uuabc.com/sendmsg/receiver/middleware"
-	"uuabc.com/sendmsg/receiver/version"
 )
 
 const prometheus = "prometheus"

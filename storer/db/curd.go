@@ -17,11 +17,11 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/domgoer/msgpusher/storer"
 	"github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
-	"uuabc.com/sendmsg/storer"
 )
 
 // query 获取单条数据

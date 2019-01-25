@@ -13,11 +13,11 @@ package handler
 
 import (
 	"context"
-	"uuabc.com/sendmsg/pkg/errors"
-	"uuabc.com/sendmsg/pkg/pb/meta"
-	"uuabc.com/sendmsg/pkg/utils"
-	"uuabc.com/sendmsg/receiver/model"
-	"uuabc.com/sendmsg/receiver/service"
+	"github.com/domgoer/msgpusher/pkg/errors"
+	"github.com/domgoer/msgpusher/pkg/pb/meta"
+	"github.com/domgoer/msgpusher/pkg/utils"
+	"github.com/domgoer/msgpusher/receiver/model"
+	"github.com/domgoer/msgpusher/receiver/service"
 )
 
 var weChatService = service.NewWeChatServiceImpl()

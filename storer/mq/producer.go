@@ -13,10 +13,10 @@ package mq
 
 import (
 	"context"
+	"github.com/domgoer/msgpusher/storer"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/streadway/amqp"
-	"uuabc.com/sendmsg/storer"
 )
 
 func SmsProduce(ctx context.Context, msg []byte, delay int64) error {

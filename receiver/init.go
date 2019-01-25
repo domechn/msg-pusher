@@ -12,10 +12,10 @@
 package receiver
 
 import (
+	"github.com/domgoer/msgpusher/receiver/monitor"
+	"github.com/domgoer/msgpusher/receiver/router"
+	"github.com/domgoer/msgpusher/storer"
 	"github.com/gorilla/mux"
-	"uuabc.com/sendmsg/receiver/monitor"
-	"uuabc.com/sendmsg/receiver/router"
-	"uuabc.com/sendmsg/storer"
 )
 
 func Init(route *mux.Router, addrMonitor string) error {

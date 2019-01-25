@@ -15,9 +15,9 @@ import (
 	"context"
 	"testing"
 
+	"github.com/domgoer/msgpusher/pkg/pb/tpl"
+	"github.com/domgoer/msgpusher/storer"
 	"github.com/jmoiron/sqlx"
-	"uuabc.com/sendmsg/pkg/pb/tpl"
-	"uuabc.com/sendmsg/storer"
 )
 
 var dbtm = &tpl.DBTemplate{

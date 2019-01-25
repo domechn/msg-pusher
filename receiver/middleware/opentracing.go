@@ -24,7 +24,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 
-	oputil "uuabc.com/sendmsg/pkg/opentracing"
+	oputil "github.com/domgoer/msgpusher/pkg/opentracing"
 )
 
 type statusCodeResponseWriter struct {

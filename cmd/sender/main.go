@@ -18,11 +18,11 @@ import (
 	"os"
 	"time"
 
-	"uuabc.com/sendmsg/config"
-	"uuabc.com/sendmsg/pkg/cmd"
-	"uuabc.com/sendmsg/pkg/log"
-	"uuabc.com/sendmsg/receiver/version"
-	"uuabc.com/sendmsg/sender"
+	"github.com/domgoer/msgpusher/config"
+	"github.com/domgoer/msgpusher/pkg/cmd"
+	"github.com/domgoer/msgpusher/pkg/log"
+	"github.com/domgoer/msgpusher/receiver/version"
+	"github.com/domgoer/msgpusher/sender"
 )
 
 type Options struct {

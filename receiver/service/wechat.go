@@ -14,8 +14,8 @@ package service
 import (
 	"context"
 
-	"uuabc.com/sendmsg/pkg/pb/meta"
-	"uuabc.com/sendmsg/storer/mq"
+	"github.com/domgoer/msgpusher/pkg/pb/meta"
+	"github.com/domgoer/msgpusher/storer/mq"
 )
 
 type weChatServiceImpl struct {

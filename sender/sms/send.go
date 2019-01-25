@@ -14,10 +14,10 @@ package sms
 import (
 	"context"
 
+	"github.com/domgoer/msgpusher/pkg/pb/meta"
+	"github.com/domgoer/msgpusher/pkg/send/sms"
+	"github.com/domgoer/msgpusher/sender/pub"
 	"github.com/sirupsen/logrus"
-	"uuabc.com/sendmsg/pkg/pb/meta"
-	"uuabc.com/sendmsg/pkg/send/sms"
-	"uuabc.com/sendmsg/sender/pub"
 )
 
 // check 验证data是否符合要求，如果符合要求会返回nil，并且按照data转化的id将数据赋值给msg

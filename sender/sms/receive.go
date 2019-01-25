@@ -14,9 +14,9 @@ package sms
 import (
 	"time"
 
+	"github.com/domgoer/msgpusher/pkg/pb/meta"
+	"github.com/domgoer/msgpusher/sender/pub"
 	"github.com/sirupsen/logrus"
-	"uuabc.com/sendmsg/pkg/pb/meta"
-	"uuabc.com/sendmsg/sender/pub"
 )
 
 type Receiver struct {

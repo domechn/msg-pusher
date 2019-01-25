@@ -15,10 +15,10 @@ import (
 	"context"
 	"testing"
 
+	"github.com/domgoer/msgpusher/pkg/db"
+	"github.com/domgoer/msgpusher/pkg/pb/meta"
+	"github.com/domgoer/msgpusher/storer"
 	"github.com/jmoiron/sqlx"
-	"uuabc.com/sendmsg/pkg/db"
-	"uuabc.com/sendmsg/pkg/pb/meta"
-	"uuabc.com/sendmsg/storer"
 )
 
 func init() {

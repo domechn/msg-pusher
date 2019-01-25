@@ -17,9 +17,9 @@ import (
 	"strconv"
 	"strings"
 
-	"uuabc.com/sendmsg/pkg/errors"
-	"uuabc.com/sendmsg/pkg/utils"
-	"uuabc.com/sendmsg/storer/cache"
+	"github.com/domgoer/msgpusher/pkg/errors"
+	"github.com/domgoer/msgpusher/pkg/utils"
+	"github.com/domgoer/msgpusher/storer/cache"
 )
 
 type ArgParams map[string]string

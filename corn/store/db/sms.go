@@ -15,13 +15,13 @@ import (
 	"context"
 	"sync"
 
+	"github.com/domgoer/msgpusher/config"
+	"github.com/domgoer/msgpusher/corn/store"
+	"github.com/domgoer/msgpusher/pkg/pb/meta"
+	"github.com/domgoer/msgpusher/pkg/utils"
+	"github.com/domgoer/msgpusher/storer/cache"
+	"github.com/domgoer/msgpusher/storer/db"
 	"github.com/sirupsen/logrus"
-	"uuabc.com/sendmsg/config"
-	"uuabc.com/sendmsg/corn/store"
-	"uuabc.com/sendmsg/pkg/pb/meta"
-	"uuabc.com/sendmsg/pkg/utils"
-	"uuabc.com/sendmsg/storer/cache"
-	"uuabc.com/sendmsg/storer/db"
 )
 
 type Sms struct {

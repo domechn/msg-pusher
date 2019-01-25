@@ -14,10 +14,10 @@ package cache
 import (
 	"context"
 
+	"github.com/domgoer/msgpusher/pkg/cache/redis"
+	"github.com/domgoer/msgpusher/storer"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
-	"uuabc.com/sendmsg/pkg/cache/redis"
-	"uuabc.com/sendmsg/storer"
 )
 
 func get(ctx context.Context, typeN, k string) ([]byte, error) {

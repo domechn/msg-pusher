@@ -12,12 +12,12 @@
 package storer
 
 import (
+	"github.com/domgoer/msgpusher/config"
+	"github.com/domgoer/msgpusher/pkg/cache/local"
+	"github.com/domgoer/msgpusher/pkg/cache/redis"
+	"github.com/domgoer/msgpusher/pkg/db"
+	"github.com/domgoer/msgpusher/pkg/mq"
 	"github.com/jmoiron/sqlx"
-	"uuabc.com/sendmsg/config"
-	"uuabc.com/sendmsg/pkg/cache/local"
-	"uuabc.com/sendmsg/pkg/cache/redis"
-	"uuabc.com/sendmsg/pkg/db"
-	"uuabc.com/sendmsg/pkg/mq"
 )
 
 var (

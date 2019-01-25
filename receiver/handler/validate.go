@@ -12,10 +12,10 @@
 package handler
 
 import (
+	"github.com/domgoer/msgpusher/pkg/errors"
+	"github.com/domgoer/msgpusher/pkg/utils"
+	"github.com/domgoer/msgpusher/receiver/service"
 	"strconv"
-	"uuabc.com/sendmsg/pkg/errors"
-	"uuabc.com/sendmsg/pkg/utils"
-	"uuabc.com/sendmsg/receiver/service"
 )
 
 func checkMobileDetail(mobile, p string) error {

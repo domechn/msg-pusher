@@ -16,10 +16,10 @@ import (
 	"errors"
 	"time"
 
+	"github.com/domgoer/msgpusher/pkg/pb/meta"
+	"github.com/domgoer/msgpusher/pkg/utils"
+	"github.com/domgoer/msgpusher/storer/cache"
 	"github.com/sirupsen/logrus"
-	"uuabc.com/sendmsg/pkg/pb/meta"
-	"uuabc.com/sendmsg/pkg/utils"
-	"uuabc.com/sendmsg/storer/cache"
 )
 
 var (
