@@ -21,6 +21,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// Init 初始化日志的输出等级，输出路径
 func Init(typeN, path, level string) {
 	l := logrus.InfoLevel
 	switch strings.ToUpper(level) {

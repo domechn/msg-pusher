@@ -1,0 +1,8 @@
+.DS_Store/
+history/
+log/
+todo
+.idea/
+conf.yaml
+dist/
+.vs_code/

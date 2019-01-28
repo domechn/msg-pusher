@@ -3,10 +3,16 @@
 #
 #   Author        : domchan
 #   Email         : 814172254@qq.com
-#   File Name     : init.go
-#   Created       : 2019/1/9 15:51
-#   Last Modified : 2019/1/9 15:51
+#   File Name     : config.go
+#   Created       : 2019/1/14 19:42
+#   Last Modified : 2019/1/14 19:42
 #   Describe      :
 #
 # ====================================================*/
-package service
+package handler
+
+import (
+	"github.com/json-iterator/go"
+)
+
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
