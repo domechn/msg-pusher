@@ -27,17 +27,17 @@ receiver: ; $(info ==============go build receiver==============)
 .PHONY: docker
 docker: release;
 	@echo ==============docker build==============
-	docker build -t uuabc.com/sendmsg:$(RELEASE_VERSION) -f Dockerfile .
+	docker build -t domgoer/msg-pusher:$(RELEASE_VERSION) -f Dockerfile .
 
 .PHONY: sender-docker
 sender-docker: dist_dir sender;
 	@echo ==============docker build==============
-	docker build -t uuabc.com/sendmsg-sender:$(RELEASE_VERSION) -f Dockerfile-sender .
+	docker build -t domgoer/msg-pusher-sender:$(RELEASE_VERSION) -f Dockerfile-sender .
 
 .PHONY: receiver-docker
 receiver-docker: dist_dir receiver;
 	@echo ==============docker build==============
-	docker build -t uuabc.com/sendmsg-receiver:$(RELEASE_VERSION) -f Dockerfile-receiver .
+	docker build -t domgoer/msg-pusher-receiver:$(RELEASE_VERSION) -f Dockerfile-receiver .
 
 .PHONY: darwin
 darwin:

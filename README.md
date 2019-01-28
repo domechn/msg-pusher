@@ -1,6 +1,6 @@
 # msg-pusher
 
-### msg-pusher是用Golang编写的高性能消息推送平台
+### msg-pusher是用Golang编写的轻量级高性能消息推送微服务
 
 ### 使用msg-pusher可以实现：
 
@@ -39,8 +39,22 @@
 
 msg-pusher依赖rabbit-mq、redis和mysql
 
-> 源码部署
+- 二进制部署
 
-> docker部署
+```bash
+cd msg-pusher
+go build -o ./dist/sender ./cmd/sender/*.go
+go build -o ./dist/receiver ./cmd/receiver/*.go
 
+./dist/sender -f conf.yaml --log-path ./
+./dist/receiver -f conf.yaml --log-path ./
+```
 
+- docker部署
+
+```bash
+cd msg-pusher
+make docker
+
+docker run --name pusher -v $CONF_PATH:/app/msg-pusher/conf/conf.yaml -v $LOG_FILE_PATH:/app/msg-pusher/log -p 8990:8990 domgoer/msg-pusher:V2.0
+```
