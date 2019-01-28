@@ -114,10 +114,10 @@ func msgFromCache(id string, msg Messager) error {
 
 func checkStatus(id string, msg Messager) error {
 	status := msg.GetStatus()
-	if status != int32(meta.Status_Wait) {
+	if status != meta.Wait {
 		logrus.WithFields(logrus.Fields{
 			"data":   id,
-			"status": meta.Status_name[status],
+			"status": meta.Status_name[int32(status)],
 		}).Error("数据状态不是待发送状态，可能已被处理")
 		return ErrMsgHasDealed
 	}

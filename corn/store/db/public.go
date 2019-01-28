@@ -12,9 +12,7 @@
 package db
 
 func Register() {
-	registerWeChat()
-	registerEmail()
-	registerSms()
+	registerMsg()
 }
 
 func read(lenF func() (int64, error), popF func() ([]byte, error), n int64) ([][]byte, error) {

@@ -19,16 +19,8 @@ import (
 	"github.com/streadway/amqp"
 )
 
-func SmsProduce(ctx context.Context, msg []byte, delay int64) error {
-	return produce(ctx, "sms", msg, delay)
-}
-
-func EmailProduce(ctx context.Context, msg []byte, delay int64) error {
-	return produce(ctx, "email", msg, delay)
-}
-
-func WeChatProduce(ctx context.Context, msg []byte, delay int64) error {
-	return produce(ctx, "wechat", msg, delay)
+func MsgProduce(ctx context.Context, msg []byte, delay int64) error {
+	return produce(ctx, "msg", msg, delay)
 }
 
 func produce(ctx context.Context, typeName string, msg []byte, delay int64) error {

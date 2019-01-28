@@ -56,7 +56,7 @@ func Send(id string, sendFunc RetryFunc) error {
 }
 
 // SendRetryFunc 返回一个可以用于重试发送的方法
-func SendRetryFunc(msg Messager, send func(Messager) error, doList func(Cache, []byte) error) RetryFunc {
+func SendRetryFunc(msg Messager, send func(Messager) error) RetryFunc {
 	var reason error
 	return func(count int) error {
 		// 发送之前检查状态,如果已发送就直接返回成功
@@ -66,13 +66,17 @@ func SendRetryFunc(msg Messager, send func(Messager) error, doList func(Cache, [
 		}
 
 		if count > TryNum {
-			msg.SetStatus(int32(meta.Status_Final))
-			msg.SetResult(int32(meta.Result_Fail))
+			msg.SetStatus(meta.Final)
+			msg.SetResult(meta.Fail)
 			msg.SetTryNum(TryNum)
 			if reason != nil {
-				msg.SetReason(reason.Error())
+				len := len(reason.Error())
+				if len > 200 {
+					len = 200
+				}
+				msg.SetReason(reason.Error()[:len])
 			}
-			updateCache(msg, doList)
+			updateCache(msg)
 			return ErrTooManyTimes
 		}
 		err := send(msg)
@@ -85,11 +89,11 @@ func SendRetryFunc(msg Messager, send func(Messager) error, doList func(Cache, [
 			return ErrMsgSendFailed
 		}
 
-		msg.SetStatus(int32(meta.Status_Final))
-		msg.SetResult(int32(meta.Result_Success))
+		msg.SetStatus(meta.Final)
+		msg.SetResult(meta.Success)
 		msg.SetTryNum(int32(count))
 		// 更新数据库和缓存，如果出错打印日志，不做错误处理
-		err = updateCache(msg, doList)
+		err = updateCache(msg)
 		if err != nil {
 			logrus.WithFields(logrus.Fields{
 				"id":    msg.GetId(),
@@ -103,7 +107,7 @@ func SendRetryFunc(msg Messager, send func(Messager) error, doList func(Cache, [
 	}
 }
 
-func updateCache(msg Messager, doList func(Cache, []byte) error) error {
+func updateCache(msg Messager) error {
 	// 消息已发送，后续不会再修改，所以这里版本号直接更新一个大数字
 	newVersion := msg.GetVersion() + 99
 	msg.SetVersion(newVersion)
@@ -112,7 +116,7 @@ func updateCache(msg Messager, doList func(Cache, []byte) error) error {
 	b, _ := msg.Marshal()
 	t := cache.NewTransaction()
 	defer t.Close()
-	doList(t, b)
+	t.RPushMsg(context.Background(), b)
 	// 强制更新缓存
 	t.PutBaseCache(context.Background(), msg.GetId(), b)
 	t.PutSendSuccess(context.Background(), msg.GetId())

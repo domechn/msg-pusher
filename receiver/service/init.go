@@ -10,9 +10,3 @@
 #
 # ====================================================*/
 package service
-
-const (
-	wechat = "wechat"
-	sms    = "sms"
-	email  = "email"
-)

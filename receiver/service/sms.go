@@ -15,158 +15,86 @@ import (
 	"context"
 	"time"
 
-	"github.com/domgoer/msg-pusher/pkg/errors"
 	"github.com/domgoer/msg-pusher/pkg/pb/meta"
 	"github.com/domgoer/msg-pusher/storer/cache"
 	"github.com/domgoer/msg-pusher/storer/db"
-	"github.com/domgoer/msg-pusher/storer/mq"
-	"github.com/sirupsen/logrus"
 )
 
-type smsServiceImpl struct {
+type msgServiceImpl struct {
 }
 
-// NewSmsServiceImpl 初始化消息service
-func NewSmsServiceImpl() smsServiceImpl {
-	return smsServiceImpl{}
+// NewMsgServiceImpl 初始化消息service
+func NewMsgServiceImpl() msgServiceImpl {
+	return msgServiceImpl{}
 }
 
-func (s smsServiceImpl) Produce(ctx context.Context, m Meta) (string, error) {
+func (s msgServiceImpl) Produce(ctx context.Context, m *meta.MsgProducer) (string, error) {
 	var templ string
 	var args map[string]string
 	var err error
-	mobile := m.GetSendTo()
+	to := m.GetSendTo()
 	sendTimeStr := m.GetSendTime()
 	ti, err := time.Parse(meta.ISO8601Layout, sendTimeStr)
 	if err != nil {
 		return "", err
 	}
-	if err := checkSendRate(ctx, mobile, ti); err != nil {
+	if err := checkSendRate(ctx, to, ti); err != nil {
 		return "", err
 	}
 	if templ, args, err = checkTemplateAndArguments(ctx, m.GetTemplate(), m.GetArguments()); err != nil {
 		return "", err
 	}
 	content := getContent(args, templ)
-	err = s.produce(ctx, m.(*meta.SmsProducer), content)
+	err = s.produce(ctx, m, content)
 	return m.GetId(), err
 }
 
-func (s smsServiceImpl) produce(ctx context.Context, p *meta.SmsProducer, content string) error {
-	dbSms := &meta.DbSms{
-		Id:          p.Id,
-		Platform:    p.Platform,
-		PlatformKey: p.PlatformKey,
-		Content:     content,
-		Mobile:      p.Mobile,
-		Template:    p.Template,
-		Arguments:   p.Arguments,
-		SendTime:    p.SendTime,
-		Server:      p.Server,
-		Type:        p.Type,
+func (s msgServiceImpl) produce(ctx context.Context, p *meta.MsgProducer, content string) error {
+	dbMsg := &meta.DbMsg{
+		Id:        p.Id,
+		SubId:     p.SubId,
+		Content:   content,
+		SendTo:    p.SendTo,
+		Reserved:  p.Reserved,
+		Template:  p.Template,
+		Arguments: p.Arguments,
+		SendTime:  p.SendTime,
+		Server:    meta.Server(p.Server),
+		Type:      meta.Type(p.Type),
 	}
 	return produce(ctx,
 		p,
-		dbSms,
-		s.rPush,
-		mq.SmsProduce)
+		dbMsg,
+	)
 }
 
-func (s smsServiceImpl) ProduceBatch(ctx context.Context, ms []*meta.SmsProducer) ([]string, error) {
-	var res []string
-	var byts [][]byte
-	var metas []*meta.DbSms
-	for _, m := range ms {
-		var templ string
-		var args map[string]string
-		var err error
-		mobile := m.GetSendTo()
-		sendTimeStr := m.GetSendTime()
-		ti, err := time.Parse(meta.ISO8601Layout, sendTimeStr)
-		if err != nil {
-			return nil, err
-		}
-		if err := checkSendRate(ctx, mobile, ti); err != nil {
-			return nil, err
-		}
-		if templ, args, err = checkTemplateAndArguments(ctx, m.GetTemplate(), m.GetArguments()); err != nil {
-			return nil, err
-		}
-		dbSms := &meta.DbSms{
-			Id:          m.Id,
-			Platform:    m.Platform,
-			PlatformKey: m.PlatformKey,
-			Content:     getContent(args, templ),
-			Mobile:      m.Mobile,
-			Template:    m.Template,
-			Arguments:   m.Arguments,
-			SendTime:    m.SendTime,
-			Server:      m.Server,
-			Status:      int32(meta.Status_Wait),
-			Type:        m.Type,
-		}
-		res = append(res, m.Id)
-		initMsg(dbSms)
-		b, _ := dbSms.Marshal()
-		byts = append(byts, b)
-		metas = append(metas, dbSms)
-	}
-	return res, s.produceBatch(ctx, byts, metas, ms)
-}
-
-func (s smsServiceImpl) produceBatch(ctx context.Context, byts [][]byte, metas []*meta.DbSms, ms []*meta.SmsProducer) error {
-	// 开启redis事务
-	t := cache.NewTransaction()
-	defer t.Close()
-
-	if len(byts) != len(metas) || len(byts) != len(ms) {
-		return errors.NewError(10000000, "未知错误")
-	}
-
-	for idx, byt := range byts {
-		if err := produceStore(ctx, metas[idx].Id, byt, ms[idx].Delay(), t, mq.SmsProduce, s.rPush); err != nil {
-			logrus.WithFields(logrus.Fields{
-				"method": "produceSmsBatch",
-				"error":  err.Error(),
-			}).Error("批量发送短信失败")
-			t.Rollback(ctx)
-			return err
-		}
-	}
-	return t.Commit(ctx)
-}
-
-func (smsServiceImpl) rPush(ctx context.Context, c Cache, b []byte) error {
-	return c.RPushSms(ctx, b)
-}
-
-func (s smsServiceImpl) Detail(ctx context.Context, id string) (Marshaler, error) {
+func (s msgServiceImpl) Detail(ctx context.Context, id string) (Marshaler, error) {
 	return s.detail(ctx, id)
 }
 
 // DetailByPhonePage 直接数据库中取,不走缓存
-func (s smsServiceImpl) DetailByPhonePage(ctx context.Context, mobile string, page int) ([]*meta.DbSms, error) {
-	return db.SmsDetailByPhoneAndPage(ctx, mobile, page)
+func (s msgServiceImpl) DetailByToAndPage(ctx context.Context, to string, page int) ([]*meta.DbMsg, error) {
+	return db.DetailByToAndPage(ctx, to, page)
 }
 
-func (s smsServiceImpl) DetailByPlat(ctx context.Context, plat int32, key string) ([]*meta.DbSms, error) {
-	return db.SmsDetailByPlat(ctx, plat, key)
+// DetailByPlat 根据key值分页查询，直接查询数据库
+func (s msgServiceImpl) DetailByKeyAndPage(ctx context.Context, key string, page int) ([]*meta.DbMsg, error) {
+	return db.DetailByKey(ctx, key, page)
 }
 
-func (smsServiceImpl) detail(ctx context.Context, id string) (Marshaler, error) {
-	res := &meta.DbSms{}
+func (msgServiceImpl) detail(ctx context.Context, id string) (Marshaler, error) {
+	res := &meta.DbMsg{}
 	return res, detail(ctx, id, res)
 }
 
-func (s smsServiceImpl) Cancel(ctx context.Context, id string) error {
+func (s msgServiceImpl) Cancel(ctx context.Context, id string) error {
 	return s.cancel(ctx, id)
 }
 
-func (s smsServiceImpl) cancel(ctx context.Context, id string) error {
-	ds := &meta.DbSms{}
+func (s msgServiceImpl) cancel(ctx context.Context, id string) error {
+	ds := &meta.DbMsg{}
 	if err := cancel(ctx,
 		id,
-		s.rPush,
 		ds); err != nil {
 		return err
 	}
@@ -177,28 +105,26 @@ func (s smsServiceImpl) cancel(ctx context.Context, id string) error {
 			return
 		}
 		// 删除限速的限制
-		cache.RemoveLimit(context.Background(), ds.Mobile, ti)
+		cache.RemoveLimit(context.Background(), ds.GetSendTo(), ti)
 	}()
 	return nil
 }
 
-func (s smsServiceImpl) Edit(ctx context.Context, m Meta) error {
-	dbParam := &meta.DbSms{}
+func (s msgServiceImpl) Edit(ctx context.Context, m Meta) error {
+	dbParam := &meta.DbMsg{}
 	return edit(ctx,
 		m,
 		dbParam,
-		s.rPush,
-		mq.SmsProduce,
 	)
 }
 
-// WaitSmsByPlat 按平台号获取待发送的消息
-func (s smsServiceImpl) WaitSmsIdByPlat(ctx context.Context, plat int32, key string) ([]string, error) {
-	return db.WaitSmsIdByPlat(ctx, plat, key)
+// WaitMsgIdByPlat 按平台号获取待发送的消息
+func (s msgServiceImpl) WaitingMsgIdByPlat(ctx context.Context, key string) ([]string, error) {
+	return db.WaitingMsgByKey(ctx, key)
 }
 
 // CancelBatch 批量取消,return 取消发送失败的消息的id
-func (s smsServiceImpl) CancelBatch(ctx context.Context, ids []string) []string {
+func (s msgServiceImpl) CancelBatch(ctx context.Context, ids []string) []string {
 	var fail []string
 	for _, id := range ids {
 		if err := s.cancel(ctx, id); err != nil {

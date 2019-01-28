@@ -61,13 +61,13 @@ func spanStartName(r *http.Request) string {
 	case "DELETE":
 		do = "Cancel"
 	}
-	param := "Unknown"
-	if strings.Contains(r.URL.Path, "email") {
-		param = "Email"
-	} else if strings.Contains(r.URL.Path, "sms") {
-		param = "Sms"
-	} else if strings.Contains(r.URL.Path, "wechat") {
-		param = "WeChat"
+	param := "Msg"
+	if strings.Contains(r.URL.Path, "key") {
+		param = "ByKey"
+	} else if strings.Contains(r.URL.Path, "to") {
+		param = "ByTo"
+	} else if strings.Contains(r.URL.Path, "msgs") {
+		param = "Msgs"
 	}
 	return param + "/" + do
 }

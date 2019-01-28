@@ -18,9 +18,7 @@ const (
 	lock5s   = "lock-5s-"
 	lockId   = "lock-id-"
 
-	weChatDB = "wechat-db-list"
-	emailDB  = "email-db-list"
-	smsDB    = "sms-db-list"
+	msgDB = "wechat-db-list"
 )
 
 var (

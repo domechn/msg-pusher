@@ -25,29 +25,29 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type Sms struct {
+type Msg struct {
 	len int64
 	sync.RWMutex
 }
 
-func registerSms() {
-	store.MustRegisterCorn("sms-corn", NewSmsCorn(config.CornConf().MaxLen))
+func registerMsg() {
+	store.MustRegisterCorn("msg-corn", NewMsgCorn(config.CornConf().MaxLen))
 }
 
-func (e *Sms) Read() ([][]byte, error) {
-	return read(cache.LLenSms, cache.LPopSms, e.len)
+func (e *Msg) Read() ([][]byte, error) {
+	return read(cache.LLenMsg, cache.LPopMsg, e.len)
 }
 
-func (e *Sms) Write(param [][]byte) (err error) {
+func (e *Msg) Write(param [][]byte) (err error) {
 	if len(param) == 0 {
 		return
 	}
-	var li []*meta.DbSms
+	var li []*meta.DbMsg
 	for _, b := range param {
-		dbSms := &meta.DbSms{}
+		dbSms := &meta.DbMsg{}
 		if err := dbSms.Unmarshal(b); err != nil {
 			logrus.WithFields(logrus.Fields{
-				"type":   "sms",
+				"type":   "msg",
 				"method": "read",
 				"data":   string(b),
 			}).Error("redis中存在错误数据")
@@ -56,14 +56,14 @@ func (e *Sms) Write(param [][]byte) (err error) {
 		dbSms.SetSendTime(utils.MustISO8601StrToUTCStr(dbSms.GetSendTime()))
 		li = append(li, dbSms)
 	}
-	if err = db.SmsUpdateAndInsertBatch(context.Background(), li); err != nil {
+	if err = db.UpdateAndInsertMsgBatch(context.Background(), li); err != nil {
 		// 如果是数据库无法连接，就将数据回滚到redis
 		if err == sql.ErrConnDone {
 			logrus.Errorf("批量插入数据库失败，数据库连接已关闭，正在将数据回滚到redis")
 			t := cache.NewTransaction()
 			defer t.Close()
 			for _, p := range param {
-				t.RPushSms(context.Background(), p)
+				t.RPushMsg(context.Background(), p)
 			}
 			t.Commit(context.Background())
 		}
@@ -71,13 +71,13 @@ func (e *Sms) Write(param [][]byte) (err error) {
 	return err
 }
 
-func (e *Sms) Name() string {
-	return "sms"
+func (e *Msg) Name() string {
+	return "msg"
 }
 
-// NewSmsCorn 初始化一个定时写入的任务，n为每次读取和写入的最大数据量
-func NewSmsCorn(n int64) *Sms {
-	return &Sms{
+// NewMsgCorn 初始化一个定时写入的任务，n为每次读取和写入的最大数据量
+func NewMsgCorn(n int64) *Msg {
+	return &Msg{
 		len: n,
 	}
 }

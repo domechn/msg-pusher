@@ -20,7 +20,7 @@ import (
 )
 
 var (
-	ec  *config.Aliyun
+	ec  *config.SmsServer
 	cli *Client
 )
 
@@ -29,8 +29,9 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	ec = config.AliyunConf()
+	ec = config.SmsConf()["aliyun"]
 	cli = NewClient(Config{
+		SignName:     ec.SignName,
 		AccessKeyId:  ec.AccessKeyId,
 		AccessSecret: ec.AccessSecret,
 		GatewayURL:   ec.GatewayURL,

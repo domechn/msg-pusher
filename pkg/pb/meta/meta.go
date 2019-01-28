@@ -4,222 +4,77 @@
 #   Author        : domchan
 #   Email         : 814172254@qq.com
 #   File Name     : meta.go
-#   Created       : 2019/1/10 16:16
-#   Last Modified : 2019/1/10 16:16
-#   Describe      : 用于检查参数是否合法，注意：本层不检查 模板和模板参数，
-#					具体这两项检查需要结合业务在service层做.
+#   Created       : 2019/1/28 13:26
+#   Last Modified : 2019/1/28 13:26
+#   Describe      :
 #
 # ====================================================*/
 package meta
 
 import (
-	"time"
-
 	"github.com/domgoer/msg-pusher/pkg/errors"
 	"github.com/domgoer/msg-pusher/pkg/utils"
-	"github.com/json-iterator/go"
 	"github.com/satori/go.uuid"
+	"time"
 )
-
-var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 const (
 	ISO8601Layout = "2006-01-02T15:04:05Z07:00"
 )
 
-// email begin...........
-// Delay 返回延迟发送的时间 毫秒 单位
-func (m *EmailProducer) Delay() int64 {
-	return delay(m.XUtcSendStamp)
-}
-
-// Validated 验证参数是否合法
-func (m *EmailProducer) Validated() error {
-	if err := checkPlatform(m.Platform); err != nil {
-		return err
-	}
-	if err := checkPlatformKey(m.PlatformKey); err != nil {
-		return err
-	}
-	if err := checkDestination(m.Destination); err != nil {
-		return err
-	}
-	if err := checkSendTime(m.SendTime); err != nil {
-		return err
-	}
-	if err := checkEmailServer(m.Server); err != nil {
-		return err
-	}
-	if err := checkType(m.Type); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (m *EmailProducer) ValidateEdit() error {
-	if m.Destination != "" {
-		if err := checkDestination(m.Destination); err != nil {
-			return err
-		}
-	}
-	if m.SendTime != "" {
-		if err := checkSendTime(m.SendTime); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// Transfer 将必须的参数进行转换
-func (m *EmailProducer) Transfer(setID bool) {
-	if setID {
-		m.Id = uuid.NewV4().String()
-	}
-	var st time.Time
-	st, m.SendTime = gbfToUTC(m.SendTime)
-	m.XUtcSendStamp = st.Unix()
-}
-
-// email end...........
-
-// sms begin...........
-// Delay 返回延迟发送的时间 毫秒 单位
-func (m *SmsProducer) Delay() int64 {
-	return delay(m.XUtcSendStamp)
-}
-
 // Transfer 必要的参数转换
-func (m *SmsProducer) Transfer(setID bool) {
+func (m *MsgProducer) Transfer(setID bool) {
 	if setID {
 		m.Id = uuid.NewV4().String()
 	}
 	var st time.Time
 	st, m.SendTime = gbfToUTC(m.SendTime)
 	m.XUtcSendStamp = st.Unix()
+}
+
+// Delay 返回延迟发送的时间 毫秒 单位
+func (m *MsgProducer) Delay() int64 {
+	return delay(m.XUtcSendStamp)
 }
 
 // Validated 验证参数时候合法
-func (m *SmsProducer) Validated() error {
-	if err := checkPlatform(m.Platform); err != nil {
-		return err
-	}
-	if err := checkPlatformKey(m.PlatformKey); err != nil {
-		return err
-	}
-	if err := checkMobile(m.Mobile); err != nil {
-		return err
-	}
-	if err := checkSendTime(m.SendTime); err != nil {
-		return err
-	}
-	if err := checkSmsServer(m.Server); err != nil {
+func (m *MsgProducer) Validated() error {
+	if err := checkSubId(m.SubId); err != nil {
 		return err
 	}
 	if err := checkType(m.Type); err != nil {
 		return err
 	}
-	return nil
-}
-
-func (m *SmsProducer) ValidateEdit() error {
-	if m.Mobile != "" {
-		if err := checkMobile(m.Mobile); err != nil {
-			return err
-		}
-	}
-	if m.SendTime != "" {
-		if err := checkSendTime(m.SendTime); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// sms end...........
-
-// wechat begin..........
-// Delay 延迟发送的时间 毫秒 单位
-func (m *WeChatProducer) Delay() int64 {
-	return delay(m.XUtcSendStamp)
-}
-
-// Validated 参数是否合法
-func (m *WeChatProducer) Validated() error {
-	if err := checkPlatform(m.Platform); err != nil {
+	if err := checkServer(m.Server); err != nil {
 		return err
 	}
-	if err := checkPlatformKey(m.PlatformKey); err != nil {
-		return err
-	}
-	if err := checkToUser(m.Touser); err != nil {
+	if err := checkSendTo(m.Type, m.SendTo); err != nil {
 		return err
 	}
 	if err := checkSendTime(m.SendTime); err != nil {
 		return err
 	}
-	if err := checkType(m.Type); err != nil {
-		return err
-	}
+
 	return nil
 }
 
-func (m *WeChatProducer) ValidateEdit() error {
-	if m.Touser != "" {
-		if err := checkToUser(m.Touser); err != nil {
-			return err
-		}
-	}
-	if m.SendTime != "" {
-		if err := checkSendTime(m.SendTime); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// Transfer 必要的参数合法
-func (m *WeChatProducer) Transfer(setID bool) {
-	if setID {
-		m.Id = uuid.NewV4().String()
-	}
-	var st time.Time
-	st, m.SendTime = gbfToUTC(m.SendTime)
-	m.XUtcSendStamp = st.Unix()
-}
-
-// wechat end........
-
-func checkPlatform(s int32) error {
-	if _, ok := PlatForm_name[s]; !ok || s == 0 {
-		return errors.ErrPlatNotFound
-	}
-	return nil
-}
-
-func checkPlatformKey(s string) error {
+func checkSubId(s string) error {
 	if s == "" {
 		return errors.ErrPlatKeyIsNil
 	}
 	return nil
 }
 
-func checkMobile(s string) error {
-	if !utils.ValidatePhone(s) {
-		return errors.ErrPhoneNumber
-	}
-	return nil
-}
-
-func checkToUser(s string) error {
-	if s == "" {
-		return errors.ErrToUser
-	}
-	return nil
-}
-
-func checkDestination(s string) error {
-	if !utils.ValidateEmailAddr(s) {
-		return errors.ErrDestination
+func checkSendTo(t int32, s string) error {
+	switch t {
+	case int32(Sms):
+		if !utils.ValidatePhone(s) {
+			return errors.ErrPhoneNumber
+		}
+	case int32(Email):
+		if !utils.ValidateEmailAddr(s) {
+			return errors.ErrDestination
+		}
 	}
 	return nil
 }
@@ -238,23 +93,16 @@ func checkSendTime(s string) error {
 	return nil
 }
 
-func checkSmsServer(s int32) error {
-	if _, ok := SmsServer_name[s]; !ok || s == 0 {
-		return errors.ErrSmsServerNotFound
-	}
-	return nil
-}
-
-func checkEmailServer(s int32) error {
-	if _, ok := EmailServer_name[s]; !ok || s == 0 {
-		return errors.ErrEmailServerNotFound
-	}
-	return nil
-}
-
 func checkType(s int32) error {
-	if _, ok := Message_name[s]; !ok || s == 0 {
+	if _, ok := Type_name[s]; !ok {
 		return errors.ErrMsgTypeNotFound
+	}
+	return nil
+}
+
+func checkServer(s int32) error {
+	if _, ok := Server_name[s]; !ok {
+		return errors.ErrServerNotFound
 	}
 	return nil
 }
@@ -278,26 +126,10 @@ func delay(begin int64) int64 {
 	return d
 }
 
-func (m *EmailProducer) GetSendTo() string {
-	return m.Destination
+func (m *MsgProducer) SetSendTo(s string) {
+	m.SendTo = s
 }
 
-func (m *EmailProducer) SetSendTo(s string) {
-	m.Destination = s
-}
-
-func (m *WeChatProducer) GetSendTo() string {
-	return m.Touser
-}
-
-func (m *WeChatProducer) SetSendTo(s string) {
-	m.Touser = s
-}
-
-func (m *SmsProducer) GetSendTo() string {
-	return m.Mobile
-}
-
-func (m *SmsProducer) SetSendTo(s string) {
-	m.Mobile = s
+func (m *MsgProducer) ValidateEdit() error {
+	return nil
 }

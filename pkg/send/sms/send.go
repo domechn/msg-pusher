@@ -76,7 +76,7 @@ func (c *Client) Send(msg send.Message, do send.DoRes) error {
 		do(result)
 	}
 	if !result.IsSuccessful() {
-		return fmt.Errorf("send msg failed,\ncode: %s\nmsg: %s", result.Code, result.Message)
+		return fmt.Errorf("send msg failed,code: %smsg: %s", result.Code, result.Message)
 	}
 	return nil
 }

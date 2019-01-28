@@ -13,15 +13,14 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"github.com/domgoer/msg-pusher/pkg/errors"
 	"github.com/domgoer/msg-pusher/pkg/pb/meta"
 	"github.com/domgoer/msg-pusher/pkg/utils"
 	"github.com/domgoer/msg-pusher/storer/cache"
+	"github.com/domgoer/msg-pusher/storer/mq"
 	"github.com/sirupsen/logrus"
 )
 
-type RPushFunc func(i context.Context, c Cache, b []byte) error
 type MqFunc func(context.Context, []byte, int64) error
 
 // MsgService 用于消息的增删改查
@@ -40,24 +39,23 @@ func detail(ctx context.Context, id string, msg Messager) error {
 	}
 	err = msg.Unmarshal(b)
 	if err != nil {
-		fmt.Println(err)
 		return errors.ErrMisMatch
 	}
 	return nil
 }
 
 // produce 将消息插入数据库 mq 和缓存
-func produce(ctx context.Context, m Meta, em Messager, rPush RPushFunc, mqParamFunc MqFunc) error {
+func produce(ctx context.Context, m Meta, em Messager) error {
 	logrus.Info("开始添加消息...,data: ", em)
 	id := em.GetId()
 
-	em.SetStatus(int32(meta.Status_Wait))
+	em.SetStatus(meta.Wait)
 	initMsg(em)
 	byt, _ := em.Marshal()
 	// 开启redis事务
 	t := cache.NewTransaction()
 	defer t.Close()
-	if err := produceStore(ctx, id, byt, m.Delay(), t, mqParamFunc, rPush); err != nil {
+	if err := produceStore(ctx, id, byt, m.Delay(), t); err != nil {
 		t.Rollback(ctx)
 		return err
 	}
@@ -79,8 +77,7 @@ func produceStore(ctx context.Context,
 	b []byte,
 	ttl int64,
 	t *cache.Transaction,
-	m MqFunc,
-	r RPushFunc) error {
+) error {
 	// 插入redis
 	err := t.PutBaseCache(ctx, id, b)
 	if err != nil {
@@ -88,11 +85,11 @@ func produceStore(ctx context.Context,
 		return err
 	}
 	// 将数据添加到list，用于入库
-	if err := r(ctx, t, b); err != nil {
+	if err := t.RPushMsg(ctx, b); err != nil {
 		logrus.Errorf("消息插入入库队列时失败,errors: %v", err)
 		return err
 	}
-	err = m(ctx, []byte(id), ttl)
+	err = mq.MsgProduce(ctx, []byte(id), ttl)
 	if err != nil {
 		logrus.Errorf("消息 %s 插入消息队列失败: %v\n", id, err)
 		return err
@@ -101,7 +98,7 @@ func produceStore(ctx context.Context,
 }
 
 // todo 限速
-func edit(ctx context.Context, m Meta, em Messager, doListFunc RPushFunc, mqParamFunc MqFunc) error {
+func edit(ctx context.Context, m Meta, em Messager) error {
 	// 先根据id从缓存中获取数据的具体内容
 	if err := detail(ctx, m.GetId(), em); err != nil {
 		return err
@@ -164,7 +161,7 @@ func edit(ctx context.Context, m Meta, em Messager, doListFunc RPushFunc, mqPara
 	var mqFunc MqFunc
 	// 判断sendtime是否改变，如果改变就向mq中重新发送id
 	if reSend {
-		mqFunc = mqParamFunc
+		mqFunc = mq.MsgProduce
 	}
 	// 修改修改时间
 	changeUpdateAndVersion(em)
@@ -173,7 +170,7 @@ func edit(ctx context.Context, m Meta, em Messager, doListFunc RPushFunc, mqPara
 	defer t.Close()
 
 	// 修改cache和mq中信息
-	if err := editStore(ctx, em.GetId(), b, ttl, t, doListFunc, mqFunc); err != nil {
+	if err := editStore(ctx, em.GetId(), b, ttl, t, mqFunc); err != nil {
 		t.Rollback(ctx)
 		logrus.WithFields(logrus.Fields{
 			"method": "updateStore",
@@ -191,9 +188,9 @@ func edit(ctx context.Context, m Meta, em Messager, doListFunc RPushFunc, mqPara
 	return nil
 }
 
-func editStore(ctx context.Context, id string, b []byte, ttl int64, t *cache.Transaction, doListFunc RPushFunc, mqf MqFunc) error {
+func editStore(ctx context.Context, id string, b []byte, ttl int64, t *cache.Transaction, mqf MqFunc) error {
 	// 异步修改db中的数据
-	err := doListFunc(ctx, t, b)
+	err := t.RPushMsg(ctx, b)
 	if err != nil {
 		return err
 	}
@@ -268,7 +265,7 @@ func updateDetailCache(ctx context.Context, id string, getDbData func(ctx2 conte
 // 	return err
 // }
 
-func cancel(ctx context.Context, id string, u RPushFunc, m Messager) error {
+func cancel(ctx context.Context, id string, m Messager) error {
 	err := detail(ctx, id, m)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
@@ -296,15 +293,15 @@ func cancel(ctx context.Context, id string, u RPushFunc, m Messager) error {
 
 	// 获取数据库中的值，并更新到缓存,必须同步，因为发送的时候需要检查缓存中信息的状态
 	// 如果异步操作失败，会导致已取消的信息发送
-	m.SetStatus(int32(meta.Status_Cancel))
-	m.SetResult(int32(meta.Result_Fail))
+	m.SetStatus(meta.Cancel)
+	m.SetResult(meta.Fail)
 	changeUpdateAndVersion(m)
 	b, _ := m.Marshal()
 
 	t := cache.NewTransaction()
 	defer t.Close()
 
-	if err = cancelStore(ctx, id, b, u, t); err != nil {
+	if err = cancelStore(ctx, id, b, t); err != nil {
 		t.Rollback(ctx)
 		logrus.WithFields(logrus.Fields{
 			"method": "cancelStore",
@@ -318,9 +315,9 @@ func cancel(ctx context.Context, id string, u RPushFunc, m Messager) error {
 
 }
 
-func cancelStore(ctx context.Context, id string, b []byte, u RPushFunc, t *cache.Transaction) error {
+func cancelStore(ctx context.Context, id string, b []byte, t *cache.Transaction) error {
 	// 更新数据库中的status
-	err := u(ctx, t, b)
+	err := t.RPushMsg(ctx, b)
 	if err != nil {
 		return err
 	}
@@ -328,11 +325,11 @@ func cancelStore(ctx context.Context, id string, b []byte, u RPushFunc, t *cache
 }
 
 func checkStatus(msg Messager) error {
-	st := msg.GetStatus()
-	if st == int32(meta.Status_Cancel) {
+	st := meta.Status(msg.GetStatus())
+	if st == meta.Cancel {
 		return errors.ErrMsgHasCancelled
 	}
-	if st == int32(meta.Status_Final) {
+	if st == meta.Final {
 		return errors.ErrMsgCantEdit
 	}
 	return nil

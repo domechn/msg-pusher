@@ -136,9 +136,7 @@ func batch(ctx context.Context, table string, params []string, args ...interface
 		ws = append(ws, "?")
 		values = append(values, params[i]+"=IF(version<=VALUES(version),VALUES("+params[i]+"),"+params[i]+")")
 	}
-	// (?,?,?,?,.....)
 	pl := "(" + strings.Join(ws, ",") + ")"
-	// l1=VALUES(l1),l2=VALUES(l2) ..
 	vs := strings.Join(values, ",")
 
 	for i := 0; i < n; i++ {

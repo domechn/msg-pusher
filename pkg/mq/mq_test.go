@@ -24,7 +24,7 @@ func TestRabbitMQ_Start(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	r, err := c.RabbitMQ("uuabc_exchange_test", "direct", amqp.Table{
+	r, err := c.RabbitMQ("exchange_test", "direct", amqp.Table{
 		"x-delayed-type": "direct",
 	})
 	if err != nil {
@@ -45,7 +45,7 @@ func TestRabbitMQ_Publish(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	r, err := c.RabbitMQ("uuabc_exchange_test", "x-delayed-message", amqp.Table{
+	r, err := c.RabbitMQ("exchange_test", "x-delayed-message", amqp.Table{
 		"x-delayed-type": "direct",
 	})
 	if err != nil {

@@ -46,31 +46,14 @@ func (t *Transaction) PutSendSuccess(ctx context.Context, k string) error {
 	return put(ctx, "tx-PutSendSuccess", k+"_send", success, 0, t.C)
 }
 
-func (t *Transaction) RPushEmail(ctx context.Context, b []byte) error {
-	return rPush(ctx, "tx-RPushEmail", emailDB, b, t.C)
+// RPushMsg 将消息存入list中，用于异步存入数据库
+func (t *Transaction) RPushMsg(ctx context.Context, b []byte) error {
+	return rPush(ctx, "tx-RPushMsg", msgDB, b, storer.Cache)
 }
 
-func (t *Transaction) RPushWeChat(ctx context.Context, b []byte) error {
-	return rPush(ctx, "tx-RPushWeChat", weChatDB, b, t.C)
-}
-
-func (t *Transaction) RPushSms(ctx context.Context, b []byte) error {
-	return rPush(ctx, "tx-RPushSms", smsDB, b, t.C)
-}
-
-// LPopWeChat 从wechat队列中取一条数据
-func (t *Transaction) LPopWeChat() ([]byte, error) {
-	return lPop(context.Background(), weChatDB, t.C)
-}
-
-// LPopEmail 从email队列中取一条数据
-func (t *Transaction) LPopEmail() ([]byte, error) {
-	return lPop(context.Background(), emailDB, t.C)
-}
-
-// LPopSms 从sms队列中取一条数据
-func (t *Transaction) LPopSms() ([]byte, error) {
-	return lPop(context.Background(), smsDB, t.C)
+// LPopMsg 从msg队列中取一条数据
+func (t *Transaction) LPopMsg() ([]byte, error) {
+	return lPop(context.Background(), msgDB, t.C)
 }
 
 // Commit 提交事务

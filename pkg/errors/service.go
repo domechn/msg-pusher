@@ -12,15 +12,14 @@
 package errors
 
 var (
-	ErrSmsServerNotFound = NewError(10001001, "短信服务商不存在")
-	ErrPageInvalidate    = NewError(10001002, "查询页数不合法或超过范围(1~10)")
-	ErrMsg1MinuteLimit   = NewError(10001003, "1分钟内短信发送数量到达上限")
-	ErrMsg1HourLimit     = NewError(10001004, "1小时内短信发送数量到达上限")
-	ErrMsg1DayLimit      = NewError(10001005, "24小时内短信发送数量到达上限")
-	ErrPhoneNumber       = NewError(10001006, "手机号码格式错误")
+	ErrPageInvalidate  = NewError(10001002, "查询页数不合法或超过范围(1~10)")
+	ErrMsg1MinuteLimit = NewError(10001003, "1分钟内发送数量到达上限")
+	ErrMsg1HourLimit   = NewError(10001004, "1小时内发送数量到达上限")
+	ErrMsg1DayLimit    = NewError(10001005, "24小时内发送数量到达上限")
+	ErrPhoneNumber     = NewError(10001006, "手机号码格式错误")
 
-	ErrEmailServerNotFound = NewError(10003001, "邮件服务商不存在")
-	ErrDestination         = NewError(10003002, "接收邮箱不合法")
+	ErrServerNotFound = NewError(10003001, "服务商不存在")
+	ErrDestination    = NewError(10003002, "接收邮箱不合法")
 
 	ErrTemplateIsExisted     = NewError(10004001, "模板SimpleID已存在")
 	ErrTemplateSimpleInvalid = NewError(10004002, "SimpleID不能为空")
@@ -33,7 +32,7 @@ var (
 	ErrArgumentsInvalid   = NewError(10009004, "参数和模板不匹配")
 	ErrMsgTypeNotFound    = NewError(10009005, "消息类型不存在")
 	ErrPlatNotFound       = NewError(10009006, "请求平台不存在")
-	ErrPlatKeyIsNil       = NewError(10009007, "平台key内容为空")
+	ErrPlatKeyIsNil       = NewError(10009007, "key内容为空")
 	ErrMisMatch           = NewError(10009008, "请求接口和消息类型不匹配")
 	ErrIDIsInvalid        = NewError(10009009, "查询id为空或格式错误")
 	ErrMsgNotFound        = NewError(10009010, "消息不存在")

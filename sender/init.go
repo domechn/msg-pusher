@@ -14,10 +14,8 @@ package sender
 import (
 	"github.com/domgoer/msg-pusher/config"
 	"github.com/domgoer/msg-pusher/pkg/mq"
-	"github.com/domgoer/msg-pusher/sender/email"
+	"github.com/domgoer/msg-pusher/sender/msg"
 	"github.com/domgoer/msg-pusher/sender/pub"
-	"github.com/domgoer/msg-pusher/sender/sms"
-	"github.com/domgoer/msg-pusher/sender/wechat"
 	"github.com/domgoer/msg-pusher/storer"
 	"github.com/streadway/amqp"
 )
@@ -32,9 +30,7 @@ func Init() error {
 
 func Start() error {
 	stopC := make(chan struct{})
-	start(wechat.NewReceiver())
-	start(email.NewReceiver())
-	start(sms.NewReceiver())
+	start(msg.NewReceiver())
 	<-stopC
 	return nil
 }

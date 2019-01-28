@@ -13,6 +13,7 @@ package service
 
 import (
 	"context"
+	"github.com/domgoer/msg-pusher/pkg/pb/meta"
 )
 
 type Meta interface {
@@ -45,9 +46,9 @@ type Messager interface {
 	GetId() string
 	GetContent() string
 	SetContent(string)
-	GetStatus() int32
-	SetStatus(int32)
-	SetResult(int32)
+	GetStatus() meta.Status
+	SetStatus(meta.Status)
+	SetResult(meta.Result)
 	SetCreatedAt(string)
 	SetUpdatedAt(string)
 	GetSendTo() string

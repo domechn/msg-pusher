@@ -33,48 +33,28 @@ var (
 	}{
 		// delete
 		{
-			name:    "CancelSmsByID",
+			name:    "CancelByID",
 			method:  "DELETE",
-			path:    "/sms/{id}",
-			handler: handler.URLHandler(handler.SmsCancel),
+			path:    "/msg/{id}",
+			handler: handler.URLHandler(handler.MsgCancel),
 		}, {
-			name:    "CancelSmsByKey",
+			name:    "CancelByKey",
 			method:  "DELETE",
-			path:    "/sms/plat/{plat}/key/{key}",
-			handler: handler.URLHandler(handler.SmsCancelByPlat),
-		}, {
-			name:    "CancelWeChatByID",
-			method:  "DELETE",
-			path:    "/wechat/{id}",
-			handler: handler.URLHandler(handler.WeChatCancel),
-		}, {
-			name:    "CancelEmailByID",
-			method:  "DELETE",
-			path:    "/email/{id}",
-			handler: handler.URLHandler(handler.EmailCancel),
+			path:    "/msg/plat/{plat}/key/{key}",
+			handler: handler.URLHandler(handler.MsgCancelByKey),
 		},
 		// post
 		{
-			name:    "ProduceSms",
+			name:    "Produce",
 			method:  "POST",
-			path:    "/sms",
-			handler: handler.JsonHandler(handler.SmsProducer),
-		}, {
-			name:    "ProduceSmss",
+			path:    "/msg",
+			handler: handler.JsonHandler(handler.MsgProducer),
+		}, /* {
+			name:    "ProduceBatch",
 			method:  "POST",
-			path:    "/smss",
-			handler: handler.JsonHandler(handler.SmsProducers),
-		}, {
-			name:    "ProduceWeChat",
-			method:  "POST",
-			path:    "/wechat",
-			handler: handler.JsonHandler(handler.WeChatProducer),
-		}, {
-			name:    "ProduceEmail",
-			method:  "POST",
-			path:    "/email",
-			handler: handler.JsonHandler(handler.EmailProducer),
-		}, {
+			path:    "/msgs",
+			handler: handler.JsonHandler(handler.MsgProducer),
+		},*/{
 			name:    "AddTemplate",
 			method:  "POST",
 			path:    "/template",
@@ -82,47 +62,27 @@ var (
 		},
 		// get
 		{
-			name:    "SmsDetailByID",
+			name:    "DetailByID",
 			method:  "GET",
-			path:    "/sms/{id}",
-			handler: handler.URLHandler(handler.SmsIDDetail),
+			path:    "/msg/{id}",
+			handler: handler.URLHandler(handler.MsgIDDetail),
 		}, {
-			name:    "WeChatDetailByID",
+			name:    "DetailByPlat",
 			method:  "GET",
-			path:    "/wechat/{id}",
-			handler: handler.URLHandler(handler.WeChatIDDetail),
+			path:    "/msg/key/{key}/p/{page}",
+			handler: handler.URLHandler(handler.MsgDetailByKey),
 		}, {
-			name:    "EmailDetailById",
+			name:    "DetailByToAndPage",
 			method:  "GET",
-			path:    "/email/{id}",
-			handler: handler.URLHandler(handler.EmailIDDetail),
-		}, {
-			name:    "SmsDetailByPlat",
-			method:  "GET",
-			path:    "/sms/plat/{plat}/key/{key}",
-			handler: handler.URLHandler(handler.SmsDetailByPlat),
-		}, {
-			name:    "SmsDetailByMobileAndPage",
-			method:  "GET",
-			path:    "/sms/mobile/{mobile}/page/{p}",
-			handler: handler.URLHandler(handler.SmsMobileDetail),
+			path:    "/msg/to/{to}/page/{p}",
+			handler: handler.URLHandler(handler.MsgDetailByTo),
 		},
 		// Patch
 		{
-			name:    "SmsEdit",
+			name:    "Edit",
 			method:  "PATCH",
-			path:    "/sms",
-			handler: handler.JsonHandler(handler.SmsEdit),
-		}, {
-			name:    "WeChatEdit",
-			method:  "PATCH",
-			path:    "/wechat",
-			handler: handler.JsonHandler(handler.WeChatEdit),
-		}, {
-			name:    "EmailEdit",
-			method:  "PATCH",
-			path:    "/email",
-			handler: handler.JsonHandler(handler.EmailEdit),
+			path:    "/msg",
+			handler: handler.JsonHandler(handler.MsgEdit),
 		},
 	}
 )

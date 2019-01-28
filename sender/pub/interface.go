@@ -13,16 +13,17 @@ package pub
 
 import (
 	"context"
+	"github.com/domgoer/msg-pusher/pkg/pb/meta"
 )
 
 type Messager interface {
 	GetId() string
 	Marshal() ([]byte, error)
 	Unmarshal([]byte) error
-	GetStatus() int32
-	SetStatus(int32)
+	GetStatus() meta.Status
+	SetStatus(meta.Status)
 	SetTryNum(int32)
-	SetResult(int32)
+	SetResult(meta.Result)
 	SetReason(string)
 	GetSendTime() string
 	SetUpdatedAt(string)
@@ -31,7 +32,5 @@ type Messager interface {
 }
 
 type Cache interface {
-	RPushEmail(context.Context, []byte) error
-	RPushWeChat(context.Context, []byte) error
-	RPushSms(context.Context, []byte) error
+	RPush(context.Context, []byte) error
 }

@@ -8,207 +8,73 @@ option (gogoproto.sizer_all) = true;
 option (gogoproto.unmarshaler_all) = true;
 option (gogoproto.goproto_enum_prefix_all) = false;
 
-enum PlatForm {
-    PlatForm_Unknown = 0;
-    PlatForm_Back = 1;
-    PlatForm_Front = 2;
-    PlatForm_IOS = 3;
-    PlatForm_Android = 4;
-    PlatForm_NewSys = 5;
+enum Type {
+    Sms = 0;
+    WeChat = 1;
+    Email = 2;
 }
 
-enum Message {
-    Message_Unknown = 0;
-    Message_Confirm = 1;
-    Message_Notice = 2;
-}
-
-enum SmsServer {
-    SmsServer_Unknown = 0;
-//    SmsServer_Eay = 1;
-    SmsServer_Ali = 2;
-}
-
-enum EmailServer {
-    EmailServer_Unknown = 0;
-    EmailServer_Tencent = 1;
+enum Server{
+    AliYun = 0;
+    ExMail = 1;
 }
 
 enum Status {
-    Status_Unknown = 0;
-    Status_Wait = 1;
-    Status_Cancel = 2;
-    Status_Final = 3;
-    // 批量完成
-    Status_LotFinal = 4;
+    Wait = 0;
+    Cancel = 1;
+    Final = 2;
 }
 
 enum Result {
-    Result_Unknown = 0;
-    Result_Success = 1;
-    Result_Fail = 2;
+    Success = 0;
+    Fail = 1;
 }
 
-// "platform":3,
-// "platform_key":"message_test",
-// "server":2,
-// "tpl": "SMS_130990029",
-// "arguments":"{\"code\":885588}",
-// "mobile": "18516051096",
-// "send_time":"2018-07-30T07:30:00+08:00",
-// "type": 2
-// SmsProducer 接收短信消息
-message SmsProducer {
+message MsgProducer {
     string id = 1;
-    int32 platform = 2;
-    //@inject_tag: json:"platform_key,omitempty"
-    string platformKey = 3;
-    int32 server = 4;
-    string template = 5;
-    string arguments = 6;
-    string mobile = 7;
+    //@inject_tag: json:"sub_id,omitempty""
+    string subId = 2;
+    //@inject_tag: json:"send_to,omitempty"
+    string sendTo = 3;
+    string template = 4;
+    string arguments = 5;
     //@inject_tag: json:"send_time,omitempty"
-    string sendTime = 8;
-    //@inject_tag: json:"-"
-    int64 _utcSendStamp = 9;
-    int32 type = 10;
-}
-
-message SmsProducers {
-    int32 platform = 1;
-    repeated SmsProducer data = 2;
-}
-
-message DbSms {
-    string id = 1;
-    int32 platform = 2;
-    //@inject_tag: json:"platform_key,omitempty" db:"platform_key"
-    string platformKey = 3;
-    string content = 4;
-    string mobile = 5;
-    int32 type = 6;
-    string template = 7;
-    string arguments = 8;
-    int32 server = 9;
-    //@inject_tag: json:"send_time,omitempty" db:"send_time"
-    string sendTime = 10;
-    //@inject_tag: json:"try_num,omitempty" db:"try_num"
-    int32 tryNum = 11;
-    int32 status = 12;
-    //@inject_tag: json:"result_status,omitempty" db:"result_status"
-    int32 resultStatus = 13;
-    string reason = 14;
-    //@inject_tag: json:"created_at,omitempty" db:"created_at"
-    string createdAt = 15;
-    //@inject_tag: json:"updated_at,omitempty" db:"updated_at"
-    string updatedAt = 16;
-    //@inject_tag: json:"-"
-    int32 version=17;
-}
-
-// "platform":3,
-// "platform_key":"email_test",
-// "server":2,
-// "title":"测试邮件",
-// "tpl": "test.blade.php",
-// "arguments":"{\"name\":\"乔治君\"}",
-// "destination": "923143925@qq.com",
-// "send_time":"2018-07-30T07:30:00+08:00",
-// "type": 2
-// EmailProducer 接收email信息
-message EmailProducer {
-    string id = 1;
-    int32 platform = 2;
-    //@inject_tag: json:"platform_key,omitempty"
-    string platformKey = 3;
-    int32 server = 4;
-    string title = 5;
-    string template = 6;
-    string arguments = 7;
-    string destination = 8;
-    //@inject_tag: json:"send_time,omitempty"
-    string sendTime = 9;
+    string sendTime = 6;
+    int32 server = 7;
+    int32 type = 8;
+    // 每种消息类型的预留字段
+    // sms: signName
+    // email: title
+    // weChat: url
+    string reserved = 9;
     //@inject_tag: json:"-"
     int64 _utcSendStamp = 10;
-    int32 type = 11;
 }
 
-message DbEmail {
+message DbMsg {
     string id = 1;
-    int32 platform = 2;
-    //@inject_tag: json:"platform_key,omitempty" db:"platform_key"
-    string platformKey = 3;
-    string title = 4;
-    string content = 5;
-    string destination = 6;
-    int32 type = 7;
-    string template = 8;
-    string arguments = 9;
-    int32 server = 10;
-    //@inject_tag: json:"send_time,omitempty" db:"send_time"
-    string sendTime = 11;
-    //@inject_tag: json:"try_num,omitempty" db:"try_num"
-    int32 tryNum = 12;
-    int32 status = 13;
-    //@inject_tag: json:"result_status,omitempty" db:"result_status"
-    int32 resultStatus = 14;
-    string reason = 15;
-    //@inject_tag: json:"created_at,omitempty" db:"created_at"
-    string createdAt = 16;
-    //@inject_tag: json:"updated_at,omitempty" db:"updated_at"
-    string updatedAt = 17;
-    //@inject_tag: json:"-"
-    int32 version=18;
-}
-
-// "platform":3,
-// "touser": "oAdVsv5nQ-qtBF0F5WGU-xPcrpGY",
-// "template_id": "RlJfVX1SCBW2ncbIblbOE_8PaOUyoxBmr2MKnjzcY80",
-// "url": "",
-// "data":"{\"first\": {\"value\":\"亲爱的George家长，UU哥提示您：本次课程已经结束，本节课配有课后作业哦，作业信息如下：\",\"color\":\"#173177\"},\"keyword1\":{\"value\":\"Hello\",\"color\":\"#173177\"},\"keyword2\": {\"value\":\"World\",\"color\":\"#173177\"},\"remark\":{\"value\":\"请提醒小朋友前往学习记录完成课后作业，完成作业还会有额外奖励哦。。如有任何问题可微信对话框留言或拨打服务热线：4001636161\",\"color\":\"#173177\"}}",
-// "send_time":"0",
-// "type": 2
-// WeChatProducer 接收微信消息
-message WeChatProducer {
-    string id = 1;
-    int32 platform = 2;
-    //@inject_tag: json:"platform_key,omitempty" db:"platform_key"
-    string platformKey = 3;
-    string touser = 4;
-    string template = 5;
-    string url = 6;
-    string arguments = 7;
-    //@inject_tag: json:"send_time,omitempty"
-    string sendTime = 8;
-    //@inject_tag: json:"-"
-    int64 _utcSendStamp = 9;
-    int32 type = 10;
-}
-
-
-message DbWeChat {
-    string id = 1;
-    int32 platform = 2;
-    //@inject_tag: json:"platform_key,omitempty" db:"platform_key"
-    string platformKey = 3;
-    string touser = 4;
-    int32 type = 5;
+    //@inject_tag: json:"sub_id,omitempty" db:"sub_id"
+    string subId = 2;
+    //@inject_tag: json:"send_to,omitempty" db:"send_to"
+    string sendTo = 3;
+    Type type = 4;
+    Server server = 5;
     string template = 6;
-    string url = 7;
+    string arguments = 7;
     string content = 8;
-    string arguments = 9;
+    string reserved = 9;
     //@inject_tag: json:"send_time,omitempty" db:"send_time"
     string sendTime = 10;
     //@inject_tag: json:"try_num,omitempty" db:"try_num"
     int32 tryNum = 11;
-    int32 status = 12;
+    Status status = 12;
     //@inject_tag: json:"result_status,omitempty" db:"result_status"
-    int32 resultStatus = 13;
+    Result resultStatus = 13;
     string reason = 14;
     //@inject_tag: json:"created_at,omitempty" db:"created_at"
     string createdAt = 15;
     //@inject_tag: json:"updated_at,omitempty" db:"updated_at"
     string updatedAt = 16;
     //@inject_tag: json:"-"
-    int32 version=17;
+    int32 version = 17;
 }

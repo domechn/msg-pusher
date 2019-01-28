@@ -22,18 +22,24 @@ import (
 	"github.com/domgoer/msg-pusher/receiver/service"
 )
 
-var smsService = service.NewSmsServiceImpl()
+var msgService = service.NewMsgServiceImpl()
 
-// @router(POST,"/sms")
-// SmsProducer 接收用户提交的json，并将json转化成消息插入到sms消息队列
-func SmsProducer(ctx context.Context, body []byte) (res []byte, err error) {
-	p := &meta.SmsProducer{}
+// @router(POST,"/msg")
+// MsgProducer 接收用户提交的json，并将json转化成消息插入到消息队列
+func MsgProducer(ctx context.Context, body []byte) (res []byte, err error) {
+	p := &meta.MsgProducer{}
 	if err = json.Unmarshal(body, p); err != nil {
 		err = errors.ErrParam
 		return
 	}
 	var id string
-	if id, err = processData(ctx, smsService, p); err != nil {
+
+	if err = p.Validated(); err != nil {
+		return
+	}
+	p.Transfer(true)
+
+	if id, err = msgService.Produce(ctx, p); err != nil {
 		return
 	}
 
@@ -41,39 +47,15 @@ func SmsProducer(ctx context.Context, body []byte) (res []byte, err error) {
 	return
 }
 
-// @router(POST,"/smss")
-// SmsProducers 批量将用户的消息插入sms队列
-func SmsProducers(ctx context.Context, body []byte) (res []byte, err error) {
-	p := &meta.SmsProducers{}
-	if err = json.Unmarshal(body, p); err != nil {
-		err = errors.ErrParam
-		return
-	}
-	// 检验参数
-	for _, d := range p.Data {
-		d.Platform = p.Platform
-		if err = d.Validated(); err != nil {
-			return
-		}
-		d.Transfer(true)
-	}
-	data, sErr := smsService.ProduceBatch(ctx, p.Data)
-	if sErr != nil {
-		err = sErr
-		return
-	}
-	res = model.NewResponseData(data).MustMarshal()
-	return
-}
-
-// @router(GET,"/sms/{id}")
-func SmsIDDetail(ctx context.Context, d map[string]string) (res []byte, err error) {
+// MsgIDDetail 根据id或取消消息的具体信息
+// @router(GET,"/msg/{id}")
+func MsgIDDetail(ctx context.Context, d map[string]string) (res []byte, err error) {
 	id := d["id"]
 	if err = utils.ValidateUUIDV4(id); err != nil {
 		err = errors.ErrIDIsInvalid
 		return
 	}
-	data, err := smsService.Detail(ctx, id)
+	data, err := msgService.Detail(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -82,28 +64,28 @@ func SmsIDDetail(ctx context.Context, d map[string]string) (res []byte, err erro
 	return
 }
 
-// @router(GET,"/sms/plat/{plat}/key/{key}")
-func SmsDetailByPlat(ctx context.Context, d map[string]string) (res []byte, err error) {
-	plat := d["plat"]
-	platform, err := strconv.Atoi(plat)
-	if err != nil {
+// @router(GET,"/msg/key/{key}/page/{p}")
+func MsgDetailByKey(ctx context.Context, d map[string]string) (res []byte, err error) {
+	p := d["p"]
+	key := d["key"]
+	page, err := strconv.Atoi(p)
+	if err != nil || key == "" {
 		return nil, errors.ErrParam
 	}
-	key := d["key"]
-	m, err := smsService.DetailByPlat(ctx, int32(platform), key)
+	m, err := msgService.DetailByKeyAndPage(ctx, key, page)
 	res = model.NewResponseDataKey("detail", m).MustMarshal()
 	return res, err
 }
 
-// @router(GET,"/sms/mobile/{mobile}/page/{p}")
-func SmsMobileDetail(ctx context.Context, d map[string]string) (res []byte, err error) {
-	mobile := d["mobile"]
+// @router(GET,"/msg/to/{to}/page/{p}")
+func MsgDetailByTo(ctx context.Context, d map[string]string) (res []byte, err error) {
+	mobile := d["to"]
 	p := d["p"]
 	if err = checkMobileDetail(mobile, p); err != nil {
 		return
 	}
 	pg, _ := strconv.Atoi(p)
-	data, err := smsService.DetailByPhonePage(ctx, mobile, pg)
+	data, err := msgService.DetailByToAndPage(ctx, mobile, pg)
 	if err != nil {
 		return
 	}
@@ -111,10 +93,10 @@ func SmsMobileDetail(ctx context.Context, d map[string]string) (res []byte, err 
 	return
 }
 
-// @router(PATCH,"/sms")
+// @router(PATCH,"/msg")
 // SmsEdit 修改短信发送消息
-func SmsEdit(ctx context.Context, body []byte) (res []byte, err error) {
-	p := &meta.SmsProducer{}
+func MsgEdit(ctx context.Context, body []byte) (res []byte, err error) {
+	p := &meta.MsgProducer{}
 	if err = json.Unmarshal(body, p); err != nil {
 		err = errors.ErrParam
 		return
@@ -122,40 +104,38 @@ func SmsEdit(ctx context.Context, body []byte) (res []byte, err error) {
 	if err = checkEdit(p); err != nil {
 		return
 	}
-	if err = smsService.Edit(ctx, p); err != nil {
+	if err = msgService.Edit(ctx, p); err != nil {
 		return
 	}
 	res = successResp
 	return
 }
 
-// @router(DELETE,"/sms/{id}")
-// SmsCancel 取消发送短信
-func SmsCancel(ctx context.Context, d map[string]string) (res []byte, err error) {
+// @router(DELETE,"/msg/{id}")
+// MsgCancel 取消发送短信
+func MsgCancel(ctx context.Context, d map[string]string) (res []byte, err error) {
 	id := d["id"]
 	if err = utils.ValidateUUIDV4(id); err != nil {
 		return
 	}
-	if err = smsService.Cancel(ctx, id); err != nil {
+	if err = msgService.Cancel(ctx, id); err != nil {
 		return
 	}
 	res = successResp
 	return
 }
 
-// @router(DELETE,"/sms/plat/{plat}/key/{key}")
-func SmsCancelByPlat(ctx context.Context, d map[string]string) (res []byte, err error) {
-	plat := d["plat"]
-	p, err := strconv.Atoi(plat)
-
-	if err != nil {
-		return nil, errors.ErrParam
+// @router(DELETE,"/msg/key/{key}")
+func MsgCancelByKey(ctx context.Context, d map[string]string) (res []byte, err error) {
+	key := d["key"]
+	if key == "" {
+		return
 	}
-	ids, err := smsService.WaitSmsIdByPlat(ctx, int32(p), d["key"])
+	ids, err := msgService.WaitingMsgIdByPlat(ctx, key)
 	if err != nil {
 		return nil, err
 	}
-	fails := smsService.CancelBatch(ctx, ids)
+	fails := msgService.CancelBatch(ctx, ids)
 	if len(fails) == 0 {
 		res = successResp
 	} else {

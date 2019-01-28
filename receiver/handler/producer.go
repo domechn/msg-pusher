@@ -10,17 +10,3 @@
 #
 # ====================================================*/
 package handler
-
-import (
-	"context"
-	"github.com/domgoer/msg-pusher/receiver/service"
-)
-
-func processData(ctx context.Context, svr service.MsgService, p service.Meta) (id string, err error) {
-	if err = p.Validated(); err != nil {
-		return
-	}
-	p.Transfer(true)
-	id, err = svr.Produce(ctx, p)
-	return
-}
