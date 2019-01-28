@@ -131,5 +131,19 @@ func (m *MsgProducer) SetSendTo(s string) {
 }
 
 func (m *MsgProducer) ValidateEdit() error {
+	if err := checkType(m.Type); err != nil {
+		return err
+	}
+	if m.SendTo != "" {
+		if err := checkSendTo(m.Type, m.SendTo); err != nil {
+			return err
+		}
+	}
+
+	if m.SendTime != "" {
+		if err := checkSendTime(m.SendTime); err != nil {
+			return err
+		}
+	}
 	return nil
 }

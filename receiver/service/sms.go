@@ -28,6 +28,7 @@ func NewMsgServiceImpl() msgServiceImpl {
 	return msgServiceImpl{}
 }
 
+// Produce 接收消息，并将验证通过的消息存入mq和缓存
 func (s msgServiceImpl) Produce(ctx context.Context, m *meta.MsgProducer) (string, error) {
 	var templ string
 	var args map[string]string
@@ -68,6 +69,7 @@ func (s msgServiceImpl) produce(ctx context.Context, p *meta.MsgProducer, conten
 	)
 }
 
+// Detail 根据id获取消息的详情
 func (s msgServiceImpl) Detail(ctx context.Context, id string) (Marshaler, error) {
 	return s.detail(ctx, id)
 }
