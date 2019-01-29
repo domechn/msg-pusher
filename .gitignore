@@ -1,5 +1,5 @@
 .DS_Store/
-history/
+.history/
 log/
 todo
 .idea/
