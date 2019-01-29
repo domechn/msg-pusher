@@ -1,7 +1,6 @@
 # gconf
 
 c.json
-
 ```json
 {
     "ABC":"a",
@@ -39,10 +38,11 @@ func getConf(){
 }
 ```
 
+
 c.yaml
 
 ```yaml
-user : hiruok
+user : domgoer
 password : qq123456
 sex: 1
 married: false
@@ -70,7 +70,7 @@ func getConfig(){
     if err != nil {
         panic(err)
     }
-    cyaml.String("user") // => hiruok
+    cyaml.String("user") // => domgoer
     cyaml.Int("sex")  // => 1
     cyaml.Bool("married") // => false
     cyaml.String("ts.tss") //=>dd
@@ -90,7 +90,7 @@ type sRead struct{
     Ts       map[string]interface{} `yaml:"ts"`
     Tlist    []string               `yaml:"tlist"`
     Default  int                    `yaml:"default"  default:"12"`
-}
+} 
 
 func getConfig(){
     sr := &sRead{}
@@ -98,7 +98,7 @@ func getConfig(){
     gconf.Read2Struct("filepath",sr)
     /*
         &sRead{
-            User:     "hiruok",
+            User:     "domgoer",
             Password: "qq123456",
             Sex:      1,
             Married:  false,
@@ -110,7 +110,7 @@ func getConfig(){
     gconf.Read2StructByDefault("filepath",sr)
     /*
             &sRead{
-                User:     "hiruok",
+                User:     "domgoer",
                 Password: "qq123456",
                 Sex:      1,
                 Married:  false,

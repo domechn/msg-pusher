@@ -83,8 +83,8 @@ func (ycr *yamlConfigContainer) Strings(key string) []string {
 	if v, err := ycr.getData(key); err == nil {
 		if vv, ok := v.([]interface{}); ok {
 			var res []string
-			for _, r := range vv {
-				res = append(res, r.(string))
+			for _,r := range vv {
+				res = append(res,r.(string))
 			}
 			return res
 		}

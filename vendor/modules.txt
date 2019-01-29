@@ -2,10 +2,8 @@
 github.com/asaskevich/govalidator
 # github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973
 github.com/beorn7/perks/quantile
-# github.com/bradfitz/gomemcache v0.0.0-20180710155616-bc664df96737
-github.com/bradfitz/gomemcache/memcache
-# github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd
-github.com/codahale/hdrhistogram
+# github.com/domgoer/gotask v0.0.0-20181207030016-0034970ffd9b
+github.com/domgoer/gotask
 # github.com/go-redis/redis v6.15.1+incompatible
 github.com/go-redis/redis
 github.com/go-redis/redis/internal
@@ -22,9 +20,7 @@ github.com/gogo/protobuf/proto
 github.com/gogo/protobuf/protoc-gen-gogo/descriptor
 # github.com/golang/protobuf v1.2.0
 github.com/golang/protobuf/proto
-# github.com/gorilla/context v1.1.1
-github.com/gorilla/context
-# github.com/gorilla/mux v1.6.2
+# github.com/gorilla/mux v1.7.0
 github.com/gorilla/mux
 # github.com/hiruok/gconf v0.0.0-20190108115641-ce0f863c7339
 github.com/hiruok/gconf
@@ -100,7 +96,7 @@ github.com/uber/jaeger-client-go/rpcmetrics
 github.com/uber/jaeger-client-go/transport
 github.com/uber/jaeger-client-go/thrift-gen/agent
 github.com/uber/jaeger-client-go/thrift-gen/baggage
-# github.com/uber/jaeger-lib v1.5.0+incompatible
+# github.com/uber/jaeger-lib v2.0.0+incompatible
 github.com/uber/jaeger-lib/metrics
 # golang.org/x/crypto v0.0.0-20180904163835-0709b304e793
 golang.org/x/crypto/ssh/terminal
