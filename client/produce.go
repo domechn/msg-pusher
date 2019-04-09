@@ -12,11 +12,7 @@
 package client
 
 import (
-<<<<<<< HEAD
 	"github.com/hiruok/msg-pusher/pkg/pb/meta"
-=======
-	"github.com/domgoer/msg-pusher/pkg/pb/meta"
->>>>>>> 3529d40be6ffd0fdfb9da99957920eea1dcbc4ac
 )
 
 type Msg struct {
