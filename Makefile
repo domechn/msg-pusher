@@ -1,5 +1,5 @@
 ROOT_DIR=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))/
-RELEASE_VERSION=V2.0
+RELEASE_VERSION=V0.1.0
 
 GOOS=linux
 CGO_ENABLED=0
