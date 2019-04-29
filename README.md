@@ -51,8 +51,5 @@ go build -o ./dist/receiver ./cmd/receiver/*.go
 - docker部署
 
 ```bash
-cd msg-pusher
-make docker
-
-docker run --name pusher -v $CONF_PATH:/app/msg-pusher/conf/conf.yaml -v $LOG_FILE_PATH:/app/msg-pusher/log -p 8990:8990 hiruok/msg-pusher:V2.0
+docker run --name pusher -v $CONF_PATH:/app/msg-pusher/conf/conf.yaml -v $LOG_FILE_PATH:/app/msg-pusher/log -p 8990:8990 hiruok/msg-pusher:V0.1.0
 ```
