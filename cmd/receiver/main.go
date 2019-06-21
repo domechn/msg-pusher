@@ -78,7 +78,6 @@ func init() {
 	startCmd.PersistentFlags().StringVar(&opts.addrJaeger, "addr-jaeger", opts.addrJaeger, "the address of jaeger")
 	startCmd.PersistentFlags().StringVar(&opts.addrMonitor, "addr-monitor", opts.addrMonitor, "the address of monitor(prometheus)")
 
-	cmd.AddFlags(rootCmd)
 	rootCmd.AddCommand(startCmd)
 	rootCmd.AddCommand(version.Command())
 }
